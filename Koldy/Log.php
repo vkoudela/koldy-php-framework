@@ -125,6 +125,10 @@ class Log {
 		} else if (!isset(self::$config['level'][$level]) || !self::$config['level'][$level]) {
 			return;
 		}
+		
+		if (self::$fp === null) {
+			Application::throwError(500, 'Can not write to log');
+		}
 
 		$user = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
 

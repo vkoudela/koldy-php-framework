@@ -1,14 +1,29 @@
 <?php namespace Koldy;
-
+/**
+ * The cache class.
+ * @author vkoudela
+ *
+ */
 class Cache {
 
-	private static $drivers = null;
+	/**
+	 * The initialized drivers
+	 * @var array
+	 */
+	protected static $drivers = null;
 
-	private static $defaultDriver = null;
+	/**
+	 * The default driver key (the first key from cache array)
+	 * @var string
+	 */
+	protected static $defaultDriver = null;
 
-	private static function init() {
-		if (self::$drivers === null) {
-			self::$drivers = array();
+	/**
+	 * Initialize the cache mechanizm
+	 */
+	protected static function init() {
+		if (static::$drivers === null) {
+			static::$drivers = array();
 			$config = Application::getConfig('cache');
 			$default = array_keys($config);
 
@@ -16,63 +31,122 @@ class Cache {
 				Log::error('Can not use cache when there is no drivers defined!');
 			}
 
-			self::$defaultDriver = $default[0];
+			static::$defaultDriver = $default[0];
 		}
 	}
 
+	/**
+	 * Get the cache driver
+	 * @param string $driver [optional]
+	 * @reutrn \Koldy\Cache\DriverAbstract
+	 */
 	private static function getDriver($driver = null) {
 		if ($driver === null) {
-			$driver = self::$defaultDriver;
+			$driver = static::$defaultDriver;
 		}
-
-		if (!isset(self::$drivers[$driver])) {
-			$config = Application::getConfig('cache');
-
+		
+		$config = Application::getConfig('cache');
+		if (!isset(static::$drivers[$driver])) {
 			if (!isset($config[$driver])) {
 				Log::error("Cache driver '{$driver}' is not defined in config");
 				Application::throwError(500, "Cache driver '{$driver}' is not defined in config");
 			}
+			
+			if (!$config[$driver]['enabled']) {
+				return false;
+			}
 
 			$config = $config[$driver];
 			$className = $config['driver_class'];
-			self::$drivers[$driver] = new $className($config);
+			static::$drivers[$driver] = new $className($config);
+		} else if (!$config[$driver]['enabled']) {
+			return false;
 		}
 
-		return self::$drivers[$driver];
+		return static::$drivers[$driver];
 	}
 
+	/**
+	 * Get the key from default cache driver
+	 * @param string $key
+	 * @return mixed
+	 */
 	public static function get($key) {
-		self::init();
-		return self::getDriver()->get($key);
+		static::init();
+		return static::getDriver()->get($key);
 	}
 
+	/**
+	 * Set the value to default cache
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $seconds
+	 * @return true if set
+	 */
 	public static function set($key, $value, $seconds = null) {
-		self::init();
-		return self::getDriver()->set($key, $value, $seconds);
+		static::init();
+		return static::getDriver()->set($key, $value, $seconds);
 	}
 
+	/**
+	 * Add the key to the cache
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $seconds
+	 * @return true if set
+	 */
 	public static function add($key, $value, $seconds = null) {
-		self::init();
-		return self::getDriver()->add($key, $value, $seconds);
+		static::init();
+		return static::getDriver()->add($key, $value, $seconds);
 	}
 
+	/**
+	 * Is there a key under default cache
+	 * @param string $key
+	 * @return boolean
+	 */
 	public static function has($key) {
-		self::init();
-		return self::getDriver()->has($key);
+		static::init();
+		return static::getDriver()->has($key);
 	}
 
+	/**
+	 * Delete the key from cache
+	 * @param string $key
+	 * @return boolean
+	 */
 	public static function delete($key) {
-		self::init();
-		return self::getDriver()->delete($key);
+		static::init();
+		return static::getDriver()->delete($key);
 	}
 
+	/**
+	 * Get or set the key's value
+	 * @param string $key
+	 * @param function $functionOnSet
+	 * @param int $seconds
+	 */
 	public static function getOrSet($key, $functionOnSet, $seconds = null) {
-		self::init();
-		return self::getDriver()->getOrSet($key, $functionOnSet, $seconds);
+		static::init();
+		return static::getDriver()->getOrSet($key, $functionOnSet, $seconds);
 	}
 
+	/**
+	 * Get the cache driver that isn't default
+	 * @param string $driver
+	 * @return \Koldy\Cache\DriverAbstract
+	 */
 	public static function driver($driver) {
-		self::init();
-		return self::getDriver($driver);
+		static::init();
+		return static::getDriver($driver);
+	}
+	
+	/**
+	 * Does given driver exists
+	 * @param string $driver
+	 * @return boolean
+	 */
+	public static function hasDriver($driver) {
+		return (static::getDriver($driver) !== false);
 	}
 }

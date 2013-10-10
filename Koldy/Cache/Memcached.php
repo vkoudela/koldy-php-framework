@@ -21,6 +21,12 @@ class Memcached extends DriverAbstract {
 	 * Is this caching object enabled or not
 	 */
 	private $enabled = null;
+	
+	/**
+	 * The site key
+	 * @var string
+	 */
+	private $siteKey = null;
 
 	/**
 	 * Construct the object by array of config properties. Config keys are set
@@ -41,6 +47,17 @@ class Memcached extends DriverAbstract {
 		$this->memcached->addServers($config['servers']);
 
 		$this->defaultDuration = $config['default_duration'];
+		
+		$this->siteKey = Application::getConfig(null, 'key');
+	}
+	
+	/**
+	 * Get the key with site's key as namespace in memcache storage
+	 * @param string $key
+	 * @return string
+	 */
+	protected function getKeyName($key) {
+		return "{$this->siteKey}::{$key}";
 	}
 
 	/**
@@ -49,7 +66,7 @@ class Memcached extends DriverAbstract {
 	 * @return  mixed value or null if key doesn't exists or cache is disabled
 	 */
 	public function get($key) {
-
+		$key = $this->getKeyName($key);
 	}
 
 	/**
@@ -60,6 +77,8 @@ class Memcached extends DriverAbstract {
 	 * @return  boolean True if set, null if cache is disabled
 	 */
 	public function set($key, $value, $seconds = null) {
+		$key = $this->getKeyName($key);
+		
 		if ($seconds === null) {
 			$seconds = $this->defaultDuration;
 		}
@@ -75,6 +94,8 @@ class Memcached extends DriverAbstract {
 	 * not enabled
 	 */
 	public function add($key, $value, $seconds = null) {
+		$key = $this->getKeyName($key);
+		
 		if (!$this->enabled) {
 			return null;
 		}
@@ -93,7 +114,7 @@ class Memcached extends DriverAbstract {
 	 * @return  boolean
 	 */
 	public function has($key) {
-
+		$key = $this->getKeyName($key);
 	}
 
 	/**
@@ -102,7 +123,7 @@ class Memcached extends DriverAbstract {
 	 * nothing to delete
 	 */
 	public function delete($key) {
-
+		$key = $this->getKeyName($key);
 	}
 
 	/**
@@ -115,7 +136,7 @@ class Memcached extends DriverAbstract {
 	 * @return  mixed
 	 */
 	public function getOrSet($key, $functionOnSet, $seconds = null) {
-
+		$key = $this->getKeyName($key);
 	}
 
 }
