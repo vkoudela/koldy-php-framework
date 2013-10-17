@@ -373,7 +373,7 @@ class Validator {
 	 * @return true|string
 	 */
 	protected function validateIdentical($param, $settings) {
-		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param])) {
 			$param2 = $settings;
 			if (!isset($this->input[$param2])) {
 				return static::getErrorMessage(1);
