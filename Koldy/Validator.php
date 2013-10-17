@@ -36,7 +36,8 @@ class Validator {
 		10 =>'This field should be exactly {length} characters longs',
 		11 =>'This field must be integer',
 		12 =>'This field must send an array of data',
-		13 =>'This value should be identical to value in {name2} field'
+		13 =>'This value should be identical to value in {name2} field',
+		14 =>'This value doesn\'t exists in database.'
 	);
 	
 	/**
@@ -291,7 +292,7 @@ class Validator {
 	/**
 	 * Throw error if value is not unique in database
 	 * @param string $param
-	 * @param string $settings (Class\Name,uniqueValue[,exceptionValue][,exceptionField])
+	 * @param string $settings (Class\Name,uniqueField[,exceptionValue][,exceptionField])
 	 * @return true|string
 	 */
 	protected function validateUnique($param, $settings) {
@@ -306,6 +307,35 @@ class Validator {
 			$exceptionField = isset($settings[3]) ? $settings[3] : null;
 			if (!$class::isUnique($field, $this->input[$param], $exceptionValue, $exceptionField)) {
 				return static::getErrorMessage(8, array('value' => $this->input[$param]));
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Throw error if value is does not exists in database
+	 * @param string $param
+	 * @param string $settings (Class\Name,requiredValue[,fieldToQuery])
+	 * @return true|string
+	 */
+	protected function validateExists($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			$settings = explode(',', $settings);
+			if (sizeof($settings) < 1) {
+				Application::throwError(500, 'Bad parameters in Validator::validateExists method');
+			}
+			$class = $settings[0];
+			$value = $this->input[$param];
+			$field = isset($settings[1]) ? $settings[1] : null;
+			
+			if ($field === null) {
+				$r = $class::fetchOne($value);
+			} else {
+				$r = $class::fetchOne($field, $value);
+			}
+			
+			if ($r === false) {
+				return static::getErrorMessage(14, array('value' => $value, 'field' => $field, 'class' => $class));
 			}
 		}
 		return true;

@@ -308,6 +308,11 @@ class QueryBuilder {
 		return $query;
 	}
 
+	/**
+	 * Fetch all records
+	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @return array
+	 */
 	public function fetch($fetchMode = \PDO::FETCH_ASSOC) {
 		return $this->adapter->query($this->getQuery(), $this->bindings, $fetchMode);
 	}
