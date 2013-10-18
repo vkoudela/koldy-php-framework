@@ -10,7 +10,7 @@ class Directory {
 	 * @example return array('/Users/vkoudela/Sites/site.tld/folder/croatia.png' => 'croatia.png')
 	 */
 	public static function read($path, $filter = null) {
-		if ($handle = opendir($path)) {
+		if (is_dir($path) && $handle = opendir($path)) {
 			$files = array();
 			while (false !== ($entry = readdir($handle))) {
 				if ($entry !== '.' && $entry !== '..') {

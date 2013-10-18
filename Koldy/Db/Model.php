@@ -375,12 +375,23 @@ abstract class Model {
 	 * If your criteria returnes more then one records, only first record will
 	 * be taken.
 	 * @param  mixed $field primaryKey value, single field or assoc array of arguments for query
-	 * @param  mixed $value
+	 * @param  mixed $value [optional]
+	 * @param array $fields [optional]
 	 * @return  new static|false
 	 */
-	public static function fetchOne($field, $value = null) {
+	public static function fetchOne($field, $value = null, array $fields = null) {
 		$tableName = static::getTableName();
 		$bindings = array();
+		
+		if ($fields === null) {
+			$fields = '*';
+		} else {
+			$tmp = array();
+			foreach ($fields as $field => $alias) {
+				$tmp[] = "{$field} as {$alias}";
+			}
+			$fields = implode(', ', $tmp);
+		}
 
 		if (is_array($field) && $value === null) {
 			$where = '';
@@ -399,12 +410,9 @@ abstract class Model {
 			$where = "{$field} = ?";
 			$bindings = array($value);
 		}
-
-		$results = static::getAdapter()->query(
-			"SELECT * FROM {$tableName} WHERE {$where} LIMIT 0, 1",
-			$bindings,
-			\PDO::FETCH_ASSOC
-		);
+		
+		$query = "SELECT {$fields} FROM {$tableName} WHERE {$where} LIMIT 0, 1";
+		$results = static::getAdapter()->query($query, $bindings, \PDO::FETCH_ASSOC);
 
 		if (sizeof($results) > 0) {
 			return new static($results[0]);
