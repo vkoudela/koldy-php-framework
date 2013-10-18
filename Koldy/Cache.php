@@ -46,10 +46,6 @@ class Cache {
 		}
 		
 		$config = Application::getConfig('cache');
-		
-		var_dump($driver);
-		print_r($config); die();
-		
 		if (!isset(static::$drivers[$driver])) {
 			if (!isset($config[$driver])) {
 				Log::error("Cache driver '{$driver}' is not defined in config");
