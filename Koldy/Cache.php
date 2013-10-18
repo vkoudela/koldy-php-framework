@@ -30,6 +30,8 @@ class Cache {
 			if (!isset($default[0])) {
 				Log::error('Can not use cache when there is no drivers defined!');
 			}
+			
+			var_dump($default[0]);
 
 			static::$defaultDriver = $default[0];
 		}
