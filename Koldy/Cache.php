@@ -43,6 +43,7 @@ class Cache {
 	 * @reutrn \Koldy\Cache\DriverAbstract
 	 */
 	private static function getDriver($driver = null) {
+		static::init();
 		if ($driver === null) {
 			$driver = static::$defaultDriver;
 		}
