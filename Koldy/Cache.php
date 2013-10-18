@@ -31,8 +31,6 @@ class Cache {
 				Log::error('Can not use cache when there is no drivers defined!');
 			}
 			
-			var_dump($default[0]);
-
 			static::$defaultDriver = $default[0];
 		}
 	}
@@ -75,7 +73,6 @@ class Cache {
 	 * @return mixed
 	 */
 	public static function get($key) {
-		static::init();
 		return static::getDriver()->get($key);
 	}
 
@@ -87,7 +84,6 @@ class Cache {
 	 * @return true if set
 	 */
 	public static function set($key, $value, $seconds = null) {
-		static::init();
 		return static::getDriver()->set($key, $value, $seconds);
 	}
 
@@ -99,7 +95,6 @@ class Cache {
 	 * @return true if set
 	 */
 	public static function add($key, $value, $seconds = null) {
-		static::init();
 		return static::getDriver()->add($key, $value, $seconds);
 	}
 
@@ -109,7 +104,6 @@ class Cache {
 	 * @return boolean
 	 */
 	public static function has($key) {
-		static::init();
 		return static::getDriver()->has($key);
 	}
 
@@ -119,7 +113,6 @@ class Cache {
 	 * @return boolean
 	 */
 	public static function delete($key) {
-		static::init();
 		return static::getDriver()->delete($key);
 	}
 
@@ -130,7 +123,6 @@ class Cache {
 	 * @param int $seconds
 	 */
 	public static function getOrSet($key, $functionOnSet, $seconds = null) {
-		static::init();
 		return static::getDriver()->getOrSet($key, $functionOnSet, $seconds);
 	}
 
@@ -140,7 +132,6 @@ class Cache {
 	 * @return \Koldy\Cache\DriverAbstract
 	 */
 	public static function driver($driver) {
-		static::init();
 		return static::getDriver($driver);
 	}
 	
