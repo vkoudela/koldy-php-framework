@@ -25,6 +25,7 @@ class Cache {
 		if (static::$drivers === null) {
 			static::$drivers = array();
 			$config = Application::getConfig('cache');
+			print_r($config); die();
 			$default = array_keys($config);
 
 			if (!isset($default[0])) {
