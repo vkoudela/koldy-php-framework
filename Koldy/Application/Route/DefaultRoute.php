@@ -6,7 +6,7 @@
  *
  * 	http://your.domain.com/[controller]/[action]/[param1]/[param2]/[paramN]
  *  or if module exists under that controller URL:
- *  http://your.domain.com/[module]/[controller]/[adction]/[param1]/[param2]/[paramN]
+ *  http://your.domain.com/[module]/[controller]/[action]/[param1]/[param2]/[paramN]
  */
 
 use Koldy\Application;
@@ -22,7 +22,9 @@ class DefaultRoute extends AbstractRoute {
 	private $actionUrl = null;
 
 	private $actionMethod = null;
-
+	
+	private $isAjax = false;
+	
 	public function __construct($uri) {
 		parent::__construct($uri);
 
@@ -151,22 +153,31 @@ class DefaultRoute extends AbstractRoute {
 				Application::getApplicationPath() . 'library' . DS, // the place where you can define your own classes and methods
 			));
 		}
+		
+		$this->isAjax = (
+			isset($_SERVER['REQUEST_METHOD'])
+			&& $_SERVER['REQUEST_METHOD'] == 'POST'
+			&& isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+			&& !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+			&& strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
+		) || (
+			isset($_SERVER['HTTP_ACCEPT'])
+			&& strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+		);
 
-		if ((
-				isset($_SERVER['REQUEST_METHOD'])
-				&& $_SERVER['REQUEST_METHOD'] == 'POST'
-				&& isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-				&& !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
-				&& strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
-			) || (
-				isset($_SERVER['HTTP_ACCEPT'])
-				&& strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
-			)) {
-
+		if ($this->isAjax) {
 			$this->actionMethod .= 'Ajax';
 		} else {
 			$this->actionMethod .= 'Action';
 		}
+	}
+	
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Application\Route\AbstractRoute::isAjax()
+	 */
+	public function isAjax() {
+		return $this->isAjax;
 	}
 
 	public function getControllerUrl() {

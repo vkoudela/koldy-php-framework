@@ -17,6 +17,12 @@ abstract class AbstractRoute {
 	abstract public function getActionUrl();
 
 	abstract public function getActionMethod();
+	
+	/**
+	 * Is this request Ajax request or not?
+	 * @return boolean
+	 */
+	abstract public function isAjax();
 
 	abstract public function href($controller, $action = null, array $params = null);
 
