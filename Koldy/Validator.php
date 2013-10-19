@@ -37,7 +37,8 @@ class Validator {
 		11 =>'This field must be integer',
 		12 =>'This field must send an array of data',
 		13 =>'This value should be identical to value in {name2} field',
-		14 =>'This value doesn\'t exists in database.'
+		14 =>'This value doesn\'t exists in database.',
+		15 =>'This value shouldn\'t be the same as {name2}'
 	);
 	
 	/**
@@ -356,6 +357,32 @@ class Validator {
 			
 			if ($this->input[$param] != $this->input[$param2]) {
 				return static::getErrorMessage(9, array(
+					'name1' => $param,
+					'name2' => $param2,
+					'value1' => $this->input[$param],
+					'value2' => $this->input[$param2]
+				));
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Throw error if this field is the same as other field in validators
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 * @example 'fieldName' => 'not_same:otherField'
+	 */
+	protected function validateNotSame($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			$param2 = $settings;
+			if (!isset($this->input[$param2])) {
+				return static::getErrorMessage(1);
+			}
+			
+			if ($this->input[$param] == $this->input[$param2]) {
+				return static::getErrorMessage(15, array(
 					'name1' => $param,
 					'name2' => $param2,
 					'value1' => $this->input[$param],

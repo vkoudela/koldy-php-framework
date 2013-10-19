@@ -1,4 +1,5 @@
-<?php namespace Koldy\Db;
+<?php use Koldy\Db\Expr;
+namespace Koldy\Db;
 
 class QueryBuilder {
 
@@ -54,6 +55,13 @@ class QueryBuilder {
 		return $this->adapter;
 	}
 
+	/**
+	 * Set the table FROM which fields will be fetched
+	 * @param string $table
+	 * @param string $alias
+	 * @param string $fields
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function from($table, $alias = null, $fields = null) {
 		$this->from = array(
 			'table' => $table,
@@ -76,6 +84,14 @@ class QueryBuilder {
 		}
 	}
 	
+	/**
+	 * LEFT JOIN other table
+	 * @param string $table
+	 * @param string $on
+	 * @param string $alias
+	 * @param string $fields
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function leftJoin($table, $on, $alias = null, $fields = null) {
 		$this->joins[] = array(
 			'type' => 'LEFT JOIN',
@@ -89,6 +105,14 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * INNER JOIN other table
+	 * @param string $table
+	 * @param string $on
+	 * @param string $alias
+	 * @param string $fields
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function innerJoin($table, $on, $alias = null, $fields = null) {
 		$this->joins[] = array(
 			'type' => 'INNER JOIN',
@@ -102,6 +126,13 @@ class QueryBuilder {
 		return $this;
 	}
 
+	/**
+	 * Add one field that will be fetched
+	 * @param string $field
+	 * @param string $as
+	 * @param string $table
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function field($field, $as = null, $table = null) {
 		$this->fields[] = array(
 			'name' => $field,
@@ -118,6 +149,12 @@ class QueryBuilder {
 		return $this;
 	}
 
+	/**
+	 * Add fields to fetch by passing array of fields
+	 * @param array $fields
+	 * @param string $table
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function fields(array $fields, $table = null) {
 		foreach ($fields as $field => $as) {
 			$this->field($field, $as, $table);
@@ -125,22 +162,42 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * Reset all fields that will be fetched
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function resetFields() {
 		$this->fields = array();
 		return $this;
 	}
 
+	/**
+	 * Add WHERE statement (will be automatically chained with AND)
+	 * @param string $field
+	 * @param mixed $value
+	 * @param string $table
+	 * @param string $operator
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function where($field, $value, $table = null, $operator = '=') {
 		$this->where[] = array(
 			'link' => 'AND',
 			'field' => $field,
 			'operator' => $operator,
-			'value' => $value,
+			'value' => ($value === NULL) ? (new Expr('NULL')) : $value,
 			'table' => $table
 		);
 		return $this;
 	}
 
+	/**
+	 * Add OR WHERE statement
+	 * @param string $field
+	 * @param mixed $value
+	 * @param string $table
+	 * @param string $operator
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function orWhere($field, $value, $table = null, $operator = '=') {
 		$this->where[] = array(
 			'link' => 'OR',
@@ -152,11 +209,21 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * Reset WHERE (remove all WHERE rules)
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function resetWhere() {
 		$this->where = array();
 		return $this;
 	}
 	
+	/**
+	 * Add field to GROUP BY
+	 * @param string $field
+	 * @param string $table
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function groupBy($field, $table = null) {
 		$this->groupBy[] = array(
 			'field' => $field,
@@ -165,11 +232,22 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * Reset GROUP BY (remove GROUP BY)
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function resetGroupBy() {
 		$this->groupBy = array();
 		return $this;
 	}
 
+	/**
+	 * Add field to ORDER BY
+	 * @param string $field
+	 * @param string $direction
+	 * @param string $table
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function orderBy($field, $direction = 'ASC', $table = null) {
 		$this->orderBy[] = array(
 			'field' => $field,
@@ -179,11 +257,21 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * Reset ORDER BY (remove ORDER BY)
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function resetOrderBy() {
 		$this->orderBy = array();
 		return $this;
 	}
 
+	/**
+	 * Set the LIMIT on query results
+	 * @param int $start
+	 * @param int $howMuch
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function limit($start, $howMuch) {
 		$this->limit = new \stdClass;
 		$this->limit->start = $start;
@@ -191,6 +279,10 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * Reset LIMIT (remove the LIMIT)
+	 * @return \Koldy\Db\QueryBuilder
+	 */
 	public function resetLimit() {
 		$this->limit = null;
 		return $this;
@@ -206,6 +298,11 @@ class QueryBuilder {
 		return $this;
 	}
 	
+	/**
+	 * Get the SQL format of the field
+	 * @param string $field
+	 * @return string
+	 */
 	protected function getFieldSql($field) {
 		if ($field['table'] !== null) {
 			return "{$field['table']}.{$field['field']}";
@@ -220,6 +317,11 @@ class QueryBuilder {
 		return $name;
 	}
 	
+	/**
+	 * Get the field alias
+	 * @param string $as
+	 * @return string
+	 */
 	protected function getAliasField($as) {
 		if (isset($this->fieldAliasMap[$as])) {
 			return $this->fieldAliasMap[$as];
@@ -228,6 +330,10 @@ class QueryBuilder {
 		return $as;
 	}
 
+	/**
+	 * Get the query string prepared for PDO
+	 * @return string
+	 */
 	protected function getQuery() {
 		$this->bindings = array();
 		$query = 'SELECT ';
@@ -289,8 +395,6 @@ class QueryBuilder {
 		if (sizeof($this->orderBy) > 0) {
 			$query .= ' ORDER BY';
 			foreach ($this->orderBy as $order) {
-// 				$tableAlias = ($order['table'] !== null) ? ($order['table'] . '.') : '';
-// 				$query .= " {$tableAlias}{$order['field']} {$order['direction']},";
 				if ($order['table'] === null) {
 					$fld = $this->getAliasField($order['field']);
 				} else {
@@ -317,13 +421,35 @@ class QueryBuilder {
 		return $this->adapter->query($this->getQuery(), $this->bindings, $fetchMode);
 	}
 	
+	/**
+	 * Fetch all records as array of objects
+	 * @return array
+	 */
 	public function fetchObj() {
 		return $this->fetch(\PDO::FETCH_OBJ);
 	}
 	
+	/**
+	 * Fetch only first record as object or return false if there is no records
+	 * @return \stdClass|false
+	 */
 	public function fetchFirstObj() {
 		$results = $this->fetch(\PDO::FETCH_OBJ);
 		return isset($results[0]) ? $results[0] : false;
+	}
+	
+	/**
+	 * Return some debug informations about the query you built
+	 * @return string
+	 */
+	public function debug() {
+		$query = $this->__toString();
+		$bindings = '';
+		foreach ($this->bindings as $key => $value) {
+			$bindings .= "{$key}={$value}&";
+		}
+		$bindings = substr($bindings, 0, -1);
+		return "Query={$query}\nBindings={$bindings}";
 	}
 	
 	public function __toString() {
