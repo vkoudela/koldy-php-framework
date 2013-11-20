@@ -1,5 +1,6 @@
-<?php use Koldy\Db\Expr;
-namespace Koldy\Db;
+<?php namespace Koldy\Db;
+
+use Koldy\Db\Expr;
 
 class QueryBuilder {
 
