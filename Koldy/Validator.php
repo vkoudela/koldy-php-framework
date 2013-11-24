@@ -2,6 +2,13 @@
 /**
  * Use this class for validating POST parameters sent from forms.
  * @author Vlatko Koudela
+ * @example
+ * 
+ * 		$validator = Validator::create(array(
+ *			'title' => 'required|min:2|max:255',
+ *			'title_seo' => 'min:2|max:255',
+ *			'category_id' => 'required|exists:News\Category'
+ *		));
  *
  */
 class Validator {
@@ -38,7 +45,9 @@ class Validator {
 		12 =>'This field must send an array of data',
 		13 =>'This value should be identical to value in {name2} field',
 		14 =>'This value doesn\'t exists in database.',
-		15 =>'This value shouldn\'t be the same as {name2}'
+		15 =>'This value shouldn\'t be the same as {name2}',
+		16 =>'Extension has to be one of the following: {extensions}',
+		17 =>'Error uploading file.'
 	);
 	
 	/**
@@ -85,9 +94,11 @@ class Validator {
 					$result = $this->$method($param, $settings);
 					if ($result !== true) {
 						$this->invalids[$param] = $result;
-					} else {
+					} else if (isset($this->input[$param])) {
 						$value = trim($this->input[$param]);
 						$this->valids[$param] = ($value == '') ? null : $value;
+					} else {
+						$this->valids[$param] = null;
 					}
 				}
 			}
@@ -412,6 +423,61 @@ class Validator {
 					'name2' => $param2,
 					'value1' => $this->input[$param],
 					'value2' => $this->input[$param2]
+				));
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Throw error if given input doesn't have given extension.
+	 * If you pass post parameter, then this will be validated on string and second,
+	 * if you pass the name of file, then file name will be validated.
+	 * 
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 */
+	protected function validateExtensions($param, $settings) {
+		if (isset($this->input[$param])) {
+			$string = $this->input[$param];
+		} else if (isset($_FILES) && isset($_FILES[$param])) {
+			$string = $_FILES[$param]['name'];
+		} else {
+			$string = null;
+		}
+		
+		if ($string !== null) {
+			$tmp = explode('.', $string);
+			$ext = strtolower(array_pop($tmp));
+			$extensions = explode(',', $settings);
+			if (!in_array($ext, $extensions)) {
+				return static::getErrorMessage(16, array(
+					'extensions' => implode(', ', $extensions)
+				));
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Throw error if this field is not image or doesn't fit to given contraints
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 */
+	protected function validateImage($param, $settings) {
+		$input = $_FILES;
+		if (isset($input[$param]) && !isset($this->invalids[$param])) {
+			$file = $input[$param];
+			if ($file['error'] != 0) {
+				return static::getErrorMessage(17);
+			}
+			
+			if (!in_array($file['type'], array('image/jpeg', 'image/gif', 'image/png'))) {
+				return static::getErrorMessage(16, array(
+					'extensions' => 'jpg, png, gif'
 				));
 			}
 		}
