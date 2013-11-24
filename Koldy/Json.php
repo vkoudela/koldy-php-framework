@@ -30,6 +30,11 @@ class Json extends Response {
 	public function has($key) {
 		return isset($this->data[$key]);
 	}
+	
+	public function remove($key) {
+		unset($this->data[$key]);
+		return $this;
+	}
 
 	public function get($key) {
 		return $this->has($key) ? $this->data[$key] : null;
