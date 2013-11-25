@@ -24,4 +24,48 @@ class Directory {
 			return null;
 		}
 	}
+	
+	/**
+	 * Create the target directory
+	 * @param string $path
+	 * @param octal $chmod default 0644
+	 * @return bool was it successfull
+	 * @example $chmod 0777, 0755, 0700
+	 */
+	public static function mkdir($path, $chmod = 0644) {
+		if (is_dir($path)) {
+			return true;
+		}
+	
+		$paths = explode(DIRECTORY_SEPARATOR, $path);
+		if (sizeof($paths)) {
+			array_shift($paths);
+			$path = DIRECTORY_SEPARATOR;
+				
+			foreach($paths as $key => $dir) {
+				$path .= $dir . DIRECTORY_SEPARATOR;
+				if (!is_dir($path)) {
+					if (!@mkdir($path, $chmod)) {
+						return false;
+					}
+				}
+			}
+				
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Remove directory and content inside recursively
+	 * @param string $directory
+	 * @return boolean
+	 */
+	public static function rmdirRecursive($directory) {
+		foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dirPath, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) as $path) {
+			$path->isFile() ? unlink($path->getPathname()) : rmdir($path->getPathname());
+		}
+		rmdir($dirPath);
+		return true;
+	}
 }

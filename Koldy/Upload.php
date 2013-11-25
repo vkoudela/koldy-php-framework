@@ -1,9 +1,12 @@
-<?php
-
-namespace Koldy;
+<?php namespace Koldy;
 
 use Koldy\Convert;
 
+/**
+ * Get some informations about upload capabilities.
+ * @author vkoudela
+ *
+ */
 class Upload {
 
 	/**
