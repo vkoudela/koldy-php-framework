@@ -17,6 +17,9 @@ class Db {
 
 	private static $defaultKey = null;
 	
+	/**
+	 * Initialize the config for database(s)
+	 */
 	public static function init() {
 		if (static::$config === null) {
 			static::$config = Application::getConfig('database');
@@ -25,6 +28,11 @@ class Db {
 		}
 	}
 
+	/**
+	 * Get adapter. If parameter not set, default is returned
+	 * @param string $whatAdapter [optional]
+	 * @return \Koldy\Db\Adapter
+	 */
 	public static function getAdapter($whatAdapter = null) {
 		static::init();
 
@@ -55,27 +63,58 @@ class Db {
 		return static::$adapter[$adapter];
 	}
 	
+	/**
+	 * Add adapter manually to the list of registered adapters
+	 * @param string $name
+	 * @param array $config
+	 */
 	public static function addAdapter($name, array $config) {
 		static::$config[$name] = $config;
 	}
 	
+	/**
+	 * Set the array of default adapter keys. This is useful if you're using adapter
+	 * keys that sometimes are not registered. In that case, system will try to lookup
+	 * for next adapter key.
+	 * @param array $defaultKeys
+	 */
 	public static function setDefaultKeys(array $defaultKeys) {
 		static::$defaultKeys = $defaultKeys;
 	}
 	
+	/**
+	 * Get the default key
+	 * @return string
+	 */
 	public static function getDefaultKey() {
 		return static::$defaultKey;
 	}
 
+	/**
+	 * Execute the query on default adapter
+	 * @param string $query
+	 * @param array $bindings
+	 * @return mixed
+	 */
 	public static function query($query, array $bindings = null) {
 		$adapter = static::getAdapter();
 		return $adapter->query($query, $bindings);
 	}
 
+	/**
+	 * Get the last executed query
+	 * @param string $connection
+	 * @return string
+	 */
 	public static function getLastQuery($connection = null) {
 		return static::getAdapter($connection)->getLastQuery();
 	}
 
+	/**
+	 * Get raw expression string
+	 * @param string $expr
+	 * @return \Koldy\Db\Expr
+	 */
 	public static function expr($expr) {
 		return new Db\Expr($expr);
 	}

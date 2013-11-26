@@ -95,7 +95,7 @@ class Log {
 					$body .= "----------\n";
 					$body .= sprintf("server: %s (%s)\n", Server::getServerAddr(), Server::getServerHost());
 					$body .= sprintf("URI: %s=%s\n", (isset($_SERVER['REQUEST_METHOD'])) ? $_SERVER['REQUEST_METHOD'] : 'CLI', Application::getUri());
-					$body .= sprintf("User IP: %s (%s)%s", Request::getUserIp(), Request::getRemoteHost(), (Request::hasProxy() ? sprintf(" via %s for %s\n", Request::getProxySignature(), Request::getProxyForwardedFor()) : "\n"));
+					$body .= sprintf("User IP: %s (%s)%s", Request::ip(), Request::host(), (Request::hasProxy() ? sprintf(" via %s for %s\n", Request::proxySignature(), Request::httpXForwardedFor()) : "\n"));
 					$body .= sprintf("UAS: %s\n", (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'no user agent set'));
 					$body .= sprintf("Server load: %s\n", Server::getServerLoad());
 
