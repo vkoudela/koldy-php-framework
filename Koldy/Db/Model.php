@@ -263,10 +263,10 @@ abstract class Model {
 					}
 				}
 				unset($data2);
-				
-				foreach (static::$neverUpdate as $field) {
-					unset($data[$field]);
-				}
+			}
+			
+			foreach (static::$neverUpdate as $field) {
+				unset($data[$field]);
 			}
 			
 			if (sizeof($data) > 0) {
