@@ -244,9 +244,21 @@ abstract class Model {
 		return static::getAdapter()->query($sql, $bindings);
 	}
 	
-	public function save() {
+	/**
+	 * @return integer how many rows is affected
+	 */
+	public function save(array $data = null) {
 		$pk = static::$primaryKey;
-		$data = $this->data;
+		
+		$dataToSave = $this->data;
+		foreach ($dataToSave as $key => $value) {
+			if (isset($data[$key])) {
+				$dataToSave[$key] = $data[$key];
+			}
+		}
+		
+		$data = $dataToSave;
+		
 		if (!isset($data[$pk]) || $data[$pk] === null) { 
 			// primary doesn't exists, we can insert into
 			return static::create($data);

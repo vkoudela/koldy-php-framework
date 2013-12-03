@@ -336,6 +336,11 @@ class QueryBuilder {
 	 * @return string
 	 */
 	protected function getQuery() {
+		if (sizeof($this->from) == 0) {
+			\Log::error("Missing 'from' in sql query, class: " . get_class($this));
+			\Application::throwError(500, 'Error building SQL query, missing \'from\'');
+		}
+		
 		$this->bindings = array();
 		$query = 'SELECT ';
 
