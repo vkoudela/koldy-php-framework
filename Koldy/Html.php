@@ -3,7 +3,7 @@
 class Html {
 
 	/**
-	 * Convert (') into &apos;
+	 * Convert (') into (& apos ;)
 	 *
 	 * @param string $string
 	 * @return string
