@@ -6,12 +6,16 @@ require_once realpath(dirname(__FILE__) . '/../../../PHPMailer/class.phpmailer.p
 
 class PHPMailer extends AbstractDriver {
 
+	/**
+	 * @var \PHPMailer
+	 */
 	private $mailer = null;
 
 	public function __construct($config) {
 		parent::__construct($config);
 
 		$this->mailer = new \PHPMailer();
+		$this->mailer->CharSet = 'UTF-8';
 		$this->mailer->Host = $config['host'];
 		$this->mailer->Port = $config['port'];
 
@@ -30,16 +34,28 @@ class PHPMailer extends AbstractDriver {
 		}
 	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Mail\Driver\AbstractDriver::from()
+	 */
 	public function from($email, $name = null) {
 		$this->mailer->SetFrom($email, $name);
 		return $this;
 	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Mail\Driver\AbstractDriver::to()
+	 */
 	public function to($email, $name = null) {
 		$this->mailer->AddAddress($email, $name === null ? '' : $name);
 		return $this;
 	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Mail\Driver\AbstractDriver::subject()
+	 */
 	public function subject($subject) {
 		$this->mailer->Subject = $subject;
 		return $this;
@@ -64,6 +80,10 @@ class PHPMailer extends AbstractDriver {
 		return $this;
 	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Mail\Driver\AbstractDriver::send()
+	 */
 	public function send() {
 		try {
 			return $this->mailer->Send();
