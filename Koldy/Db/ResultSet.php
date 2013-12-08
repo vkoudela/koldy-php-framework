@@ -21,23 +21,18 @@ class ResultSet extends QueryBuilder {
 			return $this->countQuery;
 		}
 		
-		$fields = $this->fields;
-		$limit = $this->limit;
+		$query = clone $this;
+		$query->resetFields();
+		$query->resetLimit();
+		$query->resetOrderBy();
+		$query->field('COUNT(*)', 'total');
 		
-		$this->resetFields();
-		$this->resetLimit();
-		$this->resetOrderBy();
-		
-		$this->field('COUNT(*)', 'total');
-		$query = $this->getQuery();
-		
-		$this->fields = $fields;
-		$this->limit = $limit;
 		return $query;
 	}
 
 	public function count() {
-		$result = $this->adapter->query($this->getCountQuery(), $this->bindings);
+		$result = $this->getCountQuery()->fetchObj();
+		
 		if (sizeof($result) == 1) {
 			return $result[0]->total;
 		}

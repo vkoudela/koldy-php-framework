@@ -445,6 +445,15 @@ class QueryBuilder {
 	}
 	
 	/**
+	 * Get bindings
+	 * @return array
+	 */
+	public function getBindings() {
+		$theQuery = $this->getQuery();
+		return $this->bindings;
+	}
+	
+	/**
 	 * Return some debug informations about the query you built
 	 * @return string
 	 */
