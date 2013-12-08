@@ -1,5 +1,10 @@
 <?php namespace Koldy;
-
+/**
+ * Class for handling page pagination.
+ * 
+ * @author vkoudela
+ *
+ */
 class Pagination {
 
 	protected $numberOfPageLinks = 5;
@@ -51,7 +56,7 @@ class Pagination {
 	/**
 	 * Set how many link will be displayed as number
 	 * @param int $numberOfLinksPerPage
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setLinksPerPage($numberOfLinksPerPage) {
 		$this->numberOfPageLinks = $numberOfLinksPerPage;
@@ -61,7 +66,7 @@ class Pagination {
 	/**
 	 * Set the URL pattern
 	 * @param string $pattern
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 * @example param #/page/%s
 	 */
 	public function setUrl($pattern) {
@@ -72,7 +77,7 @@ class Pagination {
 	/**
 	 * Set how many records will be displayed per page
 	 * @param int $numberOfRecordsPerPage
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setItemsPerPage($numberOfRecordsPerPage) {
 		$this->itemsPerPage = $numberOfRecordsPerPage;
@@ -82,7 +87,7 @@ class Pagination {
 	/**
 	 * Set the visible text for first link
 	 * @param string $first
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setTextFirst($first) {
 		$this->firstText = $first;
@@ -92,7 +97,7 @@ class Pagination {
 	/**
 	 * Set the visible text for previous link
 	 * @param string $prev
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setTextPrevious($prev) {
 		$this->previousText = $prev;
@@ -102,7 +107,7 @@ class Pagination {
 	/**
 	 * Set the visible text for next link
 	 * @param string $next
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setTextNext($next) {
 		$this->nextText = $next;
@@ -112,7 +117,7 @@ class Pagination {
 	/**
 	 * Set the visible text for last link
 	 * @param string $last
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setTextLast($last) {
 		$this->lastText = $last;
@@ -122,7 +127,7 @@ class Pagination {
 	/**
 	 * Set the css class that will be added on the first place to all the <a> links
 	 * @param string $defaultCssClass
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssDefault($defaultCssClass) {
 		$this->linkCss = $defaultCssClass;
@@ -132,7 +137,7 @@ class Pagination {
 	/**
 	 * Set the CSS attribute for first link
 	 * @param string $css
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssFirst($css) {
 		$this->firstCss = $css;
@@ -142,7 +147,7 @@ class Pagination {
 	/**
 	 * Set the CSS attribute for prev link
 	 * @param string $css
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssPrev($css) {
 		$this->prevCss = $css;
@@ -152,7 +157,7 @@ class Pagination {
 	/**
 	 * Set the CSS attribute for next link
 	 * @param string $css
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssNext($css) {
 		$this->nextCss = $css;
@@ -162,7 +167,7 @@ class Pagination {
 	/**
 	 * Set the CSS attribute for last link
 	 * @param string $css
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssLast($css) {
 		$this->lastCss = $css;
@@ -172,7 +177,7 @@ class Pagination {
 	/**
 	 * Set the CSS attribute for each link
 	 * @param string $css
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssPage($css) {
 		$this->pageCss = $css;
@@ -182,10 +187,21 @@ class Pagination {
 	/**
 	 * Set the CSS class for selected page
 	 * @param string $selected
-	 * @return Pagination
+	 * @return \Koldy\Pagination
 	 */
 	public function setCssSelected($selected) {
 		$this->selectedCss = $selected;
+		return $this;
+	}
+	
+	/**
+	 * Set the URL format. Use %s as placeholder for page number
+	 * @param string $href
+	 * @return \Koldy\Pagination
+	 * @example pass #/page/%s
+	 */
+	public function setLink($href) {
+		$this->link = $href;
 		return $this;
 	}
 
