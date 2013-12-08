@@ -246,10 +246,10 @@ class Html {
 	 * @param string $target optional, default _blank
 	 * @return string
 	 */
-	public static function a($text, $target = '_blank') {
+	public static function a($text, $target = null) {
 		return preg_replace(
 			'@((https?://)?([-\w]+\.[-\w\.]+)+\w(:\d+)?(/([-\w/_\.]*(\?\S+)?)?)*)@',
-			'<a href="$1">$1</a>',
+			"<a href=\"\$1\"" . ($target != null ? " target=\"{$target}\"" : '') . ">$1</a>",
 			$text
 		);
 	}
