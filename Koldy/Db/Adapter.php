@@ -45,15 +45,23 @@ class Adapter {
 		if ($this->pdo === null) {
 			switch($this->config['type']) {
 				case 'mysql':
-					$this->pdo = new PDO(
-						"mysql:host={$this->config['host']};dbname={$this->config['database']};charset={$this->config['charset']}",
-						$this->config['username'],
-						$this->config['password'],
-						array(
-							PDO::ATTR_EMULATE_PREPARES => false,
-							PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-						)
-					);
+					try {
+						$this->pdo = new PDO(
+							"mysql:host={$this->config['host']};dbname={$this->config['database']};charset={$this->config['charset']}",
+							$this->config['username'],
+							$this->config['password'],
+							array(
+								PDO::ATTR_EMULATE_PREPARES => false,
+								PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+							)
+						);
+					} catch (\PDOException $e) {
+						if (\Application::inDevelopment()) {
+							throw new \Exception($e->getMessage());
+						} else {
+							\Application::throwError(500, 'Error connecting to database');
+						}
+					}
 					break;
 
 				default:

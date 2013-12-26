@@ -13,7 +13,7 @@ class Application {
 	/**
 	 * @var const the application environment mode
 	 */
-	private static $mode = 2; // self::PRODUCTION by default
+	private static $mode = 2; // static::PRODUCTION by default
 
 	/**
 	 * @var string path to application with ending slash
@@ -60,12 +60,12 @@ class Application {
 	 * @param array $config
 	 */
 	public static function useConfig(array $config) {
-		self::$configs['application'] = $config;
+		static::$configs['application'] = $config;
 
-		self::$mode = $config['env'];
-		self::$applicationPath = $config['application_path'];
-		self::$publicPath = $config['public_path'];
-		self::$storagePath = $config['storage_path'];
+		static::$mode = $config['env'];
+		static::$applicationPath = $config['application_path'];
+		static::$publicPath = $config['public_path'];
+		static::$storagePath = $config['storage_path'];
 		
 		defined('LOG') || define('LOG', $config['log']['enabled']);
 		// todo: nastaviti
@@ -77,7 +77,7 @@ class Application {
 	 * @example /Users/vkoudela/Sites/your.site.com/application/
 	 */
 	public static function getApplicationPath() {
-		return self::$applicationPath;
+		return static::$applicationPath;
 	}
 
 	/**
@@ -86,7 +86,7 @@ class Application {
 	 * @example /Users/vkoudela/Sites/your.site.com/storage/
 	 */
 	public static function getStoragePath() {
-		return self::$storagePath;
+		return static::$storagePath;
 	}
 	
 	/**
@@ -95,7 +95,7 @@ class Application {
 	 * @example /Users/vkoudela/Sites/your.site.com/public/
 	 */
 	public static function getPublicPath() {
-		return self::$publicPath;
+		return static::$publicPath;
 	}
 
 	/**
@@ -110,19 +110,19 @@ class Application {
 			$file = 'application';
 		}
 
-		if (!isset(self::$configs[$file])) {
-			$path = self::$publicPath . "config.{$file}.php";
+		if (!isset(static::$configs[$file])) {
+			$path = static::$publicPath . "config.{$file}.php";
 			if (!file_exists($path)) {
-				self::throwError(503, 'Config file not found: ' . $file);
+				static::throwError(503, 'Config file not found: ' . $file);
 			} else {
-				self::$configs[$file] = require $path;
+				static::$configs[$file] = require $path;
 			}
 		}
 
 		if ($segment !== null) {
-			return self::$configs[$file][$segment]; // possible null pointer
+			return static::$configs[$file][$segment]; // possible null pointer
 		} else {
-			return self::$configs[$file];
+			return static::$configs[$file];
 		}
 	}
 
@@ -131,14 +131,14 @@ class Application {
 	 * @return string
 	 */
 	public static function getUri() {
-		return self::$uri;
+		return static::$uri;
 	}
 
 	/**
 	 * Throw some error HTTP response
 	 */
 	public static function throwError($errorCode, $message = null) {
-		$path = self::$publicPath . $errorCode . '.php';
+		$path = static::$publicPath . $errorCode . '.php';
 		if (file_exists($path)) {
 			if (!headers_sent()) {
 				switch($errorCode) {
@@ -161,7 +161,7 @@ class Application {
 	 * @return \Koldy\Application\Route\AbstractRoute
 	 */
 	public static function route() {
-		return self::$routing;
+		return static::$routing;
 	}
 
 	/**
@@ -169,7 +169,7 @@ class Application {
 	 * @return  boolean
 	 */
 	public static function inDevelopment() {
-		return self::$mode === self::DEVELOPMENT;
+		return static::$mode === static::DEVELOPMENT;
 	}
 
 	/**
@@ -177,14 +177,14 @@ class Application {
 	 * @return  boolean
 	 */
 	public static function inProduction() {
-		return self::$mode === self::PRODUCTION;
+		return static::$mode === static::PRODUCTION;
 	}
 
 	public static function registerModule($module) {
-		self::addIncludePath(array(
-			self::getApplicationPath() . 'modules' . DS . $module . DS . 'controllers' . DS,
-			self::getApplicationPath() . 'modules' . DS . $module . DS . 'models' . DS,
-			self::getApplicationPath() . 'modules' . DS . $module . DS . 'library' . DS
+		static::addIncludePath(array(
+			static::getApplicationPath() . 'modules' . DS . $module . DS . 'controllers' . DS,
+			static::getApplicationPath() . 'modules' . DS . $module . DS . 'models' . DS,
+			static::getApplicationPath() . 'modules' . DS . $module . DS . 'library' . DS
 		));
 	}
 
@@ -193,7 +193,7 @@ class Application {
 	 * @param string $uri
 	 */
 	protected static function init($uri) {
-		self::$uri = $uri;
+		static::$uri = $uri;
 
 		// first, check the URI for duplicate slashes - they are not allowed
 		// if you must pass duplicate slashes in URL, then urlencode them
@@ -208,7 +208,7 @@ class Application {
 		}
 
 		// set the error reporting
-		if (self::inDevelopment()) {
+		if (static::inDevelopment()) {
 			error_reporting(E_ALL);
 		}
 
@@ -227,7 +227,7 @@ class Application {
 		});
 
 		// detect some common staff for paths
-		if (self::$applicationPath === null || self::$publicPath === null) {
+		if (static::$applicationPath === null || static::$publicPath === null) {
 			if (isset($_SERVER['SCRIPT_FILENAME'])) {
 				$rootPath = dirname($_SERVER['SCRIPT_FILENAME']);
 				$rootPath = substr($rootPath, 0, strrpos($rootPath, DS)) . DS;
@@ -236,19 +236,19 @@ class Application {
 			}
 		}
 
-		if (self::$applicationPath === null) {
-			self::$applicationPath = $rootPath . 'application' . DS;
+		if (static::$applicationPath === null) {
+			static::$applicationPath = $rootPath . 'application' . DS;
 		}
 
-		if (self::$storagePath === null) {
-			self::$storagePath = self::$applicationPath . 'storage' . DS;
+		if (static::$storagePath === null) {
+			static::$storagePath = static::$applicationPath . 'storage' . DS;
 		}
 
-		if (self::$publicPath === null) {
-			self::$publicPath = $rootPath . 'public' . DS;
+		if (static::$publicPath === null) {
+			static::$publicPath = $rootPath . 'public' . DS;
 		}
 
-		self::addIncludePath(array(
+		static::addIncludePath(array(
 			substr(dirname(__FILE__), 0, -6) // set the include path to the framework folder (to Koldy and any other framework(s) located in framework folder with same namespacing style)
 		));
 	}
@@ -258,7 +258,7 @@ class Application {
 	 * @param string $uri OPTIONAL Passing this value can be useful for cron jobs / CLI environment.
 	 */
 	public static function run($uri = null) {
-		$config = self::getConfig();
+		$config = static::getConfig();
 		$microtimeStart = microtime();
 
 		if ($uri === null && isset($_SERVER) && isset($_SERVER['REQUEST_URI'])) {
@@ -272,16 +272,16 @@ class Application {
 		}
 
 		try {
-			self::init($uri);
+			static::init($uri);
 
 			$routingClassName = $config['routing_class'];
-			self::$routing = new $routingClassName($uri);
+			static::$routing = new $routingClassName($uri);
 
-			$className = self::$routing->getControllerClass();
+			$className = static::$routing->getControllerClass();
 
 			if (class_exists($className, true)) {
 				$controller = new $className();
-				$method = self::$routing->getActionMethod();
+				$method = static::$routing->getActionMethod();
 
 				if (method_exists($controller, $method) || method_exists($controller, '__call')) {
 					// get the return value of your method (json, xml, view object, string or nothing)
@@ -295,16 +295,16 @@ class Application {
 						case 'string': echo $response; break;
 					}
 				} else {
-					if (self::inDevelopment()) {
-						Log::debug('Can not find method=' . $method . ' in class=' . self::$routing->getControllerClass() . ' on path=' . self::$routing->getControllerPath());
+					if (static::inDevelopment()) {
+						Log::debug('Can not find method=' . $method . ' in class=' . static::$routing->getControllerClass() . ' on path=' . static::$routing->getControllerPath());
 					}
-					self::throwError(404, "Method not found {$className}->{$method}");
+					static::throwError(404, "Method not found {$className}->{$method}");
 				}
 			} else { // controller doesn't exists
-				self::throwError(404, "Can not find {$className}");
+				static::throwError(404, "Can not find {$className}");
 			}
 
-			if (LOG) {
+			if (LOG && static::inDevelopment()) {
 				Log::debug(round((microtime() - $microtimeStart) * 1000, 3) . 'ms, ' . sizeof(get_included_files()) . ' files');
 // 				Log::debug(print_r(explode(':', get_include_path()), true));
 			}
