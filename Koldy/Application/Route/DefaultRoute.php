@@ -412,10 +412,8 @@ class DefaultRoute extends AbstractRoute {
 
 		} else {
 			// the method we need doesn't exists, so, there is nothing we can do about it any more
-			if (Application::inDevelopment()) {
-				Log::debug("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath}");
-			}
-			static::error(404, "Method not found {$this->getControllerClass()}->{$method}");
+			Log::notice("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath}");
+			static::error(404);
 		}
 	}
 
