@@ -107,7 +107,7 @@ class Application {
 	public static function useConfig($pathToApplicationConfig) {
 		$pathToApplicationConfig = stream_resolve_include_path($pathToApplicationConfig);
 		if ($pathToApplicationConfig === false || !is_file($pathToApplicationConfig)) {
-			echo 'Can not resolve the full path to the main application config file!';
+			echo 'Can not resolve the full path to the main application config file or file doesn\'t exists!';
 			exit(1);
 		}
 

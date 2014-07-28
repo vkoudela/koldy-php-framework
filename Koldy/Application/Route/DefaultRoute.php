@@ -141,10 +141,7 @@ class DefaultRoute extends AbstractRoute {
 
 				if (!is_file($this->controllerPath)) {
 					// Even IndexController is missing. Can not resolve that.
-					if (Application::inDevelopment()) {
-						Log::debug("Can not find {$this->controllerClass} nor IndexController in {$moduleDir}{$slash}controllers");
-					}
-
+					Log::notice("Can not find {$this->controllerClass} nor IndexController in {$moduleDir}{$slash}controllers");
 					Application::error(404, 'Page not found');
 				}
 
@@ -197,10 +194,7 @@ class DefaultRoute extends AbstractRoute {
 
 				if (!is_file($this->controllerPath)) {
 					// Even IndexController is missing. Can not resolve that.
-					if (Application::inDevelopment()) {
-						Log::debug("Can not find {$this->controllerClass} nor IndexController in " . Application::getApplicationPath('controllers'));
-					}
-
+					Log::notice("Can not find {$this->controllerClass} nor IndexController in " . Application::getApplicationPath('controllers'));
 					Application::error(404, 'Page not found');
 				}
 
@@ -412,7 +406,7 @@ class DefaultRoute extends AbstractRoute {
 
 		} else {
 			// the method we need doesn't exists, so, there is nothing we can do about it any more
-			Log::notice("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath}");
+			Log::notice("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath} for URI=" . Application::getUri());
 			static::error(404);
 		}
 	}
