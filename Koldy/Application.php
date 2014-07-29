@@ -107,7 +107,7 @@ class Application {
 	public static function useConfig($pathToApplicationConfig) {
 		$pathToApplicationConfig = stream_resolve_include_path($pathToApplicationConfig);
 		if ($pathToApplicationConfig === false || !is_file($pathToApplicationConfig)) {
-			echo 'Can not resolve the full path to the main application config file!';
+			echo 'Can not resolve the full path to the main application config file or file doesn\'t exists!';
 			exit(1);
 		}
 
@@ -128,7 +128,7 @@ class Application {
 			}
 		} else {
 			if ($config['site_url'] === null) {
-				$config['site_url'] = $_SERVER['HTTP_HOST'];
+				$config['site_url'] = "//{$_SERVER['HTTP_HOST']}";
 			} else if (is_array($config['site_url'])) {
 				$sizeofSiteUrls = sizeof($config['site_url']);
 				$found = false;
@@ -168,7 +168,7 @@ class Application {
 			$config['storage_path'] = dirname($config['application_path']) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
 		}
 
-		if ($config['key'] == '_____ENTERSomeRandomKeyHere_____' || !is_string($config['key'])) {
+		if (!is_string($config['key'])) {
 			throw new \Exception('Invalid unique key in config/application.php');
 		}
 
