@@ -1,0 +1,7 @@
+._*
+.Apple*
+.DS_Store
+*.esproj 
+.buildpath
+.project  
+.settings
