@@ -128,7 +128,7 @@ class Application {
 			}
 		} else {
 			if ($config['site_url'] === null) {
-				$config['site_url'] = $_SERVER['HTTP_HOST'];
+				$config['site_url'] = "//{$_SERVER['HTTP_HOST']}";
 			} else if (is_array($config['site_url'])) {
 				$sizeofSiteUrls = sizeof($config['site_url']);
 				$found = false;
