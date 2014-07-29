@@ -168,7 +168,7 @@ class Application {
 			$config['storage_path'] = dirname($config['application_path']) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
 		}
 
-		if ($config['key'] == '_____ENTERSomeRandomKeyHere_____' || !is_string($config['key'])) {
+		if (!is_string($config['key'])) {
 			throw new \Exception('Invalid unique key in config/application.php');
 		}
 
