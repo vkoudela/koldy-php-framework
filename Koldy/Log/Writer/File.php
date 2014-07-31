@@ -3,6 +3,7 @@
 use Koldy\Application;
 use Koldy\Exception;
 use Koldy\Request;
+use Koldy\Directory;
 
 /**
  * This log writer will print all log messages into file on file system. Its
@@ -61,12 +62,16 @@ class File extends AbstractLogWriter {
 			throw new Exception('You must define \'log\' levels in file log driver config options at least with empty array');
 		}
 
-		if (!isset($config['email_on']) || !is_array($config['email_on'])) {
-			throw new Exception('You must define \'email_on\' levels in file log driver config options at least with empty array');
+		if (isset($config['email_on']) && !is_array($config['email_on'])) {
+			throw new Exception('If \'email_on\' is defined, then it has to be an array');
+		}
+
+		if (!isset($config['email_on'])) {
+			$config['email_on'] = array();
 		}
 
 		if (!array_key_exists('email', $config)) {
-			throw new Exception('You must define \'email\' in file log driver config options at least with null');
+			$config['email'] = null;
 		}
 
 		if (!isset($config['dump'])) {
@@ -119,7 +124,7 @@ class File extends AbstractLogWriter {
 	 * @param string $message
 	 * @throws \Koldy\Exception
 	 */
-	public function logMessage($level, $message) {
+	protected function logMessage($level, $message) {
 		// If script is running for very long time (e.g. CRON), then date might change if time passes midnight.
 		// In that case, log will continue to write messages to new file.
 			
@@ -132,20 +137,26 @@ class File extends AbstractLogWriter {
 			}
 
 			if ($this->config['path'] === null) {
-				$path = Application::getStoragePath() . 'log' . DS;
+				$path = Application::getStoragePath('log' . DS . $fpFile);
 			} else {
-				$path = $this->config['path'];
-				if (substr($path, -1, 1) != DS) {
-					$path .= DS;
-				}
+				$path = str_replace(DS.DS, DS, $this->config['path'] . DS . $fpFile);
 			}
 
-			$path .= $fpFile;
 			$this->fpFile = $fpFile;
 
 			if (!($this->fp = @fopen($path, 'a'))) {
+				// file failed to open, maybe directory doesn't exists?
 				$dir = dirname($path);
-				throw new Exception(!is_dir($dir) ? 'Can not write to log file; directory doesn\'t exists' : 'Can not write to log file');
+				if (!is_dir($dir)) {
+					if (!Directory::mkdir($dir, 0755)) {
+						throw new Exception('Can not create directory on location=' . $dir);
+					}
+				}
+
+				if (!($this->fp = @fopen($path, 'a'))) {
+					// now the directory should exists, so try to open file again
+					throw new Exception('Can not write to log file on path=' . $path);
+				}
 			}
 		}
 	
@@ -197,4 +208,39 @@ class File extends AbstractLogWriter {
 		}
 	}
 
+
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Log\Writer\AbstractLogWriter::processExtendedReports()
+	 */
+	protected function processExtendedReports() {
+		if (!isset($this->config['dump'])) {
+			return;
+		}
+	
+		$dump = $this->config['dump'];
+	
+		// 'speed', 'included_files', 'include_path', 'whitespace'
+	
+		if (in_array('speed', $dump)) {
+			$method = isset($_SERVER['REQUEST_METHOD'])
+			? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
+			: ('CLI=' . Application::getCliName());
+	
+			$executedIn = Application::getRequestExecutionTime();
+			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . sizeof(get_included_files()) . ' files');
+		}
+	
+		if (in_array('included_files', $dump)) {
+			$this->logMessage('notice', print_r(get_included_files(), true));
+		}
+	
+		if (in_array('include_path', $dump)) {
+			$this->logMessage('notice', print_r(explode(':', get_include_path()), true));
+		}
+	
+		if (in_array('whitespace', $dump)) {
+			$this->logMessage('notice', "----------\n\n\n");
+		}
+	}
 }

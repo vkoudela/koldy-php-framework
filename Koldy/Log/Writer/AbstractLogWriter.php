@@ -54,7 +54,84 @@ abstract class AbstractLogWriter {
 	 * @param string $level
 	 * @param mixed $message
 	 */
-	abstract public function logMessage($level, $message);
+	abstract protected function logMessage($level, $message);
+
+
+	/**
+	 * Write DEBUG message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function debug($message) {
+		$this->logMessage('debug', $message);
+	}
+
+
+	/**
+	 * Write NOTICE message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function notice($message) {
+		$this->logMessage('notice', $message);
+	}
+
+
+	/**
+	 * Write SQL message to log
+	 *
+	 * @param string $query
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function sql($query) {
+		$this->logMessage('sql', $query);
+	}
+
+
+	/**
+	 * Write INFO message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function info($message) {
+		$this->logMessage('info', $message);
+	}
+
+
+	/**
+	 * Write WARNING message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function warning($message) {
+		$this->logMessage('warning', $message);
+	}
+
+
+	/**
+	 * Write ERROR message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function error($message) {
+		$this->logMessage('error', $message);
+	}
+
+
+	/**
+	 * Write EXCEPTION message to log
+	 *
+	 * @param \Exception $e
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function exception(\Exception $e) {
+		$this->logMessage('exception', "Exception in {$e->getFile()}:{$e->getLine()}\n\n{$e->getMessage()}\n\n{$e->getTraceAsString()}");
+	}
 
 
 	/**
@@ -95,28 +172,7 @@ abstract class AbstractLogWriter {
 	/**
 	 * Process extended reports
 	 */
-	protected function processExtendedReports() {
-		$dump = $this->config['dump'];
-
-		//'speed', 'included_files', 'include_path'
-
-		if (in_array('speed', $dump)) {
-			$method = isset($_SERVER['REQUEST_METHOD'])
-				? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
-				: ('CLI=' . Application::getCliName());
-
-			$executedIn = Application::getRequestExecutionTime();
-			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . sizeof(get_included_files()) . ' files');
-		}
-
-		if (in_array('included_files', $dump)) {
-			$this->logMessage('notice', print_r(get_included_files(), true));
-		}
-
-		if (in_array('include_path', $dump)) {
-			$this->logMessage('notice', print_r(explode(':', get_include_path()), true));
-		}
-	}
+	protected function processExtendedReports() {}
 
 
 	/**
