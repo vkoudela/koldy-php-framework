@@ -81,7 +81,13 @@ abstract class AbstractCacheDriver {
 	 * @return boolean True if set, false if it exists and null if cache is not enabled
 	 * @link http://koldy.net/docs/cache#add
 	 */
-	abstract public function add($key, $value, $seconds = null);
+	public function add($key, $value, $seconds = null) {
+		if ($this->has($key)) {
+			return false;
+		}
+		
+		return $this->set($key, $value, $seconds);
+	}
 
 
 	/**

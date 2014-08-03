@@ -187,7 +187,11 @@ class Log {
 	 */
 	public static function exception(\Exception $e) {
 		static::init();
-		static::logMessage('exception', "Exception in {$e->getFile()}:{$e->getLine()}\n\n{$e->getMessage()}\n\n{$e->getTraceAsString()}");
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->exception($e);
+		}
 	}
 
 
