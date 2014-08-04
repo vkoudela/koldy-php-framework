@@ -52,7 +52,11 @@ class Cache {
 	protected static function getDriver($driver = null) {
 		static::init();
 		if ($driver === null) {
-			throw new Exception('You\'re trying to use cache without any driver defined in cache config!');
+			if (static::$defaultDriver === null) {
+				throw new Exception('You\'re trying to use cache without any driver defined in cache config!');
+			} else {
+				$driver = static::$defaultDriver;
+			}
 		}
 
 		if (isset(static::$drivers[$driver])) {
