@@ -58,15 +58,9 @@ class Files extends AbstractCacheDriver {
 			throw new Exception("Cache directory '{$this->path}' doesn't exists and can't be created");
 		}
 
-		if (isset($config['default_duration'])) {
-			$duration = (int) $config['default_duration'];
-			if ($duration > 0) {
-				$this->defaultDuration = $duration;
-			}
-		}
-
 		parent::__construct($config);
 	}
+
 
 	/**
 	 * Get path to the cache file by $key
@@ -77,6 +71,7 @@ class Files extends AbstractCacheDriver {
 	protected function getPath($key) {
 		return $this->path . $key . '_' . md5($key . Application::getConfig('application', 'key'));
 	}
+
 
 	/**
 	 * Load the data from the file and store it in this request's memory
@@ -117,11 +112,10 @@ class Files extends AbstractCacheDriver {
 		return false;
 	}
 
+
 	/**
-	 * Get the value from the cache by key
-	 * 
-	 * @param string $key
-	 * @return mixed value or null if key doesn't exists or cache is disabled
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::get()
 	 */
 	public function get($key) {
 		$this->checkKey($key);
@@ -133,13 +127,10 @@ class Files extends AbstractCacheDriver {
 		return null;
 	}
 
+
 	/**
-	 * Set the cache value by the key
-	 * 
-	 * @param string $key
-	 * @param string $value
-	 * @param integer $seconds [optional]
-	 * @return boolean True if set, null if cache is disabled
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::set()
 	 */
 	public function set($key, $value, $seconds = null) {
 		$this->checkKey($key);
@@ -166,13 +157,10 @@ class Files extends AbstractCacheDriver {
 		return true;
 	}
 
+
 	/**
-	 * The will add the value to the cache key only if it doesn't exists yet
-	 * 
-	 * @param string $key
-	 * @param mixed $value
-	 * @param integer $seconds [optional]
-	 * @return boolean True if set, false if it exists and null if cache is not enabled
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::add()
 	 */
 	public function add($key, $value, $seconds = null) {
 		$this->checkKey($key);
@@ -184,12 +172,10 @@ class Files extends AbstractCacheDriver {
 		return $this->set($key, $value, $seconds);
 	}
 
+
 	/**
-	 * This will detect does the cache key exists on file system. If does, it
-	 * will automatically detect is still valid or it has expired.
-	 * 
-	 * @param string $key
-	 * @return boolean
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
 	 */
 	public function has($key) {
 		$this->checkKey($key);
@@ -203,13 +189,19 @@ class Files extends AbstractCacheDriver {
 			$object = $this->data[$key];
 		}
 
-		return ($object->created + $object->seconds > time());
+		$ok = $object->created + $object->seconds > time();
+		if (!$ok) {
+			$this->data[$key]->action = 'delete';
+			$this->initShutdown();
+		}
+
+		return $ok;
 	}
 
+
 	/**
-	 * Deletes the cache file.
-	 * 
-	 * @return boolean True if file is deleted, False if not, null if there is nothing to delete
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
 	 */
 	public function delete($key) {
 		$this->checkKey($key);
@@ -228,6 +220,7 @@ class Files extends AbstractCacheDriver {
 		}
 	}
 
+
 	/**
 	 * (non-PHPdoc)
 	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteAll()
@@ -235,6 +228,7 @@ class Files extends AbstractCacheDriver {
 	public function deleteAll() {
 		Directory::emptyDirectory($this->path);
 	}
+
 
 	/**
 	 * (non-PHPdoc)
@@ -247,6 +241,11 @@ class Files extends AbstractCacheDriver {
 
 		clearstatcache();
 
+		/**
+		 * This is probably not good since lifetime is written in file
+		 * But going into every file and read might be even worse idea
+		 * XXX: Think about this
+		 */
 		foreach (Directory::read($this->path) as $fullPath => $fileName) {
 			$timeCreated = @filemtime($fullPath);
 			if ($timeCreated !== false) {
@@ -263,10 +262,11 @@ class Files extends AbstractCacheDriver {
 		}
 	}
 
+
 	/**
 	 * Initialize the shutdown function when request execution ends
 	 */
-	private function initShutdown() {
+	protected function initShutdown() {
 		if (!$this->shutdown) {
 			$this->shutdown = true;
 			$self = $this;
@@ -275,6 +275,7 @@ class Files extends AbstractCacheDriver {
 			});
 		}
 	}
+
 
 	/**
 	 * Execute this method on request's execution end. When you're working with
@@ -296,7 +297,7 @@ class Files extends AbstractCacheDriver {
 							$data = serialize($object->data);
 							break;
 					}
-					
+
 					@file_put_contents(
 						$object->path,
 						sprintf("%s;%d;%s\n%s",

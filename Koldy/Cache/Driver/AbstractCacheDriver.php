@@ -33,7 +33,18 @@ abstract class AbstractCacheDriver {
 	 * @param array $config
 	 */
 	public function __construct(array $config) {
+		if (isset($config['default_duration']) && (int) $config['default_duration'] > 0) {
+			$this->defaultDuration = (int) $config['default_duration'];
+		}
+
 		$this->config = $config;
+
+		if (isset($config['clean_old']) && $config['clean_old'] === true) {
+			$self = $this;
+			register_shutdown_function(function() use($self) {
+				$self->deleteOld();
+			});
+		}
 	}
 
 
@@ -45,8 +56,12 @@ abstract class AbstractCacheDriver {
 	 */
 	protected function checkKey($key) {
 		// the max length is 255-32-1 = 222
-		if (strlen($key) > 222) {
-			throw new \InvalidArgumentException('Wrong key name: ' . $key);
+		if (!is_string($key) || strlen($key) > 222) {
+			throw new \InvalidArgumentException(
+				!is_string($key)
+				? ('Passed cache key name must be string; ' . gettype($key) . ' given')
+				: 'Cache key name mustn\'t be longer then 222 characters'
+			);
 		}
 	}
 
@@ -75,7 +90,7 @@ abstract class AbstractCacheDriver {
 
 	/**
 	 * Set the value under key and remember it forever! Okay, "forever" has its
-	 * own duration and thats for 10 years. So, is 15 years enough for you?
+	 * own duration and thats for 15 years. So, is 15 years enough for you?
 	 * 
 	 * @param string $key
 	 * @param mixes $value

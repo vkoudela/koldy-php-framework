@@ -1,14 +1,15 @@
 <?php namespace Koldy\Cache\Driver;
 
 use Koldy\Db\Select;
-use Koldy\Db\Delete;
 use Koldy\Db\Insert;
-use Koldy\Exception;
 use Koldy\Db\Update;
+use Koldy\Db\Delete;
+use Koldy\Exception;
 
 /**
- * Db driver
- *
+ * This cache driver will store your cache data into database.
+ * 
+ * @link http://koldy.net/docs/cache/db
  */
 class Db extends AbstractCacheDriver {
 
@@ -34,12 +35,12 @@ class Db extends AbstractCacheDriver {
 
 
 	/**
-	 * Get the value from the cache by key
-	 * 
-	 * @param string $key
-	 * @return mixed value or null if key doesn't exists or cache is disabled
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::get()
 	 */
 	public function get($key) {
+		$this->checkKey($key);
+
 		$select = new Select($this->config['table']);
 		$select->setConnection($this->config['connection']);
 		$select->where('id', $key)
@@ -50,20 +51,18 @@ class Db extends AbstractCacheDriver {
 		if ($record === false) {
 			return null;
 		} else {
-			return $record['data'];
+			return unserialize($record['data']);
 		}
 	}
 
 
 	/**
-	 * Set the cache value by the key
-	 * 
-	 * @param string $key
-	 * @param string $value
-	 * @param integer $seconds
-	 * @return boolean True if set, null if cache is disabled
+	 * (non-PHPdoc)
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::set()
 	 */
 	public function set($key, $value, $seconds = null) {
+		$this->checkKey($key);
+
 		if ($seconds === null) {
 			$seconds = $this->defaultDuration;
 		}
@@ -71,16 +70,18 @@ class Db extends AbstractCacheDriver {
 		$update = new Update($this->config['table']);
 		$update->setConnection($this->config['connection']);
 		$ok = $update
+			->set('updated_at', date('Y-m-d H:i:s'))
 			->set('expires_at', time() + $seconds)
 			->set('data', serialize($value))
 			->where('id', $key)
 			->exec();
 
-		if ($ok === 0) {
+		if ($ok === false || ($ok === 0 && !$this->has($key))) {
 			$insert = new Insert($this->config['table']);
 			$insert->setConnection($this->config['connection']);
 			$insert->add(array(
 				'id' => $key,
+				'updated_at' => date('Y-m-d H:i:s'),
 				'expires_at' => time() + $seconds,
 				'data' => serialize($value)
 			));
@@ -90,19 +91,26 @@ class Db extends AbstractCacheDriver {
 		return true;
 	}
 
+
 	/**
 	 * (non-PHPdoc)
 	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
 	 */
 	public function has($key) {
+		$this->checkKey($key);
+
 		$select = new Select($this->config['table']);
 		$select->setConnection($this->config['connection']);
 		$select
-			->field('id')
-			->where('id', $key)
-			->where('expires_at', '>=', time());
+			->field('expires_at')
+			->where('id', $key);
 
-		return $select->fetchFirst(\PDO::FETCH_ASSOC) !== false;
+		$cacheRecord = $select->fetchFirst();
+		if ($cacheRecord === false) {
+			return false;
+		}
+
+		return ($cacheRecord['expires_at'] > time());
 	}
 
 	/**
@@ -110,6 +118,8 @@ class Db extends AbstractCacheDriver {
 	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
 	 */
 	public function delete($key) {
+		$this->checkKey($key);
+
 		$delete = new Delete($this->config['table']);
 		$delete->setConnection($this->config['connection']);
 		$delete->where('id', $key)
@@ -132,10 +142,14 @@ class Db extends AbstractCacheDriver {
 	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteOld()
 	 */
 	public function deleteOld($olderThenSeconds = null) {
+		if ($olderThenSeconds === null) {
+			$olderThenSeconds = $this->defaultDuration;
+		}
+
 		$delete = new Delete($this->config['table']);
 		$delete
 			->setConnection($this->config['connection'])
-			->where('expires_at', '<', time())
+			->where('expires_at', '<=', time())
 			->exec();
 	}
 
