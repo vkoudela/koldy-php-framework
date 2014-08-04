@@ -97,7 +97,7 @@ class Adapter {
 						$pdoConfig[$key] = $value;
 					}
 				}
-				
+
 				$this->pdo = new PDO(
 					"mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
 					$config['username'],
@@ -105,23 +105,6 @@ class Adapter {
 					$pdoConfig
 				);
 				
-				if (isset($config['connection_queries']) && is_array($config['connection_queries'])) {
-					foreach ($config['connection_queries'] as $query) {
-						try {
-							$stmt = $this->pdo->prepare($query);
-							$stmt->execute();
-							$stmt->closeCursor();
-							Log::sql("Connection query executed: {$query}");
-						} catch (PDOException $e) {
-							$this->lastException = $e;
-							$this->lastError = $e->getMessage();
-				
-							Log::error($query);
-							throw new Exception($e->getMessage());
-						}
-					}
-				}
-
 				break;
 
 				default:
