@@ -38,6 +38,20 @@ abstract class AbstractCacheDriver {
 
 
 	/**
+	 * Validate key name and throw exception if something is wrong
+	 * 
+	 * @param string $key
+	 * @throws \InvalidArgumentException
+	 */
+	protected function checkKey($key) {
+		// the max length is 255-32-1 = 222
+		if (strlen($key) > 222) {
+			throw new \InvalidArgumentException('Wrong key name: ' . $key);
+		}
+	}
+
+
+	/**
 	 * Get the value from cache by given key
 	 * 
 	 * @param string $key
@@ -68,6 +82,8 @@ abstract class AbstractCacheDriver {
 	 * @return boolean True if set, null if cache is disabled
 	 */
 	public function setForever($key, $value) {
+		$this->checkKey($key);
+
 		return $this->set($key, $value, time() + 3600 * 24 * 365 * 15);
 	}
 
@@ -82,6 +98,8 @@ abstract class AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#add
 	 */
 	public function add($key, $value, $seconds = null) {
+		$this->checkKey($key);
+
 		if ($this->has($key)) {
 			return false;
 		}
@@ -140,6 +158,8 @@ abstract class AbstractCacheDriver {
 	 * });
 	 */
 	public function getOrSet($key, $functionOnSet, $seconds = null) {
+		$this->checkKey($key);
+
 		if ($this->has($key)) {
 			return $this->get($key);
 		} else {
@@ -159,6 +179,8 @@ abstract class AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
 	public function increment($key, $howMuch = 1) {
+		$this->checkKey($key);
+
 		$data = $this->get($key);
 		if ($data !== null) {
 			$data += $howMuch;
@@ -179,6 +201,8 @@ abstract class AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
 	public function decrement($key, $howMuch = 1) {
+		$this->checkKey($key);
+
 		$data = $this->get($key);
 		if ($data !== null) {
 			$data -= $howMuch;

@@ -45,7 +45,7 @@ class Files extends AbstractCacheDriver {
 		// because if cache is not enabled, then lets not do anything else
 
 		if (!isset($config['path']) || $config['path'] === null) {
-			$this->path = Application::getStoragePath() . 'cache/';
+			$this->path = Application::getStoragePath('cache/');
 		} else {
 			$this->path = $config['path'];
 		}
@@ -85,7 +85,9 @@ class Files extends AbstractCacheDriver {
 	 * @return stdClass or false if cache doesn't exists
 	 */
 	protected function load($key) {
+		$this->checkKey($key);
 		$path = $this->getPath($key);
+
 		if (is_file($path)) {
 			$object = new \stdClass;
 			$object->path = $path;
@@ -122,6 +124,8 @@ class Files extends AbstractCacheDriver {
 	 * @return mixed value or null if key doesn't exists or cache is disabled
 	 */
 	public function get($key) {
+		$this->checkKey($key);
+
 		if ($this->has($key)) {
 			return $this->data[$key]->data;
 		}
@@ -138,6 +142,8 @@ class Files extends AbstractCacheDriver {
 	 * @return boolean True if set, null if cache is disabled
 	 */
 	public function set($key, $value, $seconds = null) {
+		$this->checkKey($key);
+
 		if ($seconds === null) {
 			$seconds = $this->defaultDuration;
 		}
@@ -169,6 +175,8 @@ class Files extends AbstractCacheDriver {
 	 * @return boolean True if set, false if it exists and null if cache is not enabled
 	 */
 	public function add($key, $value, $seconds = null) {
+		$this->checkKey($key);
+
 		if ($this->has($key)) {
 			return false;
 		}
@@ -184,6 +192,8 @@ class Files extends AbstractCacheDriver {
 	 * @return boolean
 	 */
 	public function has($key) {
+		$this->checkKey($key);
+
 		if (!isset($this->data[$key])) {
 			$object = $this->load($key);
 			if ($object === false) {
@@ -202,6 +212,8 @@ class Files extends AbstractCacheDriver {
 	 * @return boolean True if file is deleted, False if not, null if there is nothing to delete
 	 */
 	public function delete($key) {
+		$this->checkKey($key);
+
 		if (!is_file($this->getPath($key))) {
 			return null;
 		}

@@ -193,7 +193,7 @@ class Cache {
 	 * Get the cache driver that isn't default
 	 * 
 	 * @param string $driver
-	 * @return \Koldy\Cache\DriverAbstract
+	 * @return \Koldy\Cache\Driver\AbstractCacheDriver
 	 * @link http://koldy.net/docs/cache#engines
 	 */
 	public static function driver($driver) {
