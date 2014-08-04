@@ -134,13 +134,18 @@ class Adapter {
 					for ($i = 0; $i < $sizeof && $this->pdo === null; $i++) {
 						$config = $this->config['backup_connections'][$i];
 						if (isset($config['log_error']) && $config['log_error'] === true) {
-							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i}");
+							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
 							Log::exception($e); // log exception and continue
 						} else {
-							Log::notice("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i}");
+							Log::notice("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
 						}
 
 						$this->pdo = null;
+
+						if (isset($config['wait_before_connect'])) {
+							usleep($config['wait_before_connect'] * 1000);
+						}
+
 						try {
 							$this->tryConnect($config);
 							Log::notice("Connected to backup connection #{$i} ({$config['type']}:{$config['username']}@{$config['host']})");
