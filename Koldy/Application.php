@@ -506,47 +506,59 @@ class Application {
 		}
 
 		// set the error handler
-		set_error_handler(function($errno, $errstr, $errfile, $errline) {
-			if (!(error_reporting() & $errno)) {
-				// This error code is not included in error_reporting
-				return;
-			}
-
-			switch ($errno) {
-				case E_USER_ERROR:
-					\Koldy\Log::error("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					exit(2);
-					break;
-
-				case E_USER_WARNING:
-					\Koldy\Log::warning("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					break;
-
-				case E_USER_NOTICE:
-					\Koldy\Log::notice("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					break;
-
-				default:
-					\Koldy\Log::error("Uknown [{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					break;
-			}
-
-			/* Don't execute PHP internal error handler */
-			return true;
-		});
+		if (isset($config['error_handler']) && $config['error_handler'] instanceof \Closure) {
+			set_error_handler($config['error_handler']);
+		} else {
+			set_error_handler(function($errno, $errstr, $errfile, $errline) {
+				if (!(error_reporting() & $errno)) {
+					// This error code is not included in error_reporting
+					return;
+				}
+	
+				switch ($errno) {
+					case E_USER_ERROR:
+						\Koldy\Log::error("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+	
+					case E_USER_WARNING:
+						\Koldy\Log::warning("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+	
+					case E_USER_NOTICE:
+						\Koldy\Log::notice("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+	
+					default:
+						\Koldy\Log::error("PHP Uknown [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+				}
+	
+				/* Don't execute PHP internal error handler */
+				return true;
+			});
+		}
 
 		// register PHP fatal errors
 		register_shutdown_function(function() {
-			$fatalError = error_get_last();
+			if (!defined('KOLDY_FATAL_ERROR_HANDLER')) {
+				define('KOLDY_FATAL_ERROR_HANDLER', true); // to prevent possible recursion if you run into problems with logger
 
-			if ($fatalError !== null && $fatalError['type'] == E_ERROR) {
-				$errno = E_ERROR;
-				$errstr = $fatalError['message'];
-				$errfile = $fatalError['file'];
-				$errline = $fatalError['line'];
+				$fatalError = error_get_last();
+	
+				if ($fatalError !== null && $fatalError['type'] == E_ERROR) {
+					$errno = E_ERROR;
+					$errstr = $fatalError['message'];
+					$errfile = $fatalError['file'];
+					$errline = $fatalError['line'];
 
-				\Koldy\Log::error("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-				exit(3);
+					$config = \Koldy\Application::getConfig('application');
+					if (isset($config['error_handler']) && $config['error_handler'] instanceof \Closure) {
+						call_user_func($config['error_handler'], $errno, $errstr, $errfile, $errline);
+					} else {
+						\Koldy\Log::error("PHP [{$errno}] Fatal error: {$errstr} in {$errfile} on line {$errline}");
+					}
+
+				}
 			}
 		});
 
