@@ -321,6 +321,39 @@ class Adapter {
 
 
 	/**
+	 * Begin transaction
+	 * 
+	 * @return boolean
+	 */
+	public function beginTransaction() {
+		$pdo = $this->getAdapter();
+		return (($pdo instanceof \PDO) && $pdo->beginTransaction());
+	}
+
+
+	/**
+	 * Commit transaction
+	 * 
+	 * @return boolean
+	 */
+	public function commit() {
+		$pdo = $this->getAdapter();
+		return (($pdo instanceof \PDO) && $pdo->commit());
+	}
+
+
+	/**
+	 * Rollback transaction
+	 * 
+	 * @return boolean
+	 */
+	public function rollBack() {
+		$pdo = $this->getAdapter();
+		return (($pdo instanceof \PDO) && $pdo->rollBack());
+	}
+
+
+	/**
 	 * If you try to print the adapter object as string, you'll get the last
 	 * executed query. Be careful to not to expose the queries to your users in
 	 * production mode.
