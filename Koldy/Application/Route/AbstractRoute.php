@@ -259,22 +259,54 @@ abstract class AbstractRoute {
 	 * use Application::inDevelopment() and inProduction() methods.
 	 */
 	public function error($code, $message = null, \Exception $e = null) {
-		if ($message === null) {
-			$message = 'Page Not Found';
-		}
-
 		if (!headers_sent()) {
 			switch($code) {
-				case 400: header('HTTP/1.0 400 Bad Request', true, 400); break;
-				case 403: header('HTTP/1.0 403 Forbidden', true, 403); break;
-				case 404: header('HTTP/1.0 404 Not Found', true, 404); break;
-				case 500: header('HTTP/1.0 500 Internal server error', true, 500); break;
+				case 400:
+					header('HTTP/1.0 400 Bad Request', true, 400);
+
+					if ($message === null) {
+						$message = 'Bad request';
+					}
+					break;
+
+				case 403:
+					header('HTTP/1.0 403 Forbidden', true, 403);
+
+					if ($message === null) {
+						$message = 'Forbidden';
+					}
+					break;
+
+				case 404:
+					header('HTTP/1.0 404 Not Found', true, 404);
+
+					if ($message === null) {
+						$message = 'Page Not Found';
+					}
+					break;
+
+				case 500:
+					header('HTTP/1.0 500 Internal Server Error', true, 500);
+
+					if ($message === null) {
+						$message = 'Internal Server Error';
+					}
+					break;
+
 				case 503:
 					header('HTTP/1.1 503 Service Temporarily Unavailable', true, 503);
 					header('Status: 503 Service Temporarily Unavailable');
 					header('Retry-After: 300'); // 300 seconds / 5 minutes
+
+					if ($message === null) {
+						$message = 'Service Temporarily Unavailable';
+					}
 					break;
 			}
+		}
+
+		if ($message === null) {
+			$message = 'Page Not Found';
 		}
 
 		if ($this->isAjax()) {
