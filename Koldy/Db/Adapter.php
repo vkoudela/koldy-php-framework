@@ -74,74 +74,93 @@ class Adapter {
 
 
 	/**
+	 * Try to connect to database with given config block
+	 * 
+	 * @param array $config
+	 * @throws Exception
+	 * @throws PDOException
+	 */
+	private function tryConnect(array $config) {
+		switch($config['type']) {
+			case 'mysql':
+				
+				$pdoConfig = array (
+					PDO::ATTR_EMULATE_PREPARES => false,
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
+					PDO::ATTR_PERSISTENT => $config['persistent'],
+					PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
+				);
+				
+				if (isset($config['driver_options'])) {
+					foreach ($config['driver_options'] as $key => $value) {
+						$pdoConfig[$key] = $value;
+					}
+				}
+
+				$this->pdo = new PDO(
+					"mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
+					$config['username'],
+					$config['password'],
+					$pdoConfig
+				);
+				
+				break;
+
+				default:
+					throw new Exception("Database type '{$config['type']}' is not supported");
+					break;
+		}
+	}
+
+
+	/**
 	 * The PDO will be initialized only if needed, not on adapter initialization
 	 * 
 	 * @return PDO
 	 */
 	public function getAdapter() {
 		if ($this->pdo === null) {
-			switch($this->config['type']) {
-				case 'mysql':
-					try {
-						$initialConfig = array (
-							PDO::ATTR_EMULATE_PREPARES => false,
-							PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-							PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
-							PDO::ATTR_PERSISTENT => $this->config['persistent'],
-							PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
-						);
+			try {
+				$this->tryConnect($this->config);
+			} catch (PDOException $e) {
+				$this->lastException = $e;
+				$this->lastError = $e->getMessage();
+				$this->pdo = null;
 
-						if (isset($this->config['driver_options'])) {
-							foreach ($this->config['driver_options'] as $key => $value) {
-								$initialConfig[$key] = $value;
-							}
-						}
+				if (isset($this->config['backup_connections']) && is_array($this->config['backup_connections'])) {
+					$sizeof = sizeof($this->config['backup_connections']);
 
-						$this->pdo = new PDO(
-							"mysql:host={$this->config['host']};dbname={$this->config['database']};charset={$this->config['charset']}",
-							$this->config['username'],
-							$this->config['password'],
-							$initialConfig
-						);
-
-						if (isset($this->config['connection_queries']) && is_array($this->config['connection_queries']) && sizeof($this->config['connection_queries']) > 0) {
-							foreach ($this->config['connection_queries'] as $query) {
-								try {
-									$stmt = $this->pdo->prepare($query);
-									$stmt->execute();
-									$stmt->closeCursor();
-									Log::sql("Connection query executed: {$query}");
-								} catch (PDOException $e) {
-									$this->lastException = $e;
-									$this->lastError = $e->getMessage();
-
-									Log::error($query);
-									if (Application::inDevelopment()) {
-										throw new Exception($e->getMessage());
-									} else {
-										throw new Exception('Error executing connection queries');
-									}
-								}
-							}
-						}
-					} catch (PDOException $e) {
-						$this->lastException = $e;
-						$this->lastError = $e->getMessage();
-
-						if (Application::inDevelopment()) {
-							throw new Exception($e->getMessage());
+					for ($i = 0; $i < $sizeof && $this->pdo === null; $i++) {
+						$config = $this->config['backup_connections'][$i];
+						if (isset($config['log_error']) && $config['log_error'] === true) {
+							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
+							Log::exception($e); // log exception and continue
 						} else {
-							throw new Exception('Error connecting to database');
+							Log::notice("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
+						}
+
+						$this->pdo = null;
+
+						if (isset($config['wait_before_connect'])) {
+							usleep($config['wait_before_connect'] * 1000);
+						}
+
+						try {
+							$this->tryConnect($config);
+							Log::notice("Connected to backup connection #{$i} ({$config['type']}:{$config['username']}@{$config['host']})");
+						} catch (PDOException $e) {
+							$this->lastException = $e;
+							$this->lastError = $e->getMessage();
+							$this->pdo = null;
 						}
 					}
+				}
 
-					break;
-
-				default:
-					throw new Exception("Database type '{$this->config['type']}' is not supported");
-					break;
+				if ($this->pdo === null) {
+					throw new Exception('Error connecting to database');
+				}
 			}
-
 		}
 
 		return $this->pdo;

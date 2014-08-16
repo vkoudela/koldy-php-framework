@@ -33,7 +33,36 @@ abstract class AbstractCacheDriver {
 	 * @param array $config
 	 */
 	public function __construct(array $config) {
+		if (isset($config['default_duration']) && (int) $config['default_duration'] > 0) {
+			$this->defaultDuration = (int) $config['default_duration'];
+		}
+
 		$this->config = $config;
+
+		if (isset($config['clean_old']) && $config['clean_old'] === true) {
+			$self = $this;
+			register_shutdown_function(function() use($self) {
+				$self->deleteOld();
+			});
+		}
+	}
+
+
+	/**
+	 * Validate key name and throw exception if something is wrong
+	 * 
+	 * @param string $key
+	 * @throws \InvalidArgumentException
+	 */
+	protected function checkKey($key) {
+		// the max length is 255-32-1 = 222
+		if (!is_string($key) || strlen($key) > 222) {
+			throw new \InvalidArgumentException(
+				!is_string($key)
+				? ('Passed cache key name must be string; ' . gettype($key) . ' given')
+				: 'Cache key name mustn\'t be longer then 222 characters'
+			);
+		}
 	}
 
 
@@ -61,13 +90,15 @@ abstract class AbstractCacheDriver {
 
 	/**
 	 * Set the value under key and remember it forever! Okay, "forever" has its
-	 * own duration and thats for 10 years. So, is 15 years enough for you?
+	 * own duration and thats for 15 years. So, is 15 years enough for you?
 	 * 
 	 * @param string $key
 	 * @param mixes $value
 	 * @return boolean True if set, null if cache is disabled
 	 */
 	public function setForever($key, $value) {
+		$this->checkKey($key);
+
 		return $this->set($key, $value, time() + 3600 * 24 * 365 * 15);
 	}
 
@@ -81,7 +112,15 @@ abstract class AbstractCacheDriver {
 	 * @return boolean True if set, false if it exists and null if cache is not enabled
 	 * @link http://koldy.net/docs/cache#add
 	 */
-	abstract public function add($key, $value, $seconds = null);
+	public function add($key, $value, $seconds = null) {
+		$this->checkKey($key);
+
+		if ($this->has($key)) {
+			return false;
+		}
+		
+		return $this->set($key, $value, $seconds);
+	}
 
 
 	/**
@@ -134,6 +173,8 @@ abstract class AbstractCacheDriver {
 	 * });
 	 */
 	public function getOrSet($key, $functionOnSet, $seconds = null) {
+		$this->checkKey($key);
+
 		if ($this->has($key)) {
 			return $this->get($key);
 		} else {
@@ -153,6 +194,8 @@ abstract class AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
 	public function increment($key, $howMuch = 1) {
+		$this->checkKey($key);
+
 		$data = $this->get($key);
 		if ($data !== null) {
 			$data += $howMuch;
@@ -173,6 +216,8 @@ abstract class AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
 	public function decrement($key, $howMuch = 1) {
+		$this->checkKey($key);
+
 		$data = $this->get($key);
 		if ($data !== null) {
 			$data -= $howMuch;

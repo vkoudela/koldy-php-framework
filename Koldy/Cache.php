@@ -51,9 +51,12 @@ class Cache {
 	 */
 	protected static function getDriver($driver = null) {
 		static::init();
-		$driver = static::$defaultDriver;
 		if ($driver === null) {
-			throw new Exception('You\'re trying to use cache without any driver defined in cache config!');
+			if (static::$defaultDriver === null) {
+				throw new Exception('You\'re trying to use cache without any driver defined in cache config!');
+			} else {
+				$driver = static::$defaultDriver;
+			}
 		}
 
 		if (isset(static::$drivers[$driver])) {
@@ -75,6 +78,7 @@ class Cache {
 				if (!class_exists($className, true)) {
 					throw new Exception("Unknown cache class={$className} under key={$driver}");
 				}
+
 				static::$drivers[$driver] = new $className($constructor);
 			}
 
@@ -193,7 +197,7 @@ class Cache {
 	 * Get the cache driver that isn't default
 	 * 
 	 * @param string $driver
-	 * @return \Koldy\Cache\DriverAbstract
+	 * @return \Koldy\Cache\Driver\AbstractCacheDriver
 	 * @link http://koldy.net/docs/cache#engines
 	 */
 	public static function driver($driver) {

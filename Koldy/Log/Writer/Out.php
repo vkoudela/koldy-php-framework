@@ -30,7 +30,7 @@ class Out extends AbstractLogWriter {
 	 * @param string $message
 	 * @throws \Koldy\Exception
 	 */
-	public function logMessage($level, $message) {
+	protected function logMessage($level, $message) {
 		if (is_object($message)) {
 			$message = $message->__toString();
 		}
@@ -54,4 +54,39 @@ class Out extends AbstractLogWriter {
 		$this->sendEmailReport();
 	}
 
+
+	/**
+	 * (non-PHPdoc)
+	 * @see \Koldy\Log\Writer\AbstractLogWriter::processExtendedReports()
+	 */
+	protected function processExtendedReports() {
+		if (!isset($this->config['dump'])) {
+			return;
+		}
+	
+		$dump = $this->config['dump'];
+	
+		// 'speed', 'included_files', 'include_path', 'whitespace'
+	
+		if (in_array('speed', $dump)) {
+			$method = isset($_SERVER['REQUEST_METHOD'])
+			? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
+			: ('CLI=' . Application::getCliName());
+	
+			$executedIn = Application::getRequestExecutionTime();
+			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . sizeof(get_included_files()) . ' files');
+		}
+	
+		if (in_array('included_files', $dump)) {
+			$this->logMessage('notice', print_r(get_included_files(), true));
+		}
+	
+		if (in_array('include_path', $dump)) {
+			$this->logMessage('notice', print_r(explode(':', get_include_path()), true));
+		}
+	
+		if (in_array('whitespace', $dump)) {
+			$this->logMessage('notice', "----------\n\n\n");
+		}
+	}
 }

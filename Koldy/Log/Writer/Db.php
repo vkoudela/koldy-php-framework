@@ -93,7 +93,7 @@ class Db extends AbstractLogWriter {
 	 * (non-PHPdoc)
 	 * @see \Koldy\Log\Writer\AbstractLogWriter::logMessage()
 	 */
-	public function logMessage($level, $message) {
+	protected function logMessage($level, $message) {
 		if ($this->inserting) {
 			return;
 		}
