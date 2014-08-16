@@ -168,7 +168,7 @@ class Application {
 			$config['storage_path'] = dirname($config['application_path']) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
 		}
 
-		if (!is_string($config['key'])) {
+		if (!isset($config['key']) || !is_string($config['key'])) {
 			throw new \Exception('Invalid unique key in config/application.php');
 		}
 
@@ -463,14 +463,13 @@ class Application {
 		// framework(s) located in framework folder with same namespacing style)
 		$includePaths = array(substr(dirname(__FILE__), 0, -6));
 
+		$basePath = static::getApplicationPath();
 
 		// auto registering modules if there are any defined
 		if (isset($config['auto_register_modules'])) {
 			if (!is_array($config['auto_register_modules'])) {
 				throw new Exception('Invalid config for auto_register_modules in config/application.php');
 			}
-
-			$basePath = static::getApplicationPath();
 
 			foreach ($config['auto_register_modules'] as $moduleName) {
 				$includePaths[] = $basePath . 'modules' . DS . $moduleName . DS . 'controllers';
@@ -491,6 +490,12 @@ class Application {
 			}
 		}
 
+		// register include path of application itself
+		$includePaths[] = $basePath . 'controllers';
+		$includePaths[] = $basePath . 'library';
+		$includePaths[] = $basePath . 'models';
+
+		// set the include path
 		static::addIncludePath($includePaths);
 
 		// if log is enabled, then register shutdown function
@@ -528,6 +533,21 @@ class Application {
 
 			/* Don't execute PHP internal error handler */
 			return true;
+		});
+
+		// register PHP fatal errors
+		register_shutdown_function(function() {
+			$fatalError = error_get_last();
+
+			if ($fatalError !== null && $fatalError['type'] == E_ERROR) {
+				$errno = E_ERROR;
+				$errstr = $fatalError['message'];
+				$errfile = $fatalError['file'];
+				$errline = $fatalError['line'];
+
+				\Koldy\Log::error("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
+				exit(3);
+			}
 		});
 
 		// all execeptions will be caught in run() method
@@ -619,14 +639,6 @@ class Application {
 			// $argv[0] - this should be "cli.php", but we don't need this at all
 
 			static::init();
-
-			// register include path of application itself
-			$basePath = static::getApplicationPath();
-			static::addIncludePath(array(
-				$basePath . 'controllers',
-				$basePath . 'library',
-				$basePath . 'models'
-			));
 
 			try {
 				// so, if you run your script as "php cli.php backup", you'll have only two elements
