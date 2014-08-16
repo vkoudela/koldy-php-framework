@@ -9,11 +9,33 @@ class Input {
 
 
 	/**
+	 * The raw data of the request
+	 * 
+	 * @var string
+	 */
+	private static $rawData = null;
+
+
+	/**
 	 * The variables in case of PUT or DELETE request
 	 * 
 	 * @var array
 	 */
 	private static $vars = null;
+
+
+	/**
+	 * Get raw data of the request
+	 *
+	 * @return mixed
+	 */
+	public static function getRawData() {
+		if (static::$rawData === null) {
+			static::$rawData = file_get_contents('php://input');
+		}
+
+		return static::$rawData;
+	}
 
 
 	/**
@@ -24,7 +46,7 @@ class Input {
 	private static function getInputVars() {
 		if (static::$vars === null) {
 			// take those vars only once
-			parse_str(file_get_contents('php://input'), $vars);
+			parse_str(static::getRawData(), $vars);
 			static::$vars = (array) $vars;
 		}
 		
