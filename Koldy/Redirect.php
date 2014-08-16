@@ -27,15 +27,6 @@ class Redirect extends Response {
 
 
 	/**
-	 * URL where user will be redirected. It is absolute, or relative URL,...
-	 * Who cares.
-	 * 
-	 * @var string
-	 */
-	protected $where = null;
-
-
-	/**
 	 * Permanent redirect (301) to the given URL
 	 * 
 	 * @param string $where
@@ -45,7 +36,13 @@ class Redirect extends Response {
 	public static function permanent($where) {
 		$self = new static();
 		$self->responseCode = 301;
-		$self->where = $where;
+		$self
+			->parentHeader('Location', $where)
+			->httpHeader(301, 'HTTP/1.1 301 Moved Permanently')
+			->header('Status', '301 Moved Permanently')
+			->header('Connection', 'close')
+			->header('Content-Length', 0);
+
 		return $self;
 	}
 
@@ -60,7 +57,13 @@ class Redirect extends Response {
 	public static function temporary($where) {
 		$self = new static();
 		$self->responseCode = 302;
-		$self->where = $where;
+		$self
+			->parentHeader('Location', $where)
+			->httpHeader(302, 'HTTP/1.1 302 Moved Temporary')
+			->header('Status', '302 Moved Temporary')
+			->header('Connection', 'close')
+			->header('Content-Length', 0);
+
 		return $self;
 	}
 
@@ -100,10 +103,7 @@ class Redirect extends Response {
 	 * @link http://koldy.net/docs/url#href
 	 */
 	public static function href($controller = null, $action = null, array $params = null) {
-		$self = new static();
-		$self->responseCode = 302;
-		$self->where = Application::route()->href($controller, $action, $params);
-		return $self;
+		return static::temporary(Application::route()->href($controller, $action, $params));
 	}
 
 
@@ -132,27 +132,32 @@ class Redirect extends Response {
 		return parent::header($name, $value);
 	}
 
+	/**
+	 * Bypass location check
+	 * 
+	 * @param string $name
+	 * @param string $value
+	 * @return \Koldy\Response
+	 */
+	private function parentHeader($name, $value = null) {
+		return parent::header($name, $value);
+	}
+
+
+	/**
+	 * Get the redirect code
+	 * @return int 301 or 302
+	 */
+	public function getHttpCode() {
+		return $this->responseCode;
+	}
+
 
 	/**
 	 * (non-PHPdoc)
 	 * @see \Koldy\Response::flush()
 	 */
 	public function flush() {
-		switch($this->responseCode) {
-			case 301:
-				$this->header('HTTP/1.1 301 Moved Permanently');
-				parent::header('Location', $this->where);
-				break;
-
-			case 302:
-				parent::header('Location', $this->where);
-				break;
-		}
-
-		$this
-			->header('Connection', 'close')
-			->header('Content-Length', 0);
-
 		$this->flushHeaders();
 		flush();
 		
