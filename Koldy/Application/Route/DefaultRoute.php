@@ -82,7 +82,7 @@ class DefaultRoute extends AbstractRoute {
 	 * 
 	 * @var object
 	 */
-	private $controllerInstance = null;
+	protected $controllerInstance = null;
 
 
 	/**
