@@ -94,6 +94,16 @@ abstract class Response {
 
 
 	/**
+	 * Get the HTTP response code that will be used when object is flushed.
+	 * 
+	 * @return int or null if code is not set (if null, then web server will throw the http code (usually 200))
+	 */
+	public function getHttpCode() {
+		return $this->httpHeader['code'];
+	}
+
+
+	/**
 	 * Is header already set
 	 * 
 	 * @param string $name

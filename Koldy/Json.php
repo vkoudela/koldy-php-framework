@@ -1,7 +1,7 @@
 <?php namespace Koldy;
 
 /**
- * The JSON class
+ * The JSON class. Feel free to override it if you need to make it work different.
  * 
  * @link http://koldy.net/docs/json
  */
@@ -13,7 +13,7 @@ class Json extends Response {
 	 * 
 	 * @var array
 	 */
-	private $data = array();
+	private $data = null;
 
 
 	/**
@@ -26,7 +26,8 @@ class Json extends Response {
 	public static function create(array $data = array()) {
 		$self = new static();
 		$self->data = $data;
-		return $self;
+
+		return $self->header('Content-Type', 'application/json');
 	}
 
 
@@ -143,14 +144,12 @@ class Json extends Response {
 	 * @link http://koldy.net/docs/json#usage
 	 */
 	public function flush() {
-		// set the fixed headers
-		$this->header('Content-type', 'application/json');
-
 		ob_start();
 
-			echo static::encode($this->getData());
+			print static::encode($this->getData());
+
 			$size = ob_get_length();
-			$this->header('Content-length', $size);
+			$this->header('Content-Length', $size);
 
 		$this->flushHeaders();
 		ob_end_flush();

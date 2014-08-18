@@ -19,14 +19,6 @@ class Redirect extends Response {
 
 
 	/**
-	 * The HTTP response code of redirect
-	 * 
-	 * @var int 301 or 302
-	 */
-	protected $responseCode = null;
-
-
-	/**
 	 * Permanent redirect (301) to the given URL
 	 * 
 	 * @param string $where
@@ -35,7 +27,6 @@ class Redirect extends Response {
 	 */
 	public static function permanent($where) {
 		$self = new static();
-		$self->responseCode = 301;
 		$self
 			->parentHeader('Location', $where)
 			->httpHeader(301, 'HTTP/1.1 301 Moved Permanently')
@@ -56,7 +47,6 @@ class Redirect extends Response {
 	 */
 	public static function temporary($where) {
 		$self = new static();
-		$self->responseCode = 302;
 		$self
 			->parentHeader('Location', $where)
 			->httpHeader(302, 'HTTP/1.1 302 Moved Temporary')
@@ -141,15 +131,6 @@ class Redirect extends Response {
 	 */
 	private function parentHeader($name, $value = null) {
 		return parent::header($name, $value);
-	}
-
-
-	/**
-	 * Get the redirect code
-	 * @return int 301 or 302
-	 */
-	public function getHttpCode() {
-		return $this->responseCode;
 	}
 
 
