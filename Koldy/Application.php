@@ -630,9 +630,11 @@ class Application {
 					header('Status: 503 Service Temporarily Unavailable');
 					header('Retry-After: 300'); // 300 seconds / 5 minutes
 
-					echo "<p>{$e->getMessage()}</p>";
 					if (static::inDevelopment()) {
-						echo "<pre>{$e->getTraceAsString()}</pre>";
+						print "<p>{$e->getMessage()}</p>";
+						print "<pre>{$e->getTraceAsString()}</pre>";
+					} else {
+						print '<p>Something went really wrong. Please try again later.</p>';
 					}
 				} else {
 					// otherwise, route should handle exception

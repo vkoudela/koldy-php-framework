@@ -321,7 +321,8 @@ class Input {
 		foreach ($params as $param) {
 			if (!isset($parameters[$param])) {
 				if (Application::inDevelopment()) {
-					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . implode(',', array_keys($parameters)));
+					$passedParams = implode(',', array_keys($parameters));
+					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . (strlen($passedParams) > 0 ? $passedParams : '[nothing]'));
 				}
 				Application::error(400, 'Missing one of the parameters');
 			}
@@ -357,7 +358,8 @@ class Input {
 		foreach ($params as $param) {
 			if (!isset($parameters[$param])) {
 				if (Application::inDevelopment()) {
-					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . implode(',', array_keys($parameters)));
+					$passedParams = implode(',', array_keys($parameters));
+					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . (strlen($passedParams) > 0 ? $passedParams : '[nothing]'));
 				}
 				Application::error(400, 'Missing one of the parameters');
 			}
