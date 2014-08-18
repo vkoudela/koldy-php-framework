@@ -154,7 +154,7 @@ abstract class AbstractLogWriter {
 	 * @param string $level
 	 */
 	protected function detectEmailAlert($level) {
-		if (!$this->emailReport && $this->config['email'] !== null && in_array($level, $this->config['email_on'])) {
+		if ($this->emailReport === false && $this->config['email'] !== null && in_array($level, $this->config['email_on'])) {
 			$this->emailReport = true;
 		}
 	}
@@ -181,8 +181,10 @@ abstract class AbstractLogWriter {
 	 * @return boolean|null true if mail was sent and null if mail shouldn't be sent
 	 */
 	protected function sendEmailReport() {
-		if ($this->emailReport && $this->config['email'] !== null) {
+		if ($this->emailReport === true && $this->config['email'] !== null) {
 			$body = implode('', $this->messages);
+
+			/* this doesn't have sense any more :::
 			$body .= "\n\n---------- debug_backtrace:\n";
 
 			foreach (debug_backtrace() as $r) {
@@ -200,6 +202,7 @@ abstract class AbstractLogWriter {
 
 				$body .= "\n";
 			}
+			*/
 			
 			$body .= "\n----------\n";
 			$body .= sprintf("server: %s (%s)\n", Request::serverIp(), Request::hostName());

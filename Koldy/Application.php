@@ -498,13 +498,6 @@ class Application {
 		// set the include path
 		set_include_path(implode(PATH_SEPARATOR, $includePaths) . PATH_SEPARATOR . get_include_path());
 
-		// if log is enabled, then register shutdown function
-		if (LOG) {
-			register_shutdown_function(function() {
-				\Koldy\Log::shutdown();
-			});
-		}
-
 		// set the error handler
 		if (isset($config['error_handler']) && $config['error_handler'] instanceof \Closure) {
 			set_error_handler($config['error_handler']);
@@ -521,12 +514,15 @@ class Application {
 						break;
 	
 					case E_USER_WARNING:
+					case E_DEPRECATED:
+					case E_STRICT:
 						\Koldy\Log::warning("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
 						break;
 	
 					case E_USER_NOTICE:
 						\Koldy\Log::notice("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
 						break;
+						
 	
 					default:
 						\Koldy\Log::error("PHP Uknown [{$errno}] {$errstr} in file {$errfile}:{$errline}");

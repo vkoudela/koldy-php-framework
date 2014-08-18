@@ -68,6 +68,10 @@ class Log {
 					$count++;
 				}
 			}
+
+			register_shutdown_function(function() {
+				\Koldy\Log::shutdown();
+			});
 		}
 	}
 
