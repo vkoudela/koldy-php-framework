@@ -199,9 +199,7 @@ class Adapter {
 				Log::error("{$e->getMessage()}\n\n{$sql}\n\n{$e->getTraceAsString()}");
 			}
 
-			Log::exception($e);
-
-			return false;
+			throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
 		}
 
 		$stmt->setFetchMode($fetchMode !== null ? $fetchMode : PDO::FETCH_OBJ);
@@ -225,8 +223,7 @@ class Adapter {
 				Log::error("Error executing query:\n{$sql}");
 			}
 
-			Log::exception($e);
-			return false;
+			throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
 		}
 
 		$return = null;

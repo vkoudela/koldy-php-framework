@@ -496,7 +496,7 @@ class Application {
 		$includePaths[] = $basePath . 'models';
 
 		// set the include path
-		static::addIncludePath($includePaths);
+		set_include_path(implode(PATH_SEPARATOR, $includePaths) . PATH_SEPARATOR . get_include_path());
 
 		// if log is enabled, then register shutdown function
 		if (LOG) {

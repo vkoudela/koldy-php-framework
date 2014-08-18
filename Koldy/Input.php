@@ -334,6 +334,42 @@ class Input {
 
 
 	/**
+	 * Get the required parameters. Return bad request if any of them is missing. This method will return array.
+	 * 
+	 * @param variable
+	 * @return array
+	 * @link http://koldy.net/docs/input#require
+	 *
+	 * @example
+	 * 		$params = Input::requireParamsArray('id', 'email');
+	 * 		echo $params['email'];
+	 */
+	public static function requireParamsArray() {
+		switch($_SERVER['REQUEST_METHOD']) {
+			case 'GET': $parameters = $_GET; break;
+			case 'POST': $parameters = $_POST; break;
+			case 'PUT':
+			case 'DELETE': $parameters = static::getInputVars(); break;
+		}
+
+		$params = func_get_args();
+		$a = array();
+		foreach ($params as $param) {
+			if (!isset($parameters[$param])) {
+				if (Application::inDevelopment()) {
+					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . implode(',', array_keys($parameters)));
+				}
+				Application::error(400, 'Missing one of the parameters');
+			}
+
+			$a[$param] = $parameters[$param];
+		}
+
+		return $a;
+	}
+
+
+	/**
 	 * Get all parameters according to request method
 	 * 
 	 * @return array

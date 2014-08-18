@@ -180,8 +180,12 @@ abstract class Model {
 			$data = $data->getData();
 		}
 
-		$insert = new Insert(static::getTableName(), $data);
-		$ok = $insert->exec(static::$connection);
+		try {
+			$insert = new Insert(static::getTableName(), $data);
+			$ok = $insert->exec(static::$connection);
+		} catch (Exception $e) {
+			return false;
+		}
 
 		if (!$ok) {
 			return false;
@@ -252,7 +256,12 @@ abstract class Model {
 			}
 		}
 
-		return $update->exec(static::$connection);
+		try {
+			$ok = $update->exec(static::$connection);
+			return $ok;
+		} catch (Exception $e) {
+			return false;
+		}
 	}
 
 
@@ -291,7 +300,11 @@ abstract class Model {
 						}
 					}
 
-					$result = $update->exec(static::$connection);
+					try {
+						$result = $update->exec(static::$connection);
+					} catch (Exception $e) {
+						$result = false;
+					}
 
 					if ($result !== false) {
 						$this->originalData = $this->data;
@@ -302,7 +315,13 @@ abstract class Model {
 					// we don't have pk value, so lets insert
 					$insert = new Insert(static::getTableName());
 					$insert->add($toUpdate);
-					$insert->exec(static::$connection);
+
+					try {
+						$insert->exec(static::$connection);
+					} catch (Exception $e) {
+						return false;
+					}
+
 					$this->data[static::$primaryKey] = Db::getAdapter(static::$connection)->getLastInsertId();
 					$this->originalData = $this->data;
 				}
@@ -341,7 +360,12 @@ abstract class Model {
 			throw new Exception('Unhandeled increment case in DB model');
 		}
 
-		return $update->exec(static::$connection);
+		try {
+			return $update->exec(static::$connection);
+		} catch (Exception $e) {
+			return false;
+		}
+
 	}
 
 
@@ -372,7 +396,12 @@ abstract class Model {
 			$delete->where(static::$primaryKey, $where);
 		}
 
-		return $delete->exec(static::$connection);
+		try {
+			return $delete->exec(static::$connection);
+		} catch (Exception $e) {
+			return false;
+		}
+
 	}
 
 
