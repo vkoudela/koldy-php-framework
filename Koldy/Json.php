@@ -139,6 +139,16 @@ class Json extends Response {
 
 
 	/**
+	 * If you try to print your JSON object instance, you'll get JSON encoded string
+	 * 
+	 * @return string
+	 */
+	public function __toString() {
+		return static::encode($this->getData());
+	}
+
+
+	/**
 	 * (non-PHPdoc)
 	 * @see \Koldy\Response::flush()
 	 * @link http://koldy.net/docs/json#usage
