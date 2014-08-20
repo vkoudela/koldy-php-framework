@@ -1,4 +1,7 @@
 <?php namespace Koldy\Log\Writer;
+
+use Koldy\Application;
+
 /**
  * This log writer will print all messages to console. This writer is made to
  * be used in CLI environment.

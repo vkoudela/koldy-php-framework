@@ -155,6 +155,16 @@ abstract class Model {
 
 
 	/**
+	 * Get the connection string defined in this model
+	 * 
+	 * @return string|null
+	 */
+	public static function getConnection() {
+		return static::$connection;
+	}
+
+
+	/**
 	 * Get the table name for database for this model. If your model class is
 	 * User\Login\History, then the database table name will be user_login_history
 	 * 
