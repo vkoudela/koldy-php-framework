@@ -265,14 +265,14 @@ class Adapter {
 
 		if ((bool) count(array_filter(array_keys($this->lastBindings), 'is_string'))) {
 			foreach ($this->lastBindings as $key => $value) {
-				if (!(is_numeric($value) && substr($value, 0, 1) != '0')) {
+				if (!(is_numeric($value) && $value[0] != '0')) {
 					$value = sprintf('\'%s\'', addslashes($value));
 				}
 				$query = str_replace(':' . $key, $value, $query);
 			}
 		} else {
 			foreach ($this->lastBindings as $value) {
-				if (!(is_numeric($value) && substr($value, 0, 1) != '0')) {
+				if (!(is_numeric($value) && $value[0] != '0')) {
 					$value = sprintf('\'%s\'', addslashes($value));
 				}
 				$query = substr_replace($query, $value, strpos($query, '?'), 1);

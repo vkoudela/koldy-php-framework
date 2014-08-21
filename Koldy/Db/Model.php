@@ -466,16 +466,25 @@ abstract class Model {
 
 		if ($value === null) {
 			if (is_array($field)) {
+
 				foreach ($field as $k => $v) {
 					$select->where($k, $v);
 				}
+
 			} else if (is_array(static::$primaryKey)) {
 				throw new Exception('Can not build SELECT query when primary key is not single column');
+
+			} else if ($field instanceof Where) {
+				$select->where($field);
+
 			} else {
 				$select->where(static::$primaryKey, $field);
+
 			}
+
 		} else {
 			$select->where($field, $value);
+
 		}
 
 		$record = $select->fetchFirst();

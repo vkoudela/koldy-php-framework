@@ -152,7 +152,7 @@ abstract class AbstractRoute {
 
 		$config = Application::getConfig();
 		
-		if (substr($path, 0, 1) != '/') {
+		if ($path[0] != '/') {
 			$path = '/' . $path;
 		}
 		
@@ -180,7 +180,7 @@ abstract class AbstractRoute {
 		$config = Application::getConfig();
 		$cdnUrl = ($config['cdn_url'] === null) ? $config['site_url'] : $config['cdn_url'];
 		
-		if (substr($path, 0, 1) != '/') {
+		if ($path[0] != '/') {
 			$path = '/' . $path;
 		}
 

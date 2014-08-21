@@ -126,12 +126,19 @@ abstract class Query {
 		$bindings = '';
 
 		foreach ($this->bindings as $key => $value) {
-			if (substr($key, 0, 1) == ':') {
+			if ($key[0] == ':') {
 				$key = substr($key, 1);
 			}
 
 			if (is_numeric($value) && substr((string) $value, 0, 1) != '0') {
-				$query = str_replace(":{$key}", $value, $query);
+				$value = (string) $value;
+
+				if (strlen($value) > 10) {
+					$query = str_replace(":{$key}", "'{$value}'", $query);
+				} else {
+					$query = str_replace(":{$key}", $value, $query);
+				}
+
 			} else {
 				$query = str_replace(":{$key}", ("'" . addslashes($value) . "'"), $query);
 			}

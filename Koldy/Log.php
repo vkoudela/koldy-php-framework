@@ -77,7 +77,12 @@ class Log {
 
 
 	/**
-	 * Is config enabled or not
+	 * Is there any log driver enabled in this moment?
+	 * You can also check this by inspecting LOG constant. Example:
+	 * 
+	 * 		if (LOG) {
+	 * 			// log is enabled
+	 * 		}
 	 * 
 	 * @return boolean
 	 */
@@ -200,7 +205,8 @@ class Log {
 
 
 	/**
-	 * This method is called internally.
+	 * This method is called internally on request shutdown event. Do not use
+	 * it on your own!
 	 */
 	public static function shutdown() {
 		if (static::isEnabled()) {

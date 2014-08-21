@@ -205,7 +205,7 @@ class Html {
 			$s = str_replace('--','-',$s);
 		}
 
-		while (substr($s, 0, 1) == '-') {
+		while ($s[0] == '-') {
 			$s = substr($s, 1);
 		}
 
