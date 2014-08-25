@@ -326,7 +326,7 @@ class Where extends Query {
 						if ($value[0] instanceof Expr) {
 							$query .= $value[0];
 						} else {
-							$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+							$key = 'f' . str_replace('.', '_', $field) . (static::$keyIndex++);
 							$query .= ":{$key}";
 							$this->bindings[$key] = $value[0];
 						}
@@ -336,7 +336,7 @@ class Where extends Query {
 						if ($value[1] instanceof Expr) {
 							$query .= $value[1];
 						} else {
-							$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+							$key = 'f' . str_replace('.', '_', $field) . (static::$keyIndex++);
 							$query .= ":{$key}";
 							$this->bindings[$key] = $value[1];
 						}
@@ -349,7 +349,7 @@ class Where extends Query {
 						$query .= " ({$field} {$where['operator']} (";
 
 						foreach ($value as $val) {
-							$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+							$key = 'f' . str_replace('.', '_', $field) . (static::$keyIndex++);
 							$query .= ":{$key},";
 							$this->bindings[$key] = $val;
 						}
@@ -363,7 +363,7 @@ class Where extends Query {
 				}
 
 			} else {
-				$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+				$key = 'f' . str_replace('.', '_', $field) . (static::$keyIndex++);
 				$query .= " ({$field} {$where['operator']} :{$key})\n";
 				$this->bindings[$key] = $where['value'];
 			}

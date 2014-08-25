@@ -223,7 +223,7 @@ class Adapter {
 				Log::error("Error executing query:\n{$sql}");
 			}
 
-			throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
+			throw new Exception($e->getMessage());
 		}
 
 		$return = null;

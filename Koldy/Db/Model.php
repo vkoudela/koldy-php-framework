@@ -4,6 +4,13 @@ use Koldy\Db;
 use Koldy\Exception;
 use Koldy\Log;
 
+/**
+ * Model is abstract class that needs to be extended with your defined class.
+ * When you extend it, framework will know with which table it needs to work; or
+ * simply define the table name you need. Check out the docs in link for more examples.
+ * 
+ * @link http://koldy.net/docs/database/models
+ */
 abstract class Model {
 
 
