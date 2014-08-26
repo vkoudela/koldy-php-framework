@@ -100,12 +100,29 @@ class Adapter {
 					}
 				}
 
-				$this->pdo = new PDO(
-					"mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}",
-					$config['username'],
-					$config['password'],
-					$pdoConfig
-				);
+				if (!isset($config['socket'])) {
+					// not a socket
+					if (!isset($config['port'])) {
+						$config['port'] = 3306;
+					} else {
+						$config['port'] = (int) $config['port'];
+					}
+
+					$this->pdo = new PDO(
+						"mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}",
+						$config['username'],
+						$config['password'],
+						$pdoConfig
+					);
+				} else {
+					// the case with unix_socket
+					$this->pdo = new PDO(
+						"mysql:unix_socket={$config['socket']};dbname={$config['database']};charset={$config['charset']}",
+						$config['username'],
+						$config['password'],
+						$pdoConfig
+					);
+				}
 				
 				break;
 
