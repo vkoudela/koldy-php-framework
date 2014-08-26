@@ -26,13 +26,15 @@ class Adapter {
 
 
 	/**
-	 * @var PDO object
+	 * @var PDO
 	 */
 	public $pdo = null;
 
 
 	/**
-	 * @var string The last executed query
+	 * The last executed query
+	 * 
+	 * @var string
 	 */
 	private $lastQuery = null;
 
@@ -193,12 +195,6 @@ class Adapter {
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
-			if ($query instanceof Query) {
-				Log::error("{$e->getMessage()}\n\n{$query->debug()}\n\n{$e->getTraceAsString()}");
-			} else {
-				Log::error("{$e->getMessage()}\n\n{$sql}\n\n{$e->getTraceAsString()}");
-			}
-
 			throw new Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
 		}
 
@@ -216,12 +212,6 @@ class Adapter {
 		} catch (PDOException $e) {
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
-
-			if ($query instanceof Query) {
-				Log::error("Error executing query:\n{$query->debug()}");
-			} else {
-				Log::error("Error executing query:\n{$sql}");
-			}
 
 			throw new Exception($e->getMessage());
 		}
