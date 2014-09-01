@@ -154,6 +154,10 @@ class Json extends Response {
 	 * @link http://koldy.net/docs/json#usage
 	 */
 	public function flush() {
+		if (!$this->hasHeader('Content-Type')) {
+			$this->header('Content-Type', 'application/json');
+		}
+
 		ob_start();
 
 			print static::encode($this->getData());

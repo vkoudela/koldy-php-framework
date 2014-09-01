@@ -190,23 +190,16 @@ abstract class Model {
 	 * Insert the record in database with given array of data
 	 * @param mixed $data pass array or valid instance of \Koldy\Db\Model
 	 * 
-	 * @return new static|false False if insert failed, otherwise, instance of this model
+	 * @return \Koldy\Db\Model|false False if insert failed, otherwise, instance of this model
+	 * @throws \Koldy\Exception
 	 */
 	public static function create($data) {
 		if ($data instanceof Model) {
 			$data = $data->getData();
 		}
 
-		try {
-			$insert = new Insert(static::getTableName(), $data);
-			$ok = $insert->exec(static::$connection);
-		} catch (Exception $e) {
-			return false;
-		}
-
-		if (!$ok) {
-			return false;
-		}
+		$insert = new Insert(static::getTableName(), $data);
+		$ok = $insert->exec(static::$connection);
 
 		if (static::$autoIncrement) {
 			$data[static::$primaryKey] = static::getLastInsertId();
@@ -506,7 +499,7 @@ abstract class Model {
 	/**
 	 * Fetch the array of records from database
 	 * 
-	 * @param array $where the WHERE condition
+	 * @param mixed $where the WHERE condition
 	 * @param array $fields [optional] array of fields to select; by default, all fields will be fetched
 	 * @return array of initialized objects of the model this method is called on
 	 * @link http://koldy.net/docs/database/models#fetch
