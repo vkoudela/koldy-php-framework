@@ -595,11 +595,12 @@ abstract class Model {
 	 * @param mixed $where [optional]
 	 * @param string $orderField [optional]
 	 * @param string $orderDirection [optional]
+	 * @param integer $limit [optional]
 	 * @return array or empty array if not found
 	 * @example User::fetchArrayOf('id', Where::init()->where('id', '>', 50), 'id', 'asc') would return array(51,52,53,54,55,...)
 	 * @link http://koldy.net/docs/database/models#fetchArrayOf
 	 */
-	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null) {
+	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null, $limit = null) {
 		$select = static::query()->field($field, 'key_field');
 
 		if ($where !== null) {
@@ -616,6 +617,10 @@ abstract class Model {
 
 		if ($orderField !== null) {
 			$select->orderBy($orderField, $orderDirection);
+		}
+
+		if ($limit !== null) {
+			$select->limit(0, $limit);
 		}
 
 		$records = $select->fetchAll();
