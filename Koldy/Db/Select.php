@@ -66,6 +66,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example innerJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function innerJoin($table, $firstTableField, $operator, $secondTableField) {
 		$this->joins[] = array(
@@ -85,6 +86,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example leftJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function leftJoin($table, $firstTableField, $operator, $secondTableField) {
 		$this->joins[] = array(
@@ -104,6 +106,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example rightJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function rightJoin($table, $firstTableField, $operator, $secondTableField) {
 		$this->joins[] = array(
@@ -123,6 +126,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example join('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function join($table, $firstTableField, $operator, $secondTableField) {
 		return $this->innerJoin($table, $firstTableField, $operator, $secondTableField);
