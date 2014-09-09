@@ -248,7 +248,7 @@ class Html {
 		$args = func_get_args();
 		if (sizeof($args) >= 2) {
 			$string = $args[0];
-			$argsSize = sizeof($args);
+			$argsSize = count($args);
 			for ($i = 1; $i < $argsSize; $i++) {
 				$num = $i -1;
 				$string = str_replace("{{$num}}", $args[$i], $string);

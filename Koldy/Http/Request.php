@@ -119,7 +119,7 @@ class Request {
 			curl_setopt($ch, CURLOPT_URL, $this->url);
 			curl_setopt($ch, CURLOPT_POST, true); 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $this->params);
-		} else if ($this->type === static::GET && sizeof($this->params) > 0) {
+		} else if ($this->type === static::GET && count($this->params) > 0) {
 			$url = $this->url;
 			if (strpos($url, '?') === false) {
 				$url .= '?';

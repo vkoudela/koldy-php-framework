@@ -109,7 +109,7 @@ class Insert extends Query {
 	 * @return \Koldy\Db\Insert
 	 */
 	public function add(array $data) {
-		if (!isset($data[0]) && sizeof($this->fields) == 0) {
+		if (!isset($data[0]) && count($this->fields) == 0) {
 			$this->fields(array_keys($data));
 		}
 
@@ -157,7 +157,7 @@ class Insert extends Query {
 			throw new Exception('Can not execute Insert query, no records to insert');
 		}
 
-		$hasFields = sizeof($this->fields) > 0;
+		$hasFields = count($this->fields) > 0;
 
 		$query = "INSERT INTO {$this->table}";
 
@@ -203,7 +203,7 @@ class Insert extends Query {
 					$values = array_values($row);
 
 					if ($index == 0) {
-						$targetCount = sizeof($row);
+						$targetCount = count($row);
 					} else if (sizeof($row) != $targetCount) {
 						throw new Exception('Can not build INSERT query, column count is not the same in all data records');
 					}

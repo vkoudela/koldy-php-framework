@@ -80,7 +80,7 @@ class OldStyle extends AbstractRoute {
 	 * @param string $uri
 	 */
 	public function __construct($uri, array $config = null) {
-		if ($config === null || sizeof($config) == 0 || !isset($config['module_param']) || !isset($config['controller_param']) || !isset($config['action_param'])) {
+		if ($config === null || count($config) == 0 || !isset($config['module_param']) || !isset($config['controller_param']) || !isset($config['action_param'])) {
 			throw new Exception('Route config options are missing');
 		}
 

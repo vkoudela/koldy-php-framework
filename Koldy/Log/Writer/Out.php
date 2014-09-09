@@ -77,7 +77,7 @@ class Out extends AbstractLogWriter {
 			: ('CLI=' . Application::getCliName());
 	
 			$executedIn = Application::getRequestExecutionTime();
-			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . sizeof(get_included_files()) . ' files');
+			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . count(get_included_files()) . ' files');
 		}
 	
 		if (in_array('included_files', $dump)) {

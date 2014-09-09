@@ -272,7 +272,7 @@ class Where extends Query {
 	 * @return boolean
 	 */
 	protected function hasWhere() {
-		return sizeof($this->where) > 0;
+		return count($this->where) > 0;
 	}
 
 

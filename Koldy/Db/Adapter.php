@@ -148,7 +148,7 @@ class Adapter {
 				$this->pdo = null;
 
 				if (isset($this->config['backup_connections']) && is_array($this->config['backup_connections'])) {
-					$sizeof = sizeof($this->config['backup_connections']);
+					$sizeof = count($this->config['backup_connections']);
 
 					for ($i = 0; $i < $sizeof && $this->pdo === null; $i++) {
 						$config = $this->config['backup_connections'][$i];

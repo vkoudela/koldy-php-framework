@@ -358,9 +358,9 @@ class Select extends Where {
 				foreach ($join['first'] as $joinArg) {
 					if ($joinArg instanceof Expr) {
 						$query .= "{$joinArg} AND ";
-					} else if (is_array($joinArg) && sizeof($joinArg) == 3) {
+					} else if (is_array($joinArg) && count($joinArg) == 3) {
 						$query .= "{$joinArg[0]} {$joinArg[1]} {$joinArg[2]} AND ";
-					} else if (is_array($joinArg) && sizeof($joinArg) == 2) {
+					} else if (is_array($joinArg) && count($joinArg) == 2) {
 						$query .= "{$joinArg[0]} = {$joinArg[1]} AND ";
 					} else {
 						throw new Exception('Unknown JOIN argument');
@@ -385,7 +385,7 @@ class Select extends Where {
 			$query = substr($query, 0, -1);
 		}
 
-		$sizeofHaving = sizeof($this->having);
+		$sizeofHaving = count($this->having);
 		if ($sizeofHaving > 0) {
 			$query .= "\nHAVING";
 			if ($sizeofHaving == 1) {

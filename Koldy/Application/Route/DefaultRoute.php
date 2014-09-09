@@ -365,7 +365,7 @@ class DefaultRoute extends AbstractRoute {
 			$url .= '/' . $action;
 		}
 
-		if ($params !== null && sizeof($params) > 0) {
+		if ($params !== null && count($params) > 0) {
 			$q = array();
 			foreach ($params as $key => $value) {
 				if (is_numeric($key)) {

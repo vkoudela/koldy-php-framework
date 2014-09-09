@@ -56,7 +56,7 @@ class Cli {
 			static::$parameters = array();
 			$argv = static::getArgv();
 			array_shift($argv);
-			$sizeof = sizeof($argv);
+			$sizeof = count($argv);
 	
 			for ($i = 0; $i < $sizeof; $i++) {
 				$p = $argv[$i];

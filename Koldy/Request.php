@@ -118,7 +118,7 @@ class Request {
 		}
 
 		$domain = explode('.', $_SERVER['HTTP_HOST']);
-		$size = sizeof($domain);
+		$size = count($domain);
 
 		if ($size <= 2) {
 			return $_SERVER['HTTP_HOST'];

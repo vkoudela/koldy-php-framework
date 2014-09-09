@@ -130,7 +130,7 @@ class Application {
 			if ($config['site_url'] === null) {
 				$config['site_url'] = "//{$_SERVER['HTTP_HOST']}";
 			} else if (is_array($config['site_url'])) {
-				$sizeofSiteUrls = sizeof($config['site_url']);
+				$sizeofSiteUrls = count($config['site_url']);
 				$found = false;
 				for ($i = 0; !$found && $i < $sizeofSiteUrls; $i++) {
 					$siteUrl = $config['site_url'][$i];
