@@ -416,17 +416,30 @@ class Validator {
 	 * @param string $param
 	 * @param string $settings (Class\Name,uniqueField[,exceptionValue][,exceptionField])
 	 * @return true|string
+	 * @example \Db\User,email,my@email.com
+	 * @example \Db\User,email,field:id,id
 	 */
 	protected function validateUnique($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
 			$settings = explode(',', $settings);
+
 			if (sizeof($settings) < 2) {
 				throw new Exception("Bad parameters in Validator::validateUnique method");
 			}
+
 			$class = $settings[0];
 			$field = $settings[1];
 			$exceptionValue = isset($settings[2]) ? $settings[2] : null;
+
+			if (substr($exceptionValue, 0, 6) == 'field:') {
+				$exceptionFieldName = substr($exceptionValue, 6);
+				if (isset($this->input[$exceptionFieldName])) {
+					$exceptionValue = $this->input[$exceptionFieldName];
+				}
+			}
+
 			$exceptionField = isset($settings[3]) ? $settings[3] : null;
+
 			if (!$class::isUnique($field, trim($this->input[$param]), $exceptionValue, $exceptionField)) {
 				return static::getErrorMessage(8, array('value' => $this->input[$param]));
 			}
