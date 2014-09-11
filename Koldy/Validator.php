@@ -423,8 +423,12 @@ class Validator {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
 			$settings = explode(',', $settings);
 
-			if (sizeof($settings) < 2) {
-				throw new Exception("Bad parameters in Validator::validateUnique method");
+			$settingsCount = count($settings);
+			if ($settingsCount < 2) {
+				if (LOG && Application::inDevelopment()) {
+					Log::debug('validateUnique got only this: ' . print_r($settings, true));
+				}
+				throw new Exception('Bad parameters count in Validator::validateUnique method; expected at least 2, got ' . $settingsCount);
 			}
 
 			$class = $settings[0];
