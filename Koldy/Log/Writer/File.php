@@ -79,10 +79,17 @@ class File extends AbstractLogWriter {
 		}
 
 		if (isset($config['get_message_fn'])) {
-			if (!(is_object($config['get_message_fn']) && $config['get_message_fn'] instanceof \Closure)) {
+			if (is_object($config['get_message_fn']) && $config['get_message_fn'] instanceof \Closure) {
 				$this->getMessageFunction = $config['get_message_fn'];
 			} else {
-				throw new Exception('Invalid get_message_fn type; expecting Function, got: ' . gettype($config['get_message_fn']));
+
+				if (is_object($config['get_message_fn'])) {
+					$got = get_class($config['get_message_fn']);
+				} else {
+					$got = gettype($config['get_message_fn']);
+				}
+
+				throw new Exception('Invalid get_message_fn type; expected \Closure object, got: ' . $got);
 			}
 		}
 
