@@ -88,7 +88,7 @@ class Select extends Where {
 	 * @return \Koldy\Db\Select
 	 * @example leftJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
-	public function leftJoin($table, $firstTableField, $operator, $secondTableField) {
+	public function leftJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
 		$this->joins[] = array(
 			'type' => 'LEFT JOIN',
 			'table' => $table,
@@ -369,6 +369,14 @@ class Select extends Where {
 
 				$query = substr($query, 0, -5);
 			} else {
+				if ($join['operator'] === null) {
+					throw new Exception('Operator can\'t be null');
+				}
+
+				if ($join['second'] === null) {
+					throw new Exception('Second parameter can\'t be null');
+				}
+
 				$query .= "{$join['first']} {$join['operator']} {$join['second']}";
 			}
 		}
