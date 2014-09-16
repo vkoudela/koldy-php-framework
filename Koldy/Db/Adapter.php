@@ -212,7 +212,7 @@ class Adapter {
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
-			throw new Exception($e->getMessage());
+			throw $e;
 		}
 
 		$stmt->setFetchMode($fetchMode !== null ? $fetchMode : PDO::FETCH_OBJ);
@@ -230,7 +230,7 @@ class Adapter {
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
-			throw new Exception($e->getMessage());
+			throw $e;
 		}
 
 		$return = null;
