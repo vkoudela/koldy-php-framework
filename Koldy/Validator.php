@@ -55,7 +55,9 @@ class Validator {
 		15 =>'This value shouldn\'t be the same as {name2}',
 		16 =>'Extension has to be one of the following: {extensions}',
 		17 =>'Error uploading file.',
-		18 =>'This field doesn\'t have requested value.' // {field}, {value}
+		18 =>'This field doesn\'t have requested value.', // {field}, {value}
+		19 =>'This value should be decimal',
+		20 =>'This mustn\'t have more then {limit} numbers after decimal sign'
 	);
 
 
@@ -328,6 +330,52 @@ class Validator {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
 			if (!is_numeric($this->input[$param]) && !is_int($this->input[$param])) {
 				return static::getErrorMessage(11);
+			}
+		}
+
+		return true;
+	}
+
+
+	/**
+	 * Throw error if value is not numeric and not decimal. This is good for price points.
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 * @example decimal:2 - allowes numbers with two decimal points
+	 */
+	protected function validateDecimal($param, $settings = null) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+
+			// is it decimal? if there is comma, then we'll need to make it as dot
+			$value = str_replace(',', '.', trim($this->input[$param]));
+
+			// but if its not numeric now, then something is wrong
+			if (!is_numeric($value)) {
+				return static::getErrorMessage(19);
+			}
+
+			if ($settings !== null) {
+				$settings = explode(',', $settings);
+				if (count($settings) > 0) {
+					// if there are settings, then on first place, it is the number of digits after dot
+					if (!is_numeric($settings[0]) && !is_int($settings[0])) {
+						throw new Exception('Invalid setting defined for decimal definition');
+					}
+
+					// it should fail if there are more numbers after dot then defined number
+					if (strpos($value, '.') !== false) {
+						// it will validate only if there is a dot, otherwise, there is nothing to validate
+						$decimals = (int) $settings[0];
+						$tmp = explode('.', $value);
+						if (strlen($tmp[1]) > $decimals) {
+							return static::getErrorMessage(20, array(
+								'limit' => $decimals
+							));
+						}
+					}
+				}
 			}
 		}
 
