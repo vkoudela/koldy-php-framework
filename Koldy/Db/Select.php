@@ -37,7 +37,7 @@ class Select extends Where {
 	 * Set the table FROM which fields will be fetched
 	 * @param string $table
 	 * @param string $alias
-	 * @param mixed $field one field as string or more fields as array
+	 * @param mixed $field one field as string or more fields as array or just '*'
 	 * @return \Koldy\Db\Select
 	 */
 	public function from($table, $alias = null, $field = null) {
@@ -342,11 +342,24 @@ class Select extends Where {
 
 		$query .= "\nFROM";
 		foreach ($this->from as $from) {
-			$query .= "\n\t{$from['table']}";
-			if ($from['alias'] !== null) {
-				$query .= " as {$from['alias']},";
+			if ($from['table'] instanceof static) {
+				/* @var $subSelect \Koldy\Db\Select */
+				$subSelect = $from['table'];
+				$subSql = $subSelect->__toString();
+				$subSql = str_replace("\n", "\n\t", $subSql);
+				$query .= " (\n\t{$subSql}\n) {$from['alias']}\n";
+
+				$subSelectBindings = $subSelect->getBindings();
+				if (count($subSelectBindings) > 0) {
+					$this->bindings += $subSelectBindings;
+				}
 			} else {
-				$query .= ',';
+				$query .= "\n\t{$from['table']}";
+				if ($from['alias'] !== null) {
+					$query .= " as {$from['alias']},";
+				} else {
+					$query .= ',';
+				}
 			}
 		}
 		$query = substr($query, 0, -1);

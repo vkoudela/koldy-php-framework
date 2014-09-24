@@ -7,14 +7,17 @@
  * 
  * This class relies on your route instance so you'll probably need to check
  * the docs of your routes to understand the methods below.
- *
  */
 class Url {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getVar()
+	 * Get the variable from request. This depends about the route you're using.
+	 *
+	 * @param string|int $whatVar
+	 * @param string|int $default
+	 *
+	 * @return string|int
 	 */
 	public static function getVar($whatVar, $default = null) {
 		return Application::route()->getVar($whatVar, $default);
@@ -22,8 +25,9 @@ class Url {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getControllerUrl()
+	 * Get the controller name in the exact format as its being used in URL
+	 *
+	 * @return string
 	 */
 	public static function controller() {
 		return Application::route()->getControllerUrl();
@@ -42,8 +46,9 @@ class Url {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getActionUrl()
+	 * Get the current action in the exact format as it is being used in URL
+	 *
+	 * @return string
 	 */
 	public static function action() {
 		return Application::route()->getActionUrl();
@@ -107,7 +112,7 @@ class Url {
 	/**
 	 * Get the complete current URL with domain and protocol and request URI
 	 * 
-	 * @return NULL|string will return NULL in CLI environment
+	 * @return null|string will return NULL in CLI environment
 	 */
 	public static function current() {
 		if (!isset($_SERVER['REQUEST_URI'])) {
@@ -119,8 +124,13 @@ class Url {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::href()
+	 * Generate the link suitable for <a> tags. Generating links depends about the routing class you're using.
+	 *
+	 * @param string $controller
+	 * @param string $action
+	 * @param array $params
+	 *
+	 * @return string
 	 */
 	public static function href($controller = null, $action = null, array $params = null) {
 		return Application::route()->href($controller, $action, $params);
@@ -138,8 +148,11 @@ class Url {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::link()
+	 * Generate the link to static asset on the same host where application is. This method is using link() method in
+	 * routing class, so be careful because it might be overriden in your case.
+	 *
+	 * @param string $path
+	 * @return string
 	 */
 	public static function link($path) {
 		return Application::route()->link($path);
@@ -147,8 +160,11 @@ class Url {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::cdn()
+	 * Generate URL for asset file depending on configuration for assets located in configs/application.php 'cdn_url'.
+	 * This method is using cdn() method in routing class, so be careful because it might be overriden in your case.
+	 *
+	 * @param string $path
+	 * @return string
 	 */
 	public static function cdn($path) {
 		return Application::route()->cdn($path);
