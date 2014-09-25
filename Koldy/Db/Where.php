@@ -314,8 +314,10 @@ class Where extends Query {
 				foreach ($q->getBindings() as $k => $v) {
 					$this->bindings[$k] = $v;
 				}
+
 			} else if ($value instanceof Expr) {
 				$query .= " ({$field} {$where['operator']} {$value})\n";
+
 			} else if (is_array($value)) {
 
 				switch($where['operator']) {
@@ -358,14 +360,14 @@ class Where extends Query {
 						$query .= "))\n";
 						break;
 
-					default:
-						break;
+					// default: nothing by default
 				}
 
 			} else {
 				$key = 'f' . str_replace('.', '_', $field) . (static::$keyIndex++);
 				$query .= " ({$field} {$where['operator']} :{$key})\n";
 				$this->bindings[$key] = $where['value'];
+
 			}
 			
 		}

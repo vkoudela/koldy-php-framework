@@ -371,12 +371,23 @@ class Select extends Where {
 				foreach ($join['first'] as $joinArg) {
 					if ($joinArg instanceof Expr) {
 						$query .= "{$joinArg} AND ";
-					} else if (is_array($joinArg) && count($joinArg) == 3) {
-						$query .= "{$joinArg[0]} {$joinArg[1]} {$joinArg[2]} AND ";
+
 					} else if (is_array($joinArg) && count($joinArg) == 2) {
 						$query .= "{$joinArg[0]} = {$joinArg[1]} AND ";
+
+					} else if (is_array($joinArg) && count($joinArg) == 3) {
+						$query .= "{$joinArg[0]} {$joinArg[1]} {$joinArg[2]} AND ";
+
+					} else if (is_array($joinArg) && count($joinArg) == 4) {
+						if (substr($query, -5) == ' AND ') {
+							$query = substr($query, 0, -5);
+						}
+
+						$query .= " {$joinArg[0]} {$joinArg[1]} {$joinArg[2]}  {$joinArg[3]} AND ";
+
 					} else {
 						throw new Exception('Unknown JOIN argument');
+
 					}
 				}
 

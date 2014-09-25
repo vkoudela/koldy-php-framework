@@ -725,17 +725,22 @@ abstract class Model {
 	 */
 	public static function count($where = null) {
 		$select = static::query();
-		$select->field('COUNT(*)', 'total');
 
 		if ($where !== null) {
 			if ($where instanceof Where) {
+				$select->field('COUNT(*)', 'total');
 				$select->where($where);
+
 			} else if (is_array($where)) {
+				$select->field('COUNT(*)', 'total');
 				foreach ($where as $field => $value) {
 					$select->where($field, $value);
 				}
+
 			} else if (!is_array(static::$primaryKey) && (is_numeric($where) || is_string($where))) {
+				$select->field('COUNT(' . static::$primaryKey . ')', 'total');
 				$select->where(static::$primaryKey, $where);
+
 			}
 		}
 
