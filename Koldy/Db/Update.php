@@ -91,7 +91,7 @@ class Update extends Where {
 			if ($value instanceof Expr) {
 				$sql .= "{$value},\n";
 			} else {
-				$key = $field . (static::$keyIndex++);
+				$key = $field . (static::getKeyIndex());
 				$sql .= ":{$key},\n";
 				$this->bindings[$key] = $value;
 			}

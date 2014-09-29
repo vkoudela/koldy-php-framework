@@ -56,6 +56,22 @@ abstract class Query {
 
 
 	/**
+	 * Get next key index
+	 *
+	 * @return int
+	 */
+	protected static function getKeyIndex() {
+		if (static::$keyIndex === PHP_INT_MAX) {
+			static::$keyIndex = 0;
+		} else {
+			static::$keyIndex++;
+		}
+
+		return static::$keyIndex;
+	}
+
+
+	/**
 	 * Set adapter connection's name
 	 * 
 	 * @param string $connection

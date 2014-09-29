@@ -188,7 +188,7 @@ class Insert extends Query {
 							if ($val instanceof Expr) {
 								$query .= "{$val},";
 							} else {
-								$key = 'field' . $index . (static::$keyIndex++);
+								$key = 'field' . $index . (static::getKeyIndex());
 								$query .= ":{$key},";
 								$this->bindings[$key] = $val;
 							}
@@ -212,7 +212,7 @@ class Insert extends Query {
 						if ($val instanceof Expr) {
 							$query .= "{$val},";
 						} else {
-							$key = 'field' . $i . (static::$keyIndex++);
+							$key = 'field' . $i . (static::getKeyIndex());
 							$query .= ":{$key},";
 							$this->bindings[$key] = $val;
 						}
