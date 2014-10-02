@@ -56,6 +56,10 @@ class Where extends Query {
 	 * @example where('id', '<=', '0100') produces WHERE id <= '0100'
 	 */
 	public function where($field, $valueOrOperator = null, $value = null) {
+		if (is_string($field) && $valueOrOperator === null) {
+			throw new \InvalidArgumentException('Invalid second argument; argument must not be null');
+		}
+
 		return $this->addCondition('AND', $field, ($value === null) ? $valueOrOperator : $value, ($value === null) ? '=' : $valueOrOperator);
 	}
 
@@ -69,6 +73,10 @@ class Where extends Query {
 	 * @return \Koldy\Db\Where
 	 */
 	public function orWhere($field, $valueOrOperator = null, $value = null) {
+		if (is_string($field) && $valueOrOperator === null) {
+			throw new \InvalidArgumentException('Invalid second argument; argument must not be null');
+		}
+
 		return $this->addCondition('OR', $field, ($value === null) ? $valueOrOperator : $value, ($value === null) ? '=' : $valueOrOperator);
 	}
 

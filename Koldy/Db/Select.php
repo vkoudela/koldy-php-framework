@@ -472,7 +472,7 @@ class Select extends Where {
 	/**
 	 * Fetch only first record as object or return false if there is no records
 	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
-	 * @return \stdClass|false if database didn't return anything
+	 * @return \stdClass|bool false if database didn't return anything
 	 */
 	public function fetchFirst($fetchMode = \PDO::FETCH_ASSOC) {
 		$this->resetLimit()->limit(0, 1);
@@ -482,7 +482,7 @@ class Select extends Where {
 
 	/**
 	 * Fetch only first record as object
-	 * @return stdClass|false if database didn't return anything
+	 * @return stdClass|bool false if database didn't return anything
 	 */
 	public function fetchFirstObj() {
 		return $this->fetchFirst(\PDO::FETCH_OBJ);
