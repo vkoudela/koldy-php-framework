@@ -11,6 +11,59 @@ use Koldy\Application;
  */
 class Out extends AbstractLogWriter {
 
+	/**
+	 * Get message function handler
+	 *
+	 * @var function
+	 */
+	protected $getMessageFunction = null;
+
+
+	/**
+	 * Construct the handler to log to files. The config array will be check
+	 * because all configs are strict
+	 *
+	 * @param array $config
+	 */
+	public function __construct(array $config) {
+		if (!isset($config['log']) || !is_array($config['log'])) {
+			throw new Exception('You must define \'log\' levels in file log driver config options at least with empty array');
+		}
+
+		if (isset($config['email_on']) && !is_array($config['email_on'])) {
+			throw new Exception('If \'email_on\' is defined, then it has to be an array');
+		}
+
+		if (!isset($config['email_on'])) {
+			$config['email_on'] = array();
+		}
+
+		if (!array_key_exists('email', $config)) {
+			$config['email'] = null;
+		}
+
+		if (!isset($config['dump'])) {
+			$config['dump'] = array();
+		}
+
+		if (isset($config['get_message_fn'])) {
+			if (is_object($config['get_message_fn']) && $config['get_message_fn'] instanceof \Closure) {
+				$this->getMessageFunction = $config['get_message_fn'];
+			} else {
+
+				if (is_object($config['get_message_fn'])) {
+					$got = get_class($config['get_message_fn']);
+				} else {
+					$got = gettype($config['get_message_fn']);
+				}
+
+				throw new Exception('Invalid get_message_fn type; expected \Closure object, got: ' . $got);
+			}
+		}
+
+		parent::__construct($config);
+	}
+
 
 	/**
 	 * Get the message that will be printed in console. You have to return the
@@ -22,6 +75,10 @@ class Out extends AbstractLogWriter {
 	 * @return string
 	 */
 	protected function getMessage($level, $message) {
+		if ($this->getMessageFunction !== null) {
+			return call_user_func($this->getMessageFunction, $level, $message);
+		}
+
 		return date('Y-m-d H:i:sO') . "\t{$level}\t{$message}\n";
 	}
 

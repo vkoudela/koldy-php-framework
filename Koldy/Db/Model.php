@@ -501,7 +501,7 @@ abstract class Model {
 	 * 
 	 * @param mixed $where the WHERE condition
 	 * @param array $fields [optional] array of fields to select; by default, all fields will be fetched
-	 * @return array of initialized objects of the model this method is called on
+	 * @return array array of initialized objects of the model this method is called on
 	 * @link http://koldy.net/docs/database/models#fetch
 	 */
 	public static function fetch($where, array $fields = null) {
@@ -720,7 +720,7 @@ abstract class Model {
 	 * Count the records in table according to the parameters
 	 * 
 	 * @param array $what
-	 * @return int or null if failes
+	 * @return int
 	 * @link http://koldy.net/docs/database/models#count
 	 */
 	public static function count($where = null) {
@@ -742,15 +742,23 @@ abstract class Model {
 				$select->where(static::$primaryKey, $where);
 
 			}
+		} else {
+			$pk = is_string(static::$primaryKey) ? static::$primaryKey : '*';
+			$select->field('COUNT(' . $pk . ')', 'total');
 		}
 
 		$results = $select->fetchAllObj();
 
 		if (isset($results[0])) {
-			return (int) $results[0]->total;
+			$r = $results[0];
+			if (property_exists($r, 'total')) {
+				return (int) $r->total;
+			} else {
+				return 0;
+			}
+		} else {
+			return 0;
 		}
-
-		return null;
 	}
 
 
