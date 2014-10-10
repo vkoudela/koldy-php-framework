@@ -22,6 +22,14 @@ class Application {
 
 
 	/**
+	 * The registered class aliases
+	 *
+	 * @var array
+	 */
+	protected static $classAliases = array();
+
+
+	/**
 	 * The enivornment modes. Only theese for now
 	 * 
 	 * @var array
@@ -193,6 +201,7 @@ class Application {
 		}
 
 		static::$configs['application'] = $config;
+		static::$classAliases = $config['classes'];
 	}
 
 
@@ -423,6 +432,17 @@ class Application {
 
 
 	/**
+	 * Dynamically register/add new class alias
+	 *
+	 * @param string $classAlias
+	 * @param string $className
+	 */
+	public static function registerClassAlias($classAlias, $className) {
+		static::$classAliases[$classAlias] = $className;
+	}
+
+
+	/**
 	 * Initialize the application :)
 	 * 
 	 * @throws Exception
@@ -447,7 +467,7 @@ class Application {
 
 		// Register Autoload function
 		spl_autoload_register(function($className) {
-			$classes = \Koldy\Application::getConfig('application', 'classes');
+			$classes = \Koldy\Application::$classAliases;
 
 			if (isset($classes[$className])) {
 				class_alias($classes[$className], $className);
