@@ -125,4 +125,15 @@ class Cli {
 		return isset(static::$argv[$index]);
 	}
 
+
+	/**
+	 * Get all parsed parameters
+	 *
+	 * @return array
+	 */
+	public static function getParameters() {
+		static::parseArgvIntoParameters();
+		return static::$parameters;
+	}
+
 }
