@@ -1,6 +1,7 @@
 <?php namespace Koldy\Log\Writer;
 
 use Koldy\Application;
+use Koldy\Cli;
 use Koldy\Convert;
 use Koldy\Mail;
 use Koldy\Request;
@@ -214,6 +215,11 @@ abstract class AbstractLogWriter {
 			} else {
 				$body .= 'CLI Name: ' . Application::getCliName() . "\n";
 				$body .= 'CLI Script: ' . Application::getCliScript() . "\n";
+
+				$params = Cli::getParameters();
+				if (count($params) > 0) {
+					$body .= 'CLI Params: ' . print_r($params, true) . "\n";
+				}
 			}
 
 			$body .= sprintf("Server load: %s\n", Server::getServerLoad());

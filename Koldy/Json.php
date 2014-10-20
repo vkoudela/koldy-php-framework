@@ -55,7 +55,8 @@ class Json extends Response {
 
 
 	/**
-	 * JSON helper to quickly decode JSON string into array or stdClass
+	 * JSON helper to quickly decode JSON string into array or stdClass. Returns array by default. Pass TRUE to
+	 * $returnObject to get the stdClass.
 	 * 
 	 * @param string $stringData
 	 * @param string $returnObject
