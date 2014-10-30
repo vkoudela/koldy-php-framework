@@ -42,6 +42,14 @@ class Request {
 
 
 	/**
+	 * Last response instance of the request after executing
+	 *
+	 * @var Response
+	 */
+	protected $lastResponse = null;
+
+
+	/**
 	 * Construct Request
 	 *
 	 * @param string $url
@@ -221,7 +229,18 @@ class Request {
 		}
 		
 		curl_close($ch);
-		return new Response($info, $body);
+		$this->lastResponse = new Response($info, $body);
+		return $this->lastResponse;
+	}
+
+
+	/**
+	 * Get the last response object instance after executing the HTTP request
+	 *
+	 * @return Response
+	 */
+	public function getResponse() {
+		return $this->lastResponse;
 	}
 
 

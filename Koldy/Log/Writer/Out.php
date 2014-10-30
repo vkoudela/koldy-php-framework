@@ -97,12 +97,14 @@ class Out extends AbstractLogWriter {
 
 		$logMessage = $this->getMessage($level, $message);
 
-		if (in_array($level, $this->config['log'])) {
-			print $logMessage;
-		}
+		if ($logMessage !== false) {
+			if (in_array($level, $this->config['log'])) {
+				print $logMessage;
+			}
 
-		$this->detectEmailAlert($level);
-		$this->appendMessage($logMessage);
+			$this->detectEmailAlert($level);
+			$this->appendMessage($logMessage);
+		}
 	}
 
 

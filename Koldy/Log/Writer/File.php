@@ -176,26 +176,28 @@ class File extends AbstractLogWriter {
 		}
 	
 		$logMessage = $this->getMessage($level, $message);
-	
-		if (in_array($level, $this->config['log'])) {
-			if (!@fwrite($this->fp, $logMessage)) { // actually write it in file
-				throw new Exception('Unable to write to log file');
-			} else {
 
-				// so, writing was ok, but what if showdown was already called?
-				// then we'll close the file, but additional email alerts won't
-				// be sent any more - sorry
+		if ($logMessage !== false) {
+			if (in_array($level, $this->config['log'])) {
+				if (!@fwrite($this->fp, $logMessage)) { // actually write it in file
+					throw new Exception('Unable to write to log file');
+				} else {
 
-				if ($this->closed) {
-					@fclose($this->fp);
-					$this->fp = null;
-					$this->fpFile = null;
+					// so, writing was ok, but what if showdown was already called?
+					// then we'll close the file, but additional email alerts won't
+					// be sent any more - sorry
+
+					if ($this->closed) {
+						@fclose($this->fp);
+						$this->fp = null;
+						$this->fpFile = null;
+					}
 				}
 			}
-		}
 
-		$this->appendMessage($logMessage);
-		$this->detectEmailAlert($level);
+			$this->appendMessage($logMessage);
+			$this->detectEmailAlert($level);
+		}
 	}
 
 

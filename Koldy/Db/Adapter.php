@@ -239,7 +239,7 @@ class Adapter {
 			if (strtoupper(substr($sql, 0, 6)) == 'SELECT') {
 				$return = $stmt->fetchAll();
 			} else {
-				$return = $stmt->rowCount();
+				$return = (int) $stmt->rowCount();
 			}
 		} else {
 			$return = false;

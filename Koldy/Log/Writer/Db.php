@@ -100,24 +100,26 @@ class Db extends AbstractLogWriter {
 
 		$data = $this->getFieldsData($level, $message);
 
-		if (in_array($level, $this->config['log'])) {
-			$this->inserting = true;
+		if ($data !== false) {
+			if (in_array($level, $this->config['log'])) {
+				$this->inserting = true;
 
-			$insert = new Insert($this->config['table']);
-			$insert->add($data);
+				$insert = new Insert($this->config['table']);
+				$insert->add($data);
 
-			if ($insert->exec($this->config['connection']) === false) {
-				$adapter = KoldyDb::getAdapter($this->config['connection']);
-				// do not process this with Log::exception because it will run into recursion
-				$this->detectEmailAlert('exception');
-				$this->appendMessage(date('Y-m-d H:i:sO') . "\tERROR inserting log message into database: {$adapter->getLastError()}\n\n{$adapter->getLastException()->getTraceAsString()}\n");
+				if ($insert->exec($this->config['connection']) === false) {
+					$adapter = KoldyDb::getAdapter($this->config['connection']);
+					// do not process this with Log::exception because it will run into recursion
+					$this->detectEmailAlert('exception');
+					$this->appendMessage(date('Y-m-d H:i:sO') . "\tERROR inserting log message into database: {$adapter->getLastError()}\n\n{$adapter->getLastException()->getTraceAsString()}\n");
+				}
 			}
+
+			$this->inserting = false;
+
+			$this->detectEmailAlert($level);
+			$this->appendMessage(date('Y-m-d H:i:sO') . "\t" . implode("\t", array_values($data)) . "\n");
 		}
-
-		$this->inserting = false;
-
-		$this->detectEmailAlert($level);
-		$this->appendMessage(date('Y-m-d H:i:sO') . "\t" . implode("\t", array_values($data)) . "\n");
 	}
 
 }

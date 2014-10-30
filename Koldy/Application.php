@@ -22,11 +22,11 @@ class Application {
 
 
 	/**
-	 * The registered class aliases
+	 * The registered class aliases. This is for FW internal use only!
 	 *
 	 * @var array
 	 */
-	protected static $classAliases = array();
+	public static $classAliases = array();
 
 
 	/**

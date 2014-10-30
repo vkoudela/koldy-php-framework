@@ -249,7 +249,7 @@ abstract class Model {
 	 * 		User::update(array('first_name' => 'new name'), array('disabled' => 0)) will execute:
 	 *   	UPDATE user SET first_name = 'new name' WHERE disabled = 0
 	 *  
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return int number of affected rows
 	 */
 	public static function update(array $data, $where = null) {
 		$update = new Update(static::getTableName(), $data);
@@ -266,12 +266,7 @@ abstract class Model {
 			}
 		}
 
-		try {
-			$ok = $update->exec(static::$connection);
-			return $ok;
-		} catch (Exception $e) {
-			return false;
-		}
+		return $update->exec(static::$connection);
 	}
 
 
@@ -353,7 +348,7 @@ abstract class Model {
 	 * @param string $field
 	 * @param mixed $where the primary key value of the record
 	 * @param int $howMuch [optional] default 1
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return int number of affected rows
 	 */
 	public static function increment($field, $where, $howMuch = 1) {
 		$update = Db::update(static::getTableName())->increment($field, $howMuch);
@@ -370,12 +365,7 @@ abstract class Model {
 			throw new Exception('Unhandeled increment case in DB model');
 		}
 
-		try {
-			return $update->exec(static::$connection);
-		} catch (Exception $e) {
-			return false;
-		}
-
+		return $update->exec(static::$connection);
 	}
 
 
@@ -390,7 +380,7 @@ abstract class Model {
 	 * @example User::delete(1);
 	 * @example User::delete(array('group_id' => 5, 'parent_id' => 10));
 	 * @example User::delete(array('parent_id' => 10, array('time', '>', '2013-08-01 00:00:00')))
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return int number of affected rows
 	 * @link http://koldy.net/docs/database/models#delete
 	 */
 	public static function delete($where) {
@@ -406,12 +396,7 @@ abstract class Model {
 			$delete->where(static::$primaryKey, $where);
 		}
 
-		try {
-			return $delete->exec(static::$connection);
-		} catch (Exception $e) {
-			return false;
-		}
-
+		return $delete->exec(static::$connection);
 	}
 
 

@@ -108,7 +108,7 @@ abstract class Query {
 	 * 
 	 * @param string|\Koldy\Db\Adapter $adapter [optional] execute this query on which adapter?
 	 * @throws \Koldy\Exception
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return array|int number of affected rows or array of resultset returned by database
 	 */
 	public function exec($adapter = null) {
 		$query = $this->getQuery();
