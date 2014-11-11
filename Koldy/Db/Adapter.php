@@ -126,6 +126,35 @@ class Adapter {
 				
 				break;
 
+			case 'sqlite':
+				if (!isset($config['path'])) {
+					throw new Exception('SQLite configuration must have defined path to the storage file');
+				}
+
+				$path = $config['path'];
+
+				if (substr($path, 0, '8') == 'storage:') {
+					$path = Application::getStoragePath(substr($path, 8));
+				}
+
+				$pdoConfig = array (
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
+				);
+
+				if (isset($config['driver_options'])) {
+					foreach ($config['driver_options'] as $key => $value) {
+						$pdoConfig[$key] = $value;
+					}
+				}
+
+				$this->pdo = new PDO('sqlite:' . $path);
+				foreach ($pdoConfig as $key => $value) {
+					$this->pdo->setAttribute($key, $value);
+				}
+
+				break;
+
 				default:
 					throw new Exception("Database type '{$config['type']}' is not supported");
 					break;
