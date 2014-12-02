@@ -63,6 +63,15 @@ class PHPMailer extends AbstractDriver {
 				if (isset($config['username']) && $config['username'] !== null && isset($config['password']) && $config['password'] !== null) {
 					$this->mailer->SMTPAuth = true;
 				}
+
+				if (($path = stream_resolve_include_path('class.smtp.php')) !== false) {
+					require_once $path;
+
+				} else if (($path = stream_resolve_include_path('PHPMailer/class.smtp.php')) !== false) {
+					require_once $path;
+
+				}
+
 				break;
 
 			case 'mail':
