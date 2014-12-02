@@ -132,14 +132,13 @@ abstract class Query {
 
 
 	/**
-	 * Return some debug informations about the query you built
+	 * Return some debug information about the query you built
 	 * 
 	 * @param bool $oneLine return query in one line
 	 * @return string
 	 */
 	public function debug($oneLine = false) {
 		$query = $this->__toString();
-		$bindings = '';
 
 		foreach ($this->bindings as $key => $value) {
 			if ($key[0] == ':') {

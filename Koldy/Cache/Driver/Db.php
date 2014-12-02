@@ -4,7 +4,6 @@ use Koldy\Db\Select;
 use Koldy\Db\Insert;
 use Koldy\Db\Update;
 use Koldy\Db\Delete;
-use Koldy\Exception;
 
 /**
  * This cache driver will store your cache data into database.

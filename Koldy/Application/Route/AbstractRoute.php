@@ -251,12 +251,14 @@ abstract class AbstractRoute {
 	 * Application::error(404), then it will end up here. This kind of errors are meant
 	 * only to show nice error to user. If you also want to log this or alert anyone that
 	 * this happened, then do that before calling Application::error() method.
-	 * 
+	 *
 	 * @param int $code The HTTP error code
 	 * @param string $message Optional message that will be visible to user
 	 * @param \Exception $e Optional exception, if any. Be careful, you might not
 	 * want to show the exceptions to users, but you would like to show it to developers? Then
 	 * use Application::inDevelopment() and inProduction() methods.
+	 *
+	 * @throws Exception
 	 */
 	public function error($code, $message = null, \Exception $e = null) {
 		if (!headers_sent()) {

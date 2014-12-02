@@ -1,7 +1,5 @@
 <?php namespace Koldy\Db;
 
-use Koldy\Exception;
-
 /**
  * The DELETE query builder
  * 

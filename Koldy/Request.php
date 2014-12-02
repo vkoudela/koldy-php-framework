@@ -6,6 +6,8 @@
  * 
  * We really recommend that you use this class instead of $_SERVER variables directly.
  *
+ * If you're looking for a class that is able to make HTTP request, then take a look at \Koldy\Http\Request
+ *
  */
 class Request {
 

@@ -1,10 +1,10 @@
 <?php namespace Koldy\Convert;
 
 /**
- * Someday, you'll encounter the situtation when PHP can't handle really big numbers. If you search the internet, you'll
+ * Someday, you'll encounter the situation when PHP can't handle really big numbers. If you search the internet, you'll
  * find out that you should be using PHP's BC Math lib that treats big numbers as string, which is fine. But, after a
  * while, you'll probably need to write those big numbers in shorter form. This class does exactly that. By default,
- * we're using all numbers, lower and uppercase ASCII latters for conversions which gives us numeric system per
+ * we're using all numbers, lower and uppercase ASCII letters for conversions which gives us numeric system per
  * base 62. If you want to use the number/letter combination you want, then please extend this class and override
  * getAvailableNumbers() method.
  *

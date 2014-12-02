@@ -150,7 +150,6 @@ class Select extends Where {
 	/**
 	 * Add fields to fetch by passing array of fields
 	 * @param array $fields
-	 * @param string $table
 	 * @return \Koldy\Db\Select
 	 */
 	public function fields(array $fields) {
@@ -247,8 +246,11 @@ class Select extends Where {
 
 	/**
 	 * Add field to ORDER BY
+	 *
 	 * @param string $field
 	 * @param string $direction
+	 *
+	 * @throws Exception
 	 * @return \Koldy\Db\Select
 	 */
 	public function orderBy($field, $direction = null) {
@@ -312,6 +314,7 @@ class Select extends Where {
 
 	/**
 	 * Get the query string prepared for PDO
+	 * @throws Exception
 	 * @return string
 	 */
 	protected function getQuery() {
@@ -454,7 +457,7 @@ class Select extends Where {
 
 	/**
 	 * Fetch all records by this query
-	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @param int $fetchMode [optional] default PDO::FETCH_ASSOC
 	 * @return array
 	 */
 	public function fetchAll($fetchMode = \PDO::FETCH_ASSOC) {
@@ -471,7 +474,7 @@ class Select extends Where {
 
 	/**
 	 * Fetch only first record as object or return false if there is no records
-	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @param int $fetchMode [optional] default PDO::FETCH_ASSOC
 	 * @return \stdClass|bool false if database didn't return anything
 	 */
 	public function fetchFirst($fetchMode = \PDO::FETCH_ASSOC) {

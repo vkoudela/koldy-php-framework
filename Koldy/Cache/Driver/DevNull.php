@@ -1,4 +1,5 @@
 <?php namespace Koldy\Cache\Driver;
+
 /**
  * If you don't want to use your cache driver, you can redirect all cache data
  * into black whole! Learn more at http://en.wikipedia.org/wiki//dev/null

@@ -25,7 +25,7 @@ class Highlight {
 	 * @return string
 	 * @author Created by Benjamin Mayo and Chris Coyier, modified by Vlatko Koudela
 	 */
-	public static function highlightJavascriptCode($javascriptCode) {
+	public static function javascript($javascriptCode) {
 		$data = $javascriptCode;
 
 		$options = false;

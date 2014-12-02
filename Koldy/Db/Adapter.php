@@ -133,7 +133,7 @@ class Adapter {
 
 				$path = $config['path'];
 
-				if (substr($path, 0, '8') == 'storage:') {
+				if (substr($path, 0, 8) == 'storage:') {
 					$path = Application::getStoragePath(substr($path, 8));
 				}
 
@@ -164,7 +164,8 @@ class Adapter {
 
 	/**
 	 * The PDO will be initialized only if needed, not on adapter initialization
-	 * 
+	 *
+	 * @throws Exception
 	 * @return PDO
 	 */
 	public function getAdapter() {
@@ -177,9 +178,9 @@ class Adapter {
 				$this->pdo = null;
 
 				if (isset($this->config['backup_connections']) && is_array($this->config['backup_connections'])) {
-					$sizeof = count($this->config['backup_connections']);
+					$count = count($this->config['backup_connections']);
 
-					for ($i = 0; $i < $sizeof && $this->pdo === null; $i++) {
+					for ($i = 0; $i < $count && $this->pdo === null; $i++) {
 						$config = $this->config['backup_connections'][$i];
 						if (isset($config['log_error']) && $config['log_error'] === true) {
 							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");

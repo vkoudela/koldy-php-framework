@@ -1,7 +1,6 @@
 <?php namespace Koldy\Application\Route;
 
 use Koldy\Application;
-use Koldy\Exception;
 use Koldy\Log;
 
 /**
@@ -87,8 +86,9 @@ class DefaultRoute extends AbstractRoute {
 
 	/**
 	 * Construct the object
-	 * 
+	 *
 	 * @param string $uri
+	 * @param array $config
 	 */
 	public function __construct($uri, array $config = null) {
 		parent::__construct($uri, $config);
@@ -170,8 +170,6 @@ class DefaultRoute extends AbstractRoute {
 			}
 
 			// and now, configure the include paths according to the case
-			$basePath = Application::getApplicationPath();
-
 			$includePath = array(
 				// module stuff has greater priority then application folder itself
 
@@ -262,8 +260,9 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::isAjax()
+	 * Is this ajax request or not?
+	 *
+	 * @return bool
 	 */
 	public function isAjax() {
 		return $this->isAjax;
@@ -271,8 +270,12 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getVar()
+	 * Get the variable value from parameters
+	 *
+	 * @param string $whatVar
+	 * @param string $default
+	 *
+	 * @return mixed|null|string
 	 */
 	public function getVar($whatVar, $default = null) {
 		if (is_numeric($whatVar)) {
@@ -297,8 +300,7 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getModuleUrl()
+	 * @return string
 	 */
 	public function getModuleUrl() {
 		return $this->moduleUrl;
@@ -306,8 +308,7 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getControllerUrl()
+	 * @return string
 	 */
 	public function getControllerUrl() {
 		return $this->controllerUrl;
@@ -315,8 +316,7 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getControllerClass()
+	 * @return string
 	 */
 	public function getControllerClass() {
 		return $this->controllerClass;
@@ -324,8 +324,7 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getActionUrl()
+	 * @return string
 	 */
 	public function getActionUrl() {
 		return $this->actionUrl;
@@ -333,16 +332,19 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getActionMethod()
+	 * @return string
 	 */
 	public function getActionMethod() {
 		return $this->actionMethod;
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::href()
+	 * @param string $controller
+	 * @param string $action
+	 * @param array $params
+	 *
+	 * @return string
+	 * @throws \Koldy\Exception
 	 */
 	public function href($controller = null, $action = null, array $params = null) {
 		if ($controller !== null && strpos($controller, '/') !== false) {
@@ -389,8 +391,8 @@ class DefaultRoute extends AbstractRoute {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::exec()
+	 * @return mixed|void
+	 * @throws \Koldy\Exception
 	 */
 	public function exec() {
 		if (method_exists($this->controllerInstance, 'before')) {

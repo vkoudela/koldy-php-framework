@@ -2,6 +2,7 @@
 
 use Koldy\Db;
 use Koldy\Exception;
+use Koldy\Json;
 use Koldy\Log;
 
 /**
@@ -237,7 +238,7 @@ abstract class Model {
 	 * query will be executed without the WHERE statement).
 	 * 
 	 * @param  array $data
-	 * @param  mixed $onWhat OPTIONAL if you pass single value, framework will
+	 * @param  mixed $where OPTIONAL if you pass single value, framework will
 	 * assume that you passed primary key value. If you pass assoc array,
 	 * then the framework will use those to create the WHERE statement.
 	 * 
@@ -272,7 +273,8 @@ abstract class Model {
 
 	/**
 	 * Save this initialized object into database.
-	 * 
+	 *
+	 * @throws Exception
 	 * @return integer how many rows is affected
 	 */
 	public function save() {
@@ -344,10 +346,12 @@ abstract class Model {
 	/**
 	 * Increment one numeric field in table on the row identified by primary key.
 	 * You can use this only if your primary key is just one field.
-	 * 
+	 *
 	 * @param string $field
 	 * @param mixed $where the primary key value of the record
 	 * @param int $howMuch [optional] default 1
+	 *
+	 * @throws Exception
 	 * @return int number of affected rows
 	 */
 	public static function increment($field, $where, $howMuch = 1) {
@@ -380,6 +384,7 @@ abstract class Model {
 	 * @example User::delete(1);
 	 * @example User::delete(array('group_id' => 5, 'parent_id' => 10));
 	 * @example User::delete(array('parent_id' => 10, array('time', '>', '2013-08-01 00:00:00')))
+	 *
 	 * @return int number of affected rows
 	 * @link http://koldy.net/docs/database/models#delete
 	 */
@@ -402,9 +407,10 @@ abstract class Model {
 
 	/**
 	 * The same as static::delete(), only this will work if object is populated with data
-	 * 
+	 *
 	 * @see \Koldy\Db\Model::delete()
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @throws Exception
+	 * @return boolean|int False if query fails; number of affected rows if query passed
 	 */
 	public function destroy() {
 		$pk = static::$primaryKey;
@@ -435,10 +441,12 @@ abstract class Model {
 	 * model. Otherwise, you can fetch the record by any other field you have.
 	 * If your criteria returnes more then one records, only first record will
 	 * be taken.
-	 * 
+	 *
 	 * @param  mixed $field primaryKey value, single field or assoc array of arguments for query
 	 * @param  mixed $value [optional]
 	 * @param array $fields [optional]
+	 *
+	 * @throws Exception
 	 * @return  new static|false False will be returned if record is not found
 	 * @link http://koldy.net/docs/database/models#fetchOne
 	 */
@@ -520,7 +528,7 @@ abstract class Model {
 	/**
 	 * Fetch all records from database
 	 * 
-	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @param int $fetchMode [optional] default PDO::FETCH_ASSOC
 	 * @return array
 	 * @link http://www.php.net/manual/en/pdo.constants.php
 	 */
@@ -661,22 +669,24 @@ abstract class Model {
 	 * Check if some value exists in database or not. This is useful if you
 	 * want, for an example, check if user's e-mail already is in database
 	 * before you try to insert your data.
-	 * 
+	 *
 	 * @param  string $field
 	 * @param  mixed $value
 	 * @param  mixed $exceptionValue OPTIONAL
 	 * @param  string $exceptionField OPTIONAL
+	 *
+	 * @return bool|null
 	 * @link http://koldy.net/docs/database/models#isUnique
-	 * 
+	 *
 	 * @example
-	 * 		User::isUnique('email', 'email@domain.com'); will execute:
-	 *   	SELECT COUNT(*) FROM user WHERE email = 'email@domain.com'
-	 * 
-	 * 		User::isUnique('email', 'email@domain.com', 'other@mail.com');
-	 *   	SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND email != 'other@mail.com'
-	 * 
-	 * 		User::isUnique('email', 'email@domain.com', 5, 'id');
-	 *   	SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND id != 5
+	 *          User::isUnique('email', 'email@domain.com'); will execute:
+	 *          SELECT COUNT(*) FROM user WHERE email = 'email@domain.com'
+	 *
+	 *          User::isUnique('email', 'email@domain.com', 'other@mail.com');
+	 *          SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND email != 'other@mail.com'
+	 *
+	 *          User::isUnique('email', 'email@domain.com', 5, 'id');
+	 *          SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND id != 5
 	 */
 	public static function isUnique($field, $value, $exceptionValue = null, $exceptionField = null) {
 		$select = static::query();
@@ -704,7 +714,7 @@ abstract class Model {
 	/**
 	 * Count the records in table according to the parameters
 	 * 
-	 * @param array $what
+	 * @param array $where
 	 * @return int
 	 * @link http://koldy.net/docs/database/models#count
 	 */
@@ -772,7 +782,7 @@ abstract class Model {
 
 
 	public function __toString() {
-		return \Koldy\Json::encode($this->getData());
+		return Json::encode($this->getData());
 	}
 
 }

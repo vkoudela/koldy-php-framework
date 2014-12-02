@@ -1,7 +1,7 @@
 <?php namespace Koldy\Db;
 /**
  * The expression data holder - string stored in this class will be
- * literaly printed in query with no additional adding slashes or anything
+ * literally printed in query with no additional adding slashes or anything
  * like that.
  *
  */

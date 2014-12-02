@@ -286,9 +286,11 @@ class Where extends Query {
 
 	/**
 	 * Get where statement appended to query
-	 * 
+	 *
 	 * @param array $whereArray
 	 * @param int $cnt
+	 *
+	 * @throws Exception
 	 * @return string
 	 */
 	protected function getWhereSql(array $whereArray = null, $cnt = 0) {

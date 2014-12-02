@@ -204,7 +204,7 @@ class Insert extends Query {
 
 					if ($index == 0) {
 						$targetCount = count($row);
-					} else if (sizeof($row) != $targetCount) {
+					} else if (count($row) != $targetCount) { // FIXME: Troubleshoot and write tests
 						throw new Exception('Can not build INSERT query, column count is not the same in all data records');
 					}
 

@@ -90,10 +90,10 @@ abstract class AbstractCacheDriver {
 
 	/**
 	 * Set the value under key and remember it forever! Okay, "forever" has its
-	 * own duration and thats for 15 years. So, is 15 years enough for you?
+	 * own duration and that is 15 years. So, is 15 years enough for you?
 	 * 
 	 * @param string $key
-	 * @param mixes $value
+	 * @param mixed $value
 	 * @return boolean True if set, null if cache is disabled
 	 */
 	public function setForever($key, $value) {

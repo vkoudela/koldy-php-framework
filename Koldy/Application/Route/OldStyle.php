@@ -77,7 +77,11 @@ class OldStyle extends AbstractRoute {
 
 	/**
 	 * Construct the object
+	 *
 	 * @param string $uri
+	 * @param array $config
+	 *
+	 * @throws Exception
 	 */
 	public function __construct($uri, array $config = null) {
 		if ($config === null || count($config) == 0 || !isset($config['module_param']) || !isset($config['controller_param']) || !isset($config['action_param'])) {

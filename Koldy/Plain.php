@@ -1,7 +1,7 @@
 <?php namespace Koldy;
 
 /**
- * Class for printing plain text to user.
+ * Class for printing plain text as response to HTTP request.
  * 
  * @link http://koldy.net/docs/plain
  */

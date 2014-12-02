@@ -1,7 +1,6 @@
 <?php namespace Koldy\Mail\Driver;
 
 use Koldy\Exception;
-use Koldy\Log;
 
 /**
  * This mail driver class will use just internal mail() function to send
