@@ -56,6 +56,22 @@ abstract class Query {
 
 
 	/**
+	 * Get next key index
+	 *
+	 * @return int
+	 */
+	protected static function getKeyIndex() {
+		if (static::$keyIndex === PHP_INT_MAX) {
+			static::$keyIndex = 0;
+		} else {
+			static::$keyIndex++;
+		}
+
+		return static::$keyIndex;
+	}
+
+
+	/**
 	 * Set adapter connection's name
 	 * 
 	 * @param string $connection
@@ -92,7 +108,7 @@ abstract class Query {
 	 * 
 	 * @param string|\Koldy\Db\Adapter $adapter [optional] execute this query on which adapter?
 	 * @throws \Koldy\Exception
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return array|int number of affected rows or array of resultset returned by database
 	 */
 	public function exec($adapter = null) {
 		$query = $this->getQuery();
@@ -116,22 +132,28 @@ abstract class Query {
 
 
 	/**
-	 * Return some debug informations about the query you built
+	 * Return some debug information about the query you built
 	 * 
 	 * @param bool $oneLine return query in one line
 	 * @return string
 	 */
 	public function debug($oneLine = false) {
 		$query = $this->__toString();
-		$bindings = '';
 
 		foreach ($this->bindings as $key => $value) {
-			if (substr($key, 0, 1) == ':') {
+			if ($key[0] == ':') {
 				$key = substr($key, 1);
 			}
 
 			if (is_numeric($value) && substr((string) $value, 0, 1) != '0') {
-				$query = str_replace(":{$key}", $value, $query);
+				$value = (string) $value;
+
+				if (strlen($value) > 10) {
+					$query = str_replace(":{$key}", "'{$value}'", $query);
+				} else {
+					$query = str_replace(":{$key}", $value, $query);
+				}
+
 			} else {
 				$query = str_replace(":{$key}", ("'" . addslashes($value) . "'"), $query);
 			}

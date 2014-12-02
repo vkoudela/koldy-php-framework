@@ -9,11 +9,33 @@ class Input {
 
 
 	/**
+	 * The raw data of the request
+	 * 
+	 * @var string
+	 */
+	private static $rawData = null;
+
+
+	/**
 	 * The variables in case of PUT or DELETE request
 	 * 
 	 * @var array
 	 */
 	private static $vars = null;
+
+
+	/**
+	 * Get raw data of the request
+	 *
+	 * @return mixed
+	 */
+	public static function getRawData() {
+		if (static::$rawData === null) {
+			static::$rawData = file_get_contents('php://input');
+		}
+
+		return static::$rawData;
+	}
 
 
 	/**
@@ -24,7 +46,7 @@ class Input {
 	private static function getInputVars() {
 		if (static::$vars === null) {
 			// take those vars only once
-			parse_str(file_get_contents('php://input'), $vars);
+			parse_str(static::getRawData(), $vars);
 			static::$vars = (array) $vars;
 		}
 		
@@ -299,7 +321,8 @@ class Input {
 		foreach ($params as $param) {
 			if (!isset($parameters[$param])) {
 				if (Application::inDevelopment()) {
-					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . implode(',', array_keys($parameters)));
+					$passedParams = implode(',', array_keys($parameters));
+					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . (strlen($passedParams) > 0 ? $passedParams : '[nothing]'));
 				}
 				Application::error(400, 'Missing one of the parameters');
 			}
@@ -308,6 +331,43 @@ class Input {
 		}
 
 		return $class;
+	}
+
+
+	/**
+	 * Get the required parameters. Return bad request if any of them is missing. This method will return array.
+	 * 
+	 * @param variable
+	 * @return array
+	 * @link http://koldy.net/docs/input#require
+	 *
+	 * @example
+	 * 		$params = Input::requireParamsArray('id', 'email');
+	 * 		echo $params['email'];
+	 */
+	public static function requireParamsArray() {
+		switch($_SERVER['REQUEST_METHOD']) {
+			case 'GET': $parameters = $_GET; break;
+			case 'POST': $parameters = $_POST; break;
+			case 'PUT':
+			case 'DELETE': $parameters = static::getInputVars(); break;
+		}
+
+		$params = func_get_args();
+		$a = array();
+		foreach ($params as $param) {
+			if (!isset($parameters[$param])) {
+				if (Application::inDevelopment()) {
+					$passedParams = implode(',', array_keys($parameters));
+					Log::debug("Missing {$_SERVER['REQUEST_METHOD']} parameter '{$param}', only got " . (strlen($passedParams) > 0 ? $passedParams : '[nothing]'));
+				}
+				Application::error(400, 'Missing one of the parameters');
+			}
+
+			$a[$param] = $parameters[$param];
+		}
+
+		return $a;
 	}
 
 

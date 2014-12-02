@@ -54,21 +54,25 @@ class Update extends Where {
 		$this->what = $values;
 		return $this;
 	}
-	
+
 	/**
 	 * Increment numeric field's value in database
+	 *
 	 * @param string $field
-	 * @param number $howMuch
+	 * @param int $howMuch
+	 *
 	 * @return \Koldy\Db\Update
 	 */
 	public function increment($field, $howMuch = 1) {
 		return $this->set($field, new Expr("{$field} + {$howMuch}"));
 	}
-	
+
 	/**
 	 * Decrement numeric field's value in database
+	 *
 	 * @param string $field
-	 * @param number $howMuch
+	 * @param int $howMuch
+	 *
 	 * @return \Koldy\Db\Update
 	 */
 	public function decrement($field, $howMuch = 1) {
@@ -91,7 +95,7 @@ class Update extends Where {
 			if ($value instanceof Expr) {
 				$sql .= "{$value},\n";
 			} else {
-				$key = $field . (static::$keyIndex++);
+				$key = $field . (static::getKeyIndex());
 				$sql .= ":{$key},\n";
 				$this->bindings[$key] = $value;
 			}

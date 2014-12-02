@@ -55,7 +55,9 @@ class Validator {
 		15 =>'This value shouldn\'t be the same as {name2}',
 		16 =>'Extension has to be one of the following: {extensions}',
 		17 =>'Error uploading file.',
-		18 =>'This field doesn\'t have requested value.' // {field}, {value}
+		18 =>'This field doesn\'t have requested value.', // {field}, {value}
+		19 =>'This value should be decimal',
+		20 =>'This mustn\'t have more then {limit} numbers after decimal sign'
 	);
 
 
@@ -336,6 +338,52 @@ class Validator {
 
 
 	/**
+	 * Throw error if value is not numeric and not decimal. This is good for price points.
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 * @example decimal:2 - allowes numbers with two decimal points
+	 */
+	protected function validateDecimal($param, $settings = null) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+
+			// is it decimal? if there is comma, then we'll need to make it as dot
+			$value = str_replace(',', '.', trim($this->input[$param]));
+
+			// but if its not numeric now, then something is wrong
+			if (!is_numeric($value)) {
+				return static::getErrorMessage(19);
+			}
+
+			if ($settings !== null) {
+				$settings = explode(',', $settings);
+				if (count($settings) > 0) {
+					// if there are settings, then on first place, it is the number of digits after dot
+					if (!is_numeric($settings[0]) && !is_int($settings[0])) {
+						throw new Exception('Invalid setting defined for decimal definition');
+					}
+
+					// it should fail if there are more numbers after dot then defined number
+					if (strpos($value, '.') !== false) {
+						// it will validate only if there is a dot, otherwise, there is nothing to validate
+						$decimals = (int) $settings[0];
+						$tmp = explode('.', $value);
+						if (strlen($tmp[1]) > $decimals) {
+							return static::getErrorMessage(20, array(
+								'limit' => $decimals
+							));
+						}
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+
+	/**
 	 * Throw error if input is not the array of fields. This will only check the array not, not the values in array.
 	 * 
 	 * @param string $param
@@ -416,17 +464,34 @@ class Validator {
 	 * @param string $param
 	 * @param string $settings (Class\Name,uniqueField[,exceptionValue][,exceptionField])
 	 * @return true|string
+	 * @example \Db\User,email,my@email.com
+	 * @example \Db\User,email,field:id,id
 	 */
 	protected function validateUnique($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
 			$settings = explode(',', $settings);
-			if (sizeof($settings) < 2) {
-				throw new Exception("Bad parameters in Validator::validateUnique method");
+
+			$settingsCount = count($settings);
+			if ($settingsCount < 2) {
+				if (LOG && Application::inDevelopment()) {
+					Log::debug('validateUnique got only this: ' . print_r($settings, true));
+				}
+				throw new Exception('Bad parameters count in Validator::validateUnique method; expected at least 2, got ' . $settingsCount);
 			}
+
 			$class = $settings[0];
 			$field = $settings[1];
 			$exceptionValue = isset($settings[2]) ? $settings[2] : null;
+
+			if (substr($exceptionValue, 0, 6) == 'field:') {
+				$exceptionFieldName = substr($exceptionValue, 6);
+				if (isset($this->input[$exceptionFieldName])) {
+					$exceptionValue = $this->input[$exceptionFieldName];
+				}
+			}
+
 			$exceptionField = isset($settings[3]) ? $settings[3] : null;
+
 			if (!$class::isUnique($field, trim($this->input[$param]), $exceptionValue, $exceptionField)) {
 				return static::getErrorMessage(8, array('value' => $this->input[$param]));
 			}

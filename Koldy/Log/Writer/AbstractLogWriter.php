@@ -1,6 +1,7 @@
 <?php namespace Koldy\Log\Writer;
 
 use Koldy\Application;
+use Koldy\Cli;
 use Koldy\Convert;
 use Koldy\Mail;
 use Koldy\Request;
@@ -54,7 +55,84 @@ abstract class AbstractLogWriter {
 	 * @param string $level
 	 * @param mixed $message
 	 */
-	abstract public function logMessage($level, $message);
+	abstract protected function logMessage($level, $message);
+
+
+	/**
+	 * Write DEBUG message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function debug($message) {
+		$this->logMessage('debug', $message);
+	}
+
+
+	/**
+	 * Write NOTICE message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function notice($message) {
+		$this->logMessage('notice', $message);
+	}
+
+
+	/**
+	 * Write SQL message to log
+	 *
+	 * @param string $query
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function sql($query) {
+		$this->logMessage('sql', $query);
+	}
+
+
+	/**
+	 * Write INFO message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function info($message) {
+		$this->logMessage('info', $message);
+	}
+
+
+	/**
+	 * Write WARNING message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function warning($message) {
+		$this->logMessage('warning', $message);
+	}
+
+
+	/**
+	 * Write ERROR message to log
+	 *
+	 * @param string $message
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function error($message) {
+		$this->logMessage('error', $message);
+	}
+
+
+	/**
+	 * Write EXCEPTION message to log
+	 *
+	 * @param \Exception $e
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public function exception(\Exception $e) {
+		$this->logMessage('exception', "Exception in {$e->getFile()}:{$e->getLine()}\n\n{$e->getMessage()}\n\n{$e->getTraceAsString()}");
+	}
 
 
 	/**
@@ -77,7 +155,7 @@ abstract class AbstractLogWriter {
 	 * @param string $level
 	 */
 	protected function detectEmailAlert($level) {
-		if (!$this->emailReport && $this->config['email'] !== null && in_array($level, $this->config['email_on'])) {
+		if ($this->emailReport === false && $this->config['email'] !== null && in_array($level, $this->config['email_on'])) {
 			$this->emailReport = true;
 		}
 	}
@@ -95,28 +173,7 @@ abstract class AbstractLogWriter {
 	/**
 	 * Process extended reports
 	 */
-	protected function processExtendedReports() {
-		$dump = $this->config['dump'];
-
-		//'speed', 'included_files', 'include_path'
-
-		if (in_array('speed', $dump)) {
-			$method = isset($_SERVER['REQUEST_METHOD'])
-				? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
-				: ('CLI=' . Application::getCliName());
-
-			$executedIn = Application::getRequestExecutionTime();
-			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . sizeof(get_included_files()) . ' files');
-		}
-
-		if (in_array('included_files', $dump)) {
-			$this->logMessage('notice', print_r(get_included_files(), true));
-		}
-
-		if (in_array('include_path', $dump)) {
-			$this->logMessage('notice', print_r(explode(':', get_include_path()), true));
-		}
-	}
+	protected function processExtendedReports() {}
 
 
 	/**
@@ -125,8 +182,10 @@ abstract class AbstractLogWriter {
 	 * @return boolean|null true if mail was sent and null if mail shouldn't be sent
 	 */
 	protected function sendEmailReport() {
-		if ($this->emailReport && $this->config['email'] !== null) {
+		if ($this->emailReport === true && $this->config['email'] !== null) {
 			$body = implode('', $this->messages);
+
+			/* this doesn't have sense any more :::
 			$body .= "\n\n---------- debug_backtrace:\n";
 
 			foreach (debug_backtrace() as $r) {
@@ -144,6 +203,7 @@ abstract class AbstractLogWriter {
 
 				$body .= "\n";
 			}
+			*/
 			
 			$body .= "\n----------\n";
 			$body .= sprintf("server: %s (%s)\n", Request::serverIp(), Request::hostName());
@@ -155,6 +215,11 @@ abstract class AbstractLogWriter {
 			} else {
 				$body .= 'CLI Name: ' . Application::getCliName() . "\n";
 				$body .= 'CLI Script: ' . Application::getCliScript() . "\n";
+
+				$params = Cli::getParameters();
+				if (count($params) > 0) {
+					$body .= 'CLI Params: ' . print_r($params, true) . "\n";
+				}
 			}
 
 			$body .= sprintf("Server load: %s\n", Server::getServerLoad());

@@ -152,7 +152,7 @@ abstract class AbstractRoute {
 
 		$config = Application::getConfig();
 		
-		if (substr($path, 0, 1) != '/') {
+		if ($path[0] != '/') {
 			$path = '/' . $path;
 		}
 		
@@ -180,7 +180,7 @@ abstract class AbstractRoute {
 		$config = Application::getConfig();
 		$cdnUrl = ($config['cdn_url'] === null) ? $config['site_url'] : $config['cdn_url'];
 		
-		if (substr($path, 0, 1) != '/') {
+		if ($path[0] != '/') {
 			$path = '/' . $path;
 		}
 
@@ -251,30 +251,64 @@ abstract class AbstractRoute {
 	 * Application::error(404), then it will end up here. This kind of errors are meant
 	 * only to show nice error to user. If you also want to log this or alert anyone that
 	 * this happened, then do that before calling Application::error() method.
-	 * 
+	 *
 	 * @param int $code The HTTP error code
 	 * @param string $message Optional message that will be visible to user
 	 * @param \Exception $e Optional exception, if any. Be careful, you might not
 	 * want to show the exceptions to users, but you would like to show it to developers? Then
 	 * use Application::inDevelopment() and inProduction() methods.
+	 *
+	 * @throws Exception
 	 */
 	public function error($code, $message = null, \Exception $e = null) {
-		if ($message === null) {
-			$message = 'Page Not Found';
-		}
-
 		if (!headers_sent()) {
 			switch($code) {
-				case 400: header('HTTP/1.0 400 Bad Request', true, 400); break;
-				case 403: header('HTTP/1.0 403 Forbidden', true, 403); break;
-				case 404: header('HTTP/1.0 404 Not Found', true, 404); break;
-				case 500: header('HTTP/1.0 500 Internal server error', true, 500); break;
+				case 400:
+					header('HTTP/1.0 400 Bad Request', true, 400);
+
+					if ($message === null) {
+						$message = 'Bad request';
+					}
+					break;
+
+				case 403:
+					header('HTTP/1.0 403 Forbidden', true, 403);
+
+					if ($message === null) {
+						$message = 'Forbidden';
+					}
+					break;
+
+				case 404:
+					header('HTTP/1.0 404 Not Found', true, 404);
+
+					if ($message === null) {
+						$message = 'Page Not Found';
+					}
+					break;
+
+				case 500:
+					header('HTTP/1.0 500 Internal Server Error', true, 500);
+
+					if ($message === null) {
+						$message = 'Internal Server Error';
+					}
+					break;
+
 				case 503:
 					header('HTTP/1.1 503 Service Temporarily Unavailable', true, 503);
 					header('Status: 503 Service Temporarily Unavailable');
 					header('Retry-After: 300'); // 300 seconds / 5 minutes
+
+					if ($message === null) {
+						$message = 'Service Temporarily Unavailable';
+					}
 					break;
 			}
+		}
+
+		if ($message === null) {
+			$message = 'Page Not Found';
 		}
 
 		if ($this->isAjax()) {

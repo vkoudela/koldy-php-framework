@@ -24,6 +24,17 @@ abstract class Response {
 
 
 	/**
+	 * The HTTP response headers - it can be only one code response
+	 * @var array
+	 */
+	private $httpHeader = array(
+		'code' => null,
+		'status' => null,
+		'override' => null
+	);
+
+
+	/**
 	 * Flush the content to output buffer
 	 */
 	abstract public function flush();
@@ -52,6 +63,43 @@ abstract class Response {
 		);
 
 		return $this;
+	}
+
+
+	/**
+	 * Set the HTTP response header with status code
+	 * 
+	 * @param int $httpCode
+	 * @param string $httpStatus
+	 * @param boolean $override override the already set HTTP code
+	 * @return \Koldy\Response
+	 */
+	public function httpHeader($httpCode, $httpStatus, $override = true) {
+		if ($httpCode < 100 || $httpCode > 999) {
+			throw new \InvalidArgumentException('Invalid HTTP code while setting HTTP header');
+		}
+
+		if (!is_string($httpStatus)) {
+			throw new \InvalidArgumentException('Invalid HTTP status while setting HTTP header');
+		}
+
+		$this->httpHeader = array(
+			'code' => $httpCode,
+			'status' => $httpStatus,
+			'override' => $override
+		);
+
+		return $this;
+	}
+
+
+	/**
+	 * Get the HTTP response code that will be used when object is flushed.
+	 * 
+	 * @return int or null if code is not set (if null, then web server will throw the http code (usually 200))
+	 */
+	public function getHttpCode() {
+		return $this->httpHeader['code'];
 	}
 
 
@@ -104,14 +152,43 @@ abstract class Response {
 	/**
 	 * Flush the headers
 	 */
-	protected function flushHeaders() {
+	public function flushHeaders() {
 		if (!headers_sent()) {
+			// first flush the HTTP header first, if any
+
+			if ($this->httpHeader['code'] !== null) {
+				header($this->httpHeader['status'], $this->httpHeader['override'], $this->httpHeader['code']);
+			}
+
 			foreach ($this->headers as $header) {
 				header("{$header['name']}: {$header['value']}");
 			}
 		} else {
-			Log::warning('Can\'t flushHeaders because headers are already sent');
+			Log::error('Can\'t flushHeaders because headers are already sent');
 		}
+	}
+
+
+	/**
+	 * Get the array of all headers (one item is one header)
+	 * 
+	 * DO NOT USE THIS data for flushing the headers later! If you want to
+	 * flush the headers, use flushHeaders() method!
+	 * 
+	 * @return array
+	 */
+	public function getHeaders() {
+		$headers = array();
+
+		if ($this->httpHeader['code'] !== null) {
+			$headers[] = $this->httpHeader['status'];
+		}
+
+		foreach ($this->headers as $header) {
+			$headers[] = $header['one-line'] ? $header['value'] : "{$header['name']}: {$header['value']}";
+		}
+
+		return $headers;
 	}
 
 

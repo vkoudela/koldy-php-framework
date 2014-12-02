@@ -56,6 +56,10 @@ class Where extends Query {
 	 * @example where('id', '<=', '0100') produces WHERE id <= '0100'
 	 */
 	public function where($field, $valueOrOperator = null, $value = null) {
+		if (is_string($field) && $valueOrOperator === null) {
+			throw new \InvalidArgumentException('Invalid second argument; argument must not be null');
+		}
+
 		return $this->addCondition('AND', $field, ($value === null) ? $valueOrOperator : $value, ($value === null) ? '=' : $valueOrOperator);
 	}
 
@@ -69,6 +73,10 @@ class Where extends Query {
 	 * @return \Koldy\Db\Where
 	 */
 	public function orWhere($field, $valueOrOperator = null, $value = null) {
+		if (is_string($field) && $valueOrOperator === null) {
+			throw new \InvalidArgumentException('Invalid second argument; argument must not be null');
+		}
+
 		return $this->addCondition('OR', $field, ($value === null) ? $valueOrOperator : $value, ($value === null) ? '=' : $valueOrOperator);
 	}
 
@@ -272,15 +280,17 @@ class Where extends Query {
 	 * @return boolean
 	 */
 	protected function hasWhere() {
-		return sizeof($this->where) > 0;
+		return count($this->where) > 0;
 	}
 
 
 	/**
 	 * Get where statement appended to query
-	 * 
+	 *
 	 * @param array $whereArray
 	 * @param int $cnt
+	 *
+	 * @throws Exception
 	 * @return string
 	 */
 	protected function getWhereSql(array $whereArray = null, $cnt = 0) {
@@ -314,8 +324,10 @@ class Where extends Query {
 				foreach ($q->getBindings() as $k => $v) {
 					$this->bindings[$k] = $v;
 				}
+
 			} else if ($value instanceof Expr) {
 				$query .= " ({$field} {$where['operator']} {$value})\n";
+
 			} else if (is_array($value)) {
 
 				switch($where['operator']) {
@@ -326,7 +338,7 @@ class Where extends Query {
 						if ($value[0] instanceof Expr) {
 							$query .= $value[0];
 						} else {
-							$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+							$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
 							$query .= ":{$key}";
 							$this->bindings[$key] = $value[0];
 						}
@@ -336,7 +348,7 @@ class Where extends Query {
 						if ($value[1] instanceof Expr) {
 							$query .= $value[1];
 						} else {
-							$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+							$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
 							$query .= ":{$key}";
 							$this->bindings[$key] = $value[1];
 						}
@@ -349,7 +361,7 @@ class Where extends Query {
 						$query .= " ({$field} {$where['operator']} (";
 
 						foreach ($value as $val) {
-							$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+							$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
 							$query .= ":{$key},";
 							$this->bindings[$key] = $val;
 						}
@@ -358,14 +370,14 @@ class Where extends Query {
 						$query .= "))\n";
 						break;
 
-					default:
-						break;
+					// default: nothing by default
 				}
 
 			} else {
-				$key = str_replace('.', '_', $field) . (static::$keyIndex++);
+				$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
 				$query .= " ({$field} {$where['operator']} :{$key})\n";
 				$this->bindings[$key] = $where['value'];
+
 			}
 			
 		}

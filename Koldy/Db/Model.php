@@ -2,8 +2,16 @@
 
 use Koldy\Db;
 use Koldy\Exception;
+use Koldy\Json;
 use Koldy\Log;
 
+/**
+ * Model is abstract class that needs to be extended with your defined class.
+ * When you extend it, framework will know with which table it needs to work; or
+ * simply define the table name you need. Check out the docs in link for more examples.
+ * 
+ * @link http://koldy.net/docs/database/models
+ */
 abstract class Model {
 
 
@@ -155,6 +163,16 @@ abstract class Model {
 
 
 	/**
+	 * Get the connection string defined in this model
+	 * 
+	 * @return string|null
+	 */
+	public static function getConnection() {
+		return static::$connection;
+	}
+
+
+	/**
 	 * Get the table name for database for this model. If your model class is
 	 * User\Login\History, then the database table name will be user_login_history
 	 * 
@@ -173,7 +191,8 @@ abstract class Model {
 	 * Insert the record in database with given array of data
 	 * @param mixed $data pass array or valid instance of \Koldy\Db\Model
 	 * 
-	 * @return new static|false False if insert failed, otherwise, instance of this model
+	 * @return \Koldy\Db\Model|false False if insert failed, otherwise, instance of this model
+	 * @throws \Koldy\Exception
 	 */
 	public static function create($data) {
 		if ($data instanceof Model) {
@@ -182,10 +201,6 @@ abstract class Model {
 
 		$insert = new Insert(static::getTableName(), $data);
 		$ok = $insert->exec(static::$connection);
-
-		if (!$ok) {
-			return false;
-		}
 
 		if (static::$autoIncrement) {
 			$data[static::$primaryKey] = static::getLastInsertId();
@@ -223,7 +238,7 @@ abstract class Model {
 	 * query will be executed without the WHERE statement).
 	 * 
 	 * @param  array $data
-	 * @param  mixed $onWhat OPTIONAL if you pass single value, framework will
+	 * @param  mixed $where OPTIONAL if you pass single value, framework will
 	 * assume that you passed primary key value. If you pass assoc array,
 	 * then the framework will use those to create the WHERE statement.
 	 * 
@@ -235,7 +250,7 @@ abstract class Model {
 	 * 		User::update(array('first_name' => 'new name'), array('disabled' => 0)) will execute:
 	 *   	UPDATE user SET first_name = 'new name' WHERE disabled = 0
 	 *  
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return int number of affected rows
 	 */
 	public static function update(array $data, $where = null) {
 		$update = new Update(static::getTableName(), $data);
@@ -258,7 +273,8 @@ abstract class Model {
 
 	/**
 	 * Save this initialized object into database.
-	 * 
+	 *
+	 * @throws Exception
 	 * @return integer how many rows is affected
 	 */
 	public function save() {
@@ -291,7 +307,11 @@ abstract class Model {
 						}
 					}
 
-					$result = $update->exec(static::$connection);
+					try {
+						$result = $update->exec(static::$connection);
+					} catch (Exception $e) {
+						$result = false;
+					}
 
 					if ($result !== false) {
 						$this->originalData = $this->data;
@@ -302,7 +322,13 @@ abstract class Model {
 					// we don't have pk value, so lets insert
 					$insert = new Insert(static::getTableName());
 					$insert->add($toUpdate);
-					$insert->exec(static::$connection);
+
+					try {
+						$insert->exec(static::$connection);
+					} catch (Exception $e) {
+						return false;
+					}
+
 					$this->data[static::$primaryKey] = Db::getAdapter(static::$connection)->getLastInsertId();
 					$this->originalData = $this->data;
 				}
@@ -320,11 +346,13 @@ abstract class Model {
 	/**
 	 * Increment one numeric field in table on the row identified by primary key.
 	 * You can use this only if your primary key is just one field.
-	 * 
+	 *
 	 * @param string $field
 	 * @param mixed $where the primary key value of the record
 	 * @param int $howMuch [optional] default 1
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 *
+	 * @throws Exception
+	 * @return int number of affected rows
 	 */
 	public static function increment($field, $where, $howMuch = 1) {
 		$update = Db::update(static::getTableName())->increment($field, $howMuch);
@@ -356,7 +384,8 @@ abstract class Model {
 	 * @example User::delete(1);
 	 * @example User::delete(array('group_id' => 5, 'parent_id' => 10));
 	 * @example User::delete(array('parent_id' => 10, array('time', '>', '2013-08-01 00:00:00')))
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 *
+	 * @return int number of affected rows
 	 * @link http://koldy.net/docs/database/models#delete
 	 */
 	public static function delete($where) {
@@ -378,9 +407,10 @@ abstract class Model {
 
 	/**
 	 * The same as static::delete(), only this will work if object is populated with data
-	 * 
+	 *
 	 * @see \Koldy\Db\Model::delete()
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @throws Exception
+	 * @return boolean|int False if query fails; number of affected rows if query passed
 	 */
 	public function destroy() {
 		$pk = static::$primaryKey;
@@ -411,10 +441,12 @@ abstract class Model {
 	 * model. Otherwise, you can fetch the record by any other field you have.
 	 * If your criteria returnes more then one records, only first record will
 	 * be taken.
-	 * 
+	 *
 	 * @param  mixed $field primaryKey value, single field or assoc array of arguments for query
 	 * @param  mixed $value [optional]
 	 * @param array $fields [optional]
+	 *
+	 * @throws Exception
 	 * @return  new static|false False will be returned if record is not found
 	 * @link http://koldy.net/docs/database/models#fetchOne
 	 */
@@ -427,16 +459,25 @@ abstract class Model {
 
 		if ($value === null) {
 			if (is_array($field)) {
+
 				foreach ($field as $k => $v) {
 					$select->where($k, $v);
 				}
+
 			} else if (is_array(static::$primaryKey)) {
 				throw new Exception('Can not build SELECT query when primary key is not single column');
+
+			} else if ($field instanceof Where) {
+				$select->where($field);
+
 			} else {
 				$select->where(static::$primaryKey, $field);
+
 			}
+
 		} else {
 			$select->where($field, $value);
+
 		}
 
 		$record = $select->fetchFirst();
@@ -451,9 +492,9 @@ abstract class Model {
 	/**
 	 * Fetch the array of records from database
 	 * 
-	 * @param array $where the WHERE condition
+	 * @param mixed $where the WHERE condition
 	 * @param array $fields [optional] array of fields to select; by default, all fields will be fetched
-	 * @return array of initialized objects of the model this method is called on
+	 * @return array array of initialized objects of the model this method is called on
 	 * @link http://koldy.net/docs/database/models#fetch
 	 */
 	public static function fetch($where, array $fields = null) {
@@ -487,7 +528,7 @@ abstract class Model {
 	/**
 	 * Fetch all records from database
 	 * 
-	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @param int $fetchMode [optional] default PDO::FETCH_ASSOC
 	 * @return array
 	 * @link http://www.php.net/manual/en/pdo.constants.php
 	 */
@@ -547,11 +588,12 @@ abstract class Model {
 	 * @param mixed $where [optional]
 	 * @param string $orderField [optional]
 	 * @param string $orderDirection [optional]
+	 * @param integer $limit [optional]
 	 * @return array or empty array if not found
 	 * @example User::fetchArrayOf('id', Where::init()->where('id', '>', 50), 'id', 'asc') would return array(51,52,53,54,55,...)
 	 * @link http://koldy.net/docs/database/models#fetchArrayOf
 	 */
-	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null) {
+	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null, $limit = null) {
 		$select = static::query()->field($field, 'key_field');
 
 		if ($where !== null) {
@@ -568,6 +610,10 @@ abstract class Model {
 
 		if ($orderField !== null) {
 			$select->orderBy($orderField, $orderDirection);
+		}
+
+		if ($limit !== null) {
+			$select->limit(0, $limit);
 		}
 
 		$records = $select->fetchAll();
@@ -623,22 +669,24 @@ abstract class Model {
 	 * Check if some value exists in database or not. This is useful if you
 	 * want, for an example, check if user's e-mail already is in database
 	 * before you try to insert your data.
-	 * 
+	 *
 	 * @param  string $field
 	 * @param  mixed $value
 	 * @param  mixed $exceptionValue OPTIONAL
 	 * @param  string $exceptionField OPTIONAL
+	 *
+	 * @return bool|null
 	 * @link http://koldy.net/docs/database/models#isUnique
-	 * 
+	 *
 	 * @example
-	 * 		User::isUnique('email', 'email@domain.com'); will execute:
-	 *   	SELECT COUNT(*) FROM user WHERE email = 'email@domain.com'
-	 * 
-	 * 		User::isUnique('email', 'email@domain.com', 'other@mail.com');
-	 *   	SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND email != 'other@mail.com'
-	 * 
-	 * 		User::isUnique('email', 'email@domain.com', 5, 'id');
-	 *   	SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND id != 5
+	 *          User::isUnique('email', 'email@domain.com'); will execute:
+	 *          SELECT COUNT(*) FROM user WHERE email = 'email@domain.com'
+	 *
+	 *          User::isUnique('email', 'email@domain.com', 'other@mail.com');
+	 *          SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND email != 'other@mail.com'
+	 *
+	 *          User::isUnique('email', 'email@domain.com', 5, 'id');
+	 *          SELECT COUNT(*) FROM user WHERE email = 'email@domain.com' AND id != 5
 	 */
 	public static function isUnique($field, $value, $exceptionValue = null, $exceptionField = null) {
 		$select = static::query();
@@ -666,33 +714,46 @@ abstract class Model {
 	/**
 	 * Count the records in table according to the parameters
 	 * 
-	 * @param array $what
-	 * @return int or null if failes
+	 * @param array $where
+	 * @return int
 	 * @link http://koldy.net/docs/database/models#count
 	 */
 	public static function count($where = null) {
 		$select = static::query();
-		$select->field('COUNT(*)', 'total');
 
 		if ($where !== null) {
 			if ($where instanceof Where) {
+				$select->field('COUNT(*)', 'total');
 				$select->where($where);
+
 			} else if (is_array($where)) {
+				$select->field('COUNT(*)', 'total');
 				foreach ($where as $field => $value) {
 					$select->where($field, $value);
 				}
+
 			} else if (!is_array(static::$primaryKey) && (is_numeric($where) || is_string($where))) {
+				$select->field('COUNT(' . static::$primaryKey . ')', 'total');
 				$select->where(static::$primaryKey, $where);
+
 			}
+		} else {
+			$pk = is_string(static::$primaryKey) ? static::$primaryKey : '*';
+			$select->field('COUNT(' . $pk . ')', 'total');
 		}
 
 		$results = $select->fetchAllObj();
 
 		if (isset($results[0])) {
-			return (int) $results[0]->total;
+			$r = $results[0];
+			if (property_exists($r, 'total')) {
+				return (int) $r->total;
+			} else {
+				return 0;
+			}
+		} else {
+			return 0;
 		}
-
-		return null;
 	}
 
 
@@ -721,7 +782,7 @@ abstract class Model {
 
 
 	public function __toString() {
-		return \Koldy\Json::encode($this->getData());
+		return Json::encode($this->getData());
 	}
 
 }

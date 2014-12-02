@@ -153,4 +153,34 @@ class Convert {
 		return $inchs / 0.393700787;
 	}
 
+
+	/**
+	 * Convert given string into proper UTF-8 string
+	 *
+	 * @param string $string
+	 *
+	 * @return string
+	 * @throws \InvalidArgumentException
+	 * @throws \Koldy\Exception
+	 *
+	 * @author Simon Brüchner (@powtac)
+	 * @link http://php.net/manual/en/function.utf8-encode.php#102382
+	 */
+	public static function stringToUtf8($string) {
+		if (!is_string($string)) {
+			throw new \InvalidArgumentException('Invalid argument; expected string, got: ' . gettype($string));
+		}
+
+		if(!mb_check_encoding($string, 'UTF-8') || !($string === mb_convert_encoding(mb_convert_encoding($string, 'UTF-32', 'UTF-8' ), 'UTF-8', 'UTF-32'))) {
+
+			$string = mb_convert_encoding($string, 'UTF-8');
+
+			if (!mb_check_encoding($string, 'UTF-8')) {
+				throw new Exception('Can not convert given string to UTF-8');
+			}
+		}
+
+		return $string;
+	}
+
 }

@@ -1,4 +1,5 @@
 <?php namespace Koldy\Cache\Driver;
+
 /**
  * If you don't want to use your cache driver, you can redirect all cache data
  * into black whole! Learn more at http://en.wikipedia.org/wiki//dev/null
@@ -11,41 +12,46 @@ class DevNull extends AbstractCacheDriver {
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::get()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::get()
 	 */
 	public function get($key) {
+		$this->checkKey($key);
 		return null;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::set()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::set()
 	 */
 	public function set($key, $value, $seconds = null) {
+		$this->checkKey($key);
 		return true;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::add()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::add()
 	 */
 	public function add($key, $value, $seconds = null) {
+		$this->checkKey($key);
 		return true;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::has()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
 	 */
 	public function has($key) {
+		$this->checkKey($key);
 		return false;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::delete()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
 	 */
 	public function delete($key) {
+		$this->checkKey($key);
 		return null;
 	}
 
@@ -67,25 +73,28 @@ class DevNull extends AbstractCacheDriver {
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::getOrSet()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::getOrSet()
 	 */
 	public function getOrSet($key, $functionOnSet, $seconds = null) {
+		$this->checkKey($key);
 		return call_user_func($functionOnSet);
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::increment()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::increment()
 	 */
 	public function increment($key, $howMuch = 1) {
+		$this->checkKey($key);
 		return true;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\DriverAbstract::decrement()
+	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::decrement()
 	 */
 	public function decrement($key, $howMuch = 1) {
+		$this->checkKey($key);
 		return true;
 	}
 

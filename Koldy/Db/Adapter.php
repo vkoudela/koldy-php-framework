@@ -26,13 +26,15 @@ class Adapter {
 
 
 	/**
-	 * @var PDO object
+	 * @var PDO
 	 */
 	public $pdo = null;
 
 
 	/**
-	 * @var string The last executed query
+	 * The last executed query
+	 * 
+	 * @var string
 	 */
 	private $lastQuery = null;
 
@@ -74,74 +76,140 @@ class Adapter {
 
 
 	/**
-	 * The PDO will be initialized only if needed, not on adapter initialization
+	 * Try to connect to database with given config block
 	 * 
+	 * @param array $config
+	 * @throws Exception
+	 * @throws PDOException
+	 */
+	private function tryConnect(array $config) {
+		switch($config['type']) {
+			case 'mysql':
+				
+				$pdoConfig = array (
+					PDO::ATTR_EMULATE_PREPARES => false,
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
+					PDO::ATTR_PERSISTENT => $config['persistent'],
+					PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
+				);
+				
+				if (isset($config['driver_options'])) {
+					foreach ($config['driver_options'] as $key => $value) {
+						$pdoConfig[$key] = $value;
+					}
+				}
+
+				if (!isset($config['socket'])) {
+					// not a socket
+					if (!isset($config['port'])) {
+						$config['port'] = 3306;
+					} else {
+						$config['port'] = (int) $config['port'];
+					}
+
+					$this->pdo = new PDO(
+						"mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}",
+						$config['username'],
+						$config['password'],
+						$pdoConfig
+					);
+				} else {
+					// the case with unix_socket
+					$this->pdo = new PDO(
+						"mysql:unix_socket={$config['socket']};dbname={$config['database']};charset={$config['charset']}",
+						$config['username'],
+						$config['password'],
+						$pdoConfig
+					);
+				}
+				
+				break;
+
+			case 'sqlite':
+				if (!isset($config['path'])) {
+					throw new Exception('SQLite configuration must have defined path to the storage file');
+				}
+
+				$path = $config['path'];
+
+				if (substr($path, 0, 8) == 'storage:') {
+					$path = Application::getStoragePath(substr($path, 8));
+				}
+
+				$pdoConfig = array (
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
+				);
+
+				if (isset($config['driver_options'])) {
+					foreach ($config['driver_options'] as $key => $value) {
+						$pdoConfig[$key] = $value;
+					}
+				}
+
+				$this->pdo = new PDO('sqlite:' . $path);
+				foreach ($pdoConfig as $key => $value) {
+					$this->pdo->setAttribute($key, $value);
+				}
+
+				break;
+
+				default:
+					throw new Exception("Database type '{$config['type']}' is not supported");
+					break;
+		}
+	}
+
+
+	/**
+	 * The PDO will be initialized only if needed, not on adapter initialization
+	 *
+	 * @throws Exception
 	 * @return PDO
 	 */
 	public function getAdapter() {
 		if ($this->pdo === null) {
-			switch($this->config['type']) {
-				case 'mysql':
-					try {
-						$initialConfig = array (
-							PDO::ATTR_EMULATE_PREPARES => false,
-							PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-							PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
-							PDO::ATTR_PERSISTENT => $this->config['persistent'],
-							PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
-						);
+			try {
+				$this->tryConnect($this->config);
+			} catch (PDOException $e) {
+				$this->lastException = $e;
+				$this->lastError = $e->getMessage();
+				$this->pdo = null;
 
-						if (isset($this->config['driver_options'])) {
-							foreach ($this->config['driver_options'] as $key => $value) {
-								$initialConfig[$key] = $value;
-							}
-						}
+				if (isset($this->config['backup_connections']) && is_array($this->config['backup_connections'])) {
+					$count = count($this->config['backup_connections']);
 
-						$this->pdo = new PDO(
-							"mysql:host={$this->config['host']};dbname={$this->config['database']};charset={$this->config['charset']}",
-							$this->config['username'],
-							$this->config['password'],
-							$initialConfig
-						);
-
-						if (isset($this->config['connection_queries']) && is_array($this->config['connection_queries']) && sizeof($this->config['connection_queries']) > 0) {
-							foreach ($this->config['connection_queries'] as $query) {
-								try {
-									$stmt = $this->pdo->prepare($query);
-									$stmt->execute();
-									$stmt->closeCursor();
-									Log::sql("Connection query executed: {$query}");
-								} catch (PDOException $e) {
-									$this->lastException = $e;
-									$this->lastError = $e->getMessage();
-
-									Log::error($query);
-									if (Application::inDevelopment()) {
-										throw new Exception($e->getMessage());
-									} else {
-										throw new Exception('Error executing connection queries');
-									}
-								}
-							}
-						}
-					} catch (PDOException $e) {
-						$this->lastException = $e;
-						$this->lastError = $e->getMessage();
-
-						if (Application::inDevelopment()) {
-							throw new Exception($e->getMessage());
+					for ($i = 0; $i < $count && $this->pdo === null; $i++) {
+						$config = $this->config['backup_connections'][$i];
+						if (isset($config['log_error']) && $config['log_error'] === true) {
+							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
+							Log::exception($e); // log exception and continue
 						} else {
-							throw new Exception('Error connecting to database');
+							Log::notice("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
+						}
+
+						$this->pdo = null;
+
+						if (isset($config['wait_before_connect'])) {
+							usleep($config['wait_before_connect'] * 1000);
+						}
+
+						try {
+							$this->tryConnect($config);
+							Log::notice("Connected to backup connection #{$i} ({$config['type']}:{$config['username']}@{$config['host']})");
+						} catch (PDOException $e) {
+							$this->lastException = $e;
+							$this->lastError = $e->getMessage();
+							$this->pdo = null;
 						}
 					}
+				}
 
-					break;
-
-				default:
-					throw new Exception("Database type '{$this->config['type']}' is not supported");
-					break;
+				if ($this->pdo === null) {
+					throw new Exception('Error connecting to database');
+				}
 			}
-
 		}
 
 		return $this->pdo;
@@ -174,15 +242,7 @@ class Adapter {
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
-			if ($query instanceof Query) {
-				Log::error("{$e->getMessage()}\n\n{$query->debug()}\n\n{$e->getTraceAsString()}");
-			} else {
-				Log::error("{$e->getMessage()}\n\n{$sql}\n\n{$e->getTraceAsString()}");
-			}
-
-			Log::exception($e);
-
-			return false;
+			throw $e;
 		}
 
 		$stmt->setFetchMode($fetchMode !== null ? $fetchMode : PDO::FETCH_OBJ);
@@ -200,14 +260,7 @@ class Adapter {
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
-			if ($query instanceof Query) {
-				Log::error("Error executing query:\n{$query->debug()}");
-			} else {
-				Log::error("Error executing query:\n{$sql}");
-			}
-
-			Log::exception($e);
-			return false;
+			throw $e;
 		}
 
 		$return = null;
@@ -216,7 +269,7 @@ class Adapter {
 			if (strtoupper(substr($sql, 0, 6)) == 'SELECT') {
 				$return = $stmt->fetchAll();
 			} else {
-				$return = $stmt->rowCount();
+				$return = (int) $stmt->rowCount();
 			}
 		} else {
 			$return = false;
@@ -249,14 +302,14 @@ class Adapter {
 
 		if ((bool) count(array_filter(array_keys($this->lastBindings), 'is_string'))) {
 			foreach ($this->lastBindings as $key => $value) {
-				if (!(is_numeric($value) && substr($value, 0, 1) != '0')) {
+				if (!(is_numeric($value) && $value[0] != '0')) {
 					$value = sprintf('\'%s\'', addslashes($value));
 				}
 				$query = str_replace(':' . $key, $value, $query);
 			}
 		} else {
 			foreach ($this->lastBindings as $value) {
-				if (!(is_numeric($value) && substr($value, 0, 1) != '0')) {
+				if (!(is_numeric($value) && $value[0] != '0')) {
 					$value = sprintf('\'%s\'', addslashes($value));
 				}
 				$query = substr_replace($query, $value, strpos($query, '?'), 1);
@@ -317,6 +370,39 @@ class Adapter {
 			->getAdapter()
 			->prepare('SELECT 1')
 			->execute();
+	}
+
+
+	/**
+	 * Begin transaction
+	 * 
+	 * @return boolean
+	 */
+	public function beginTransaction() {
+		$pdo = $this->getAdapter();
+		return (($pdo instanceof \PDO) && $pdo->beginTransaction());
+	}
+
+
+	/**
+	 * Commit transaction
+	 * 
+	 * @return boolean
+	 */
+	public function commit() {
+		$pdo = $this->getAdapter();
+		return (($pdo instanceof \PDO) && $pdo->commit());
+	}
+
+
+	/**
+	 * Rollback transaction
+	 * 
+	 * @return boolean
+	 */
+	public function rollBack() {
+		$pdo = $this->getAdapter();
+		return (($pdo instanceof \PDO) && $pdo->rollBack());
 	}
 
 

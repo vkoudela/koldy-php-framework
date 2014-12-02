@@ -56,7 +56,7 @@ class Cli {
 			static::$parameters = array();
 			$argv = static::getArgv();
 			array_shift($argv);
-			$sizeof = sizeof($argv);
+			$sizeof = count($argv);
 	
 			for ($i = 0; $i < $sizeof; $i++) {
 				$p = $argv[$i];
@@ -123,6 +123,17 @@ class Cli {
 	public static function hasParameterOnPosition($index) {
 		static::parseArgvIntoParameters();
 		return isset(static::$argv[$index]);
+	}
+
+
+	/**
+	 * Get all parsed parameters
+	 *
+	 * @return array
+	 */
+	public static function getParameters() {
+		static::parseArgvIntoParameters();
+		return static::$parameters;
 	}
 
 }

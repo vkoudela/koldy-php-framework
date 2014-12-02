@@ -37,7 +37,7 @@ class Select extends Where {
 	 * Set the table FROM which fields will be fetched
 	 * @param string $table
 	 * @param string $alias
-	 * @param mixed $field one field as string or more fields as array
+	 * @param mixed $field one field as string or more fields as array or just '*'
 	 * @return \Koldy\Db\Select
 	 */
 	public function from($table, $alias = null, $field = null) {
@@ -66,6 +66,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example innerJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function innerJoin($table, $firstTableField, $operator, $secondTableField) {
 		$this->joins[] = array(
@@ -85,8 +86,9 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example leftJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
-	public function leftJoin($table, $firstTableField, $operator, $secondTableField) {
+	public function leftJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
 		$this->joins[] = array(
 			'type' => 'LEFT JOIN',
 			'table' => $table,
@@ -104,6 +106,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example rightJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function rightJoin($table, $firstTableField, $operator, $secondTableField) {
 		$this->joins[] = array(
@@ -123,6 +126,7 @@ class Select extends Where {
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
+	 * @example join('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function join($table, $firstTableField, $operator, $secondTableField) {
 		return $this->innerJoin($table, $firstTableField, $operator, $secondTableField);
@@ -146,7 +150,6 @@ class Select extends Where {
 	/**
 	 * Add fields to fetch by passing array of fields
 	 * @param array $fields
-	 * @param string $table
 	 * @return \Koldy\Db\Select
 	 */
 	public function fields(array $fields) {
@@ -243,8 +246,11 @@ class Select extends Where {
 
 	/**
 	 * Add field to ORDER BY
+	 *
 	 * @param string $field
 	 * @param string $direction
+	 *
+	 * @throws Exception
 	 * @return \Koldy\Db\Select
 	 */
 	public function orderBy($field, $direction = null) {
@@ -308,6 +314,7 @@ class Select extends Where {
 
 	/**
 	 * Get the query string prepared for PDO
+	 * @throws Exception
 	 * @return string
 	 */
 	protected function getQuery() {
@@ -338,11 +345,24 @@ class Select extends Where {
 
 		$query .= "\nFROM";
 		foreach ($this->from as $from) {
-			$query .= "\n\t{$from['table']}";
-			if ($from['alias'] !== null) {
-				$query .= " as {$from['alias']},";
+			if ($from['table'] instanceof static) {
+				/* @var $subSelect \Koldy\Db\Select */
+				$subSelect = $from['table'];
+				$subSql = $subSelect->__toString();
+				$subSql = str_replace("\n", "\n\t", $subSql);
+				$query .= " (\n\t{$subSql}\n) {$from['alias']}\n";
+
+				$subSelectBindings = $subSelect->getBindings();
+				if (count($subSelectBindings) > 0) {
+					$this->bindings += $subSelectBindings;
+				}
 			} else {
-				$query .= ',';
+				$query .= "\n\t{$from['table']}";
+				if ($from['alias'] !== null) {
+					$query .= " as {$from['alias']},";
+				} else {
+					$query .= ',';
+				}
 			}
 		}
 		$query = substr($query, 0, -1);
@@ -354,17 +374,36 @@ class Select extends Where {
 				foreach ($join['first'] as $joinArg) {
 					if ($joinArg instanceof Expr) {
 						$query .= "{$joinArg} AND ";
-					} else if (is_array($joinArg) && sizeof($joinArg) == 3) {
-						$query .= "{$joinArg[0]} {$joinArg[1]} {$joinArg[2]} AND ";
-					} else if (is_array($joinArg) && sizeof($joinArg) == 2) {
+
+					} else if (is_array($joinArg) && count($joinArg) == 2) {
 						$query .= "{$joinArg[0]} = {$joinArg[1]} AND ";
+
+					} else if (is_array($joinArg) && count($joinArg) == 3) {
+						$query .= "{$joinArg[0]} {$joinArg[1]} {$joinArg[2]} AND ";
+
+					} else if (is_array($joinArg) && count($joinArg) == 4) {
+						if (substr($query, -5) == ' AND ') {
+							$query = substr($query, 0, -5);
+						}
+
+						$query .= " {$joinArg[0]} {$joinArg[1]} {$joinArg[2]}  {$joinArg[3]} AND ";
+
 					} else {
 						throw new Exception('Unknown JOIN argument');
+
 					}
 				}
 
 				$query = substr($query, 0, -5);
 			} else {
+				if ($join['operator'] === null) {
+					throw new Exception('Operator can\'t be null');
+				}
+
+				if ($join['second'] === null) {
+					throw new Exception('Second parameter can\'t be null');
+				}
+
 				$query .= "{$join['first']} {$join['operator']} {$join['second']}";
 			}
 		}
@@ -381,7 +420,7 @@ class Select extends Where {
 			$query = substr($query, 0, -1);
 		}
 
-		$sizeofHaving = sizeof($this->having);
+		$sizeofHaving = count($this->having);
 		if ($sizeofHaving > 0) {
 			$query .= "\nHAVING";
 			if ($sizeofHaving == 1) {
@@ -418,7 +457,7 @@ class Select extends Where {
 
 	/**
 	 * Fetch all records by this query
-	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @param int $fetchMode [optional] default PDO::FETCH_ASSOC
 	 * @return array
 	 */
 	public function fetchAll($fetchMode = \PDO::FETCH_ASSOC) {
@@ -435,8 +474,8 @@ class Select extends Where {
 
 	/**
 	 * Fetch only first record as object or return false if there is no records
-	 * @param const $fetchMode [optional] default PDO::FETCH_ASSOC
-	 * @return \stdClass|false if database didn't return anything
+	 * @param int $fetchMode [optional] default PDO::FETCH_ASSOC
+	 * @return \stdClass|bool false if database didn't return anything
 	 */
 	public function fetchFirst($fetchMode = \PDO::FETCH_ASSOC) {
 		$this->resetLimit()->limit(0, 1);
@@ -446,7 +485,7 @@ class Select extends Where {
 
 	/**
 	 * Fetch only first record as object
-	 * @return stdClass|false if database didn't return anything
+	 * @return stdClass|bool false if database didn't return anything
 	 */
 	public function fetchFirstObj() {
 		return $this->fetchFirst(\PDO::FETCH_OBJ);

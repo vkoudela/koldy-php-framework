@@ -1,4 +1,5 @@
 <?php namespace Koldy\Cache\Driver;
+
 /**
  * This cache driver holds cached data only in request's scope. As soon as
  * request ends, everything will disappear
@@ -38,7 +39,7 @@ class Request extends AbstractCacheDriver {
 	 * @return boolean True if set, null if cache is disabled
 	 */
 	public function set($key, $value, $seconds = null) {
-		$this->data[$key] = $object;
+		$this->data[$key] = $value;
 		return true;
 	}
 

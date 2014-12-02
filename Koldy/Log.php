@@ -55,41 +55,40 @@ class Log {
 
 			$count = 0;
 			foreach ($configs as $config) {
-				if ($config['enabled']) { // if the config is enabled, then make new instance
+				if ($config['enabled']) {
+					// if the config is enabled, then make new instance
+
 					$writer = $config['writer_class'];
 					static::$writers[$count] = new $writer($config['options']);
+
 					if (!(static::$writers[$count] instanceof AbstractLogWriter)) {
 						throw new Exception("Log driver {$writer} must extend AbstractLogWriter");
 					}
+
 					$count++;
 				}
 			}
+
+			register_shutdown_function(function() {
+				\Koldy\Log::shutdown();
+			});
 		}
 	}
 
 
 	/**
-	 * Is config enabled or not
+	 * Is there any log driver enabled in this moment?
+	 * You can also check this by inspecting LOG constant. Example:
+	 * 
+	 * 		if (LOG) {
+	 * 			// log is enabled
+	 * 		}
 	 * 
 	 * @return boolean
 	 */
 	public static function isEnabled() {
 		static::init();
 		return (sizeof(static::$writers) > 0);
-	}
-
-
-	/**
-	 * Log the log message
-	 * 
-	 * @param string $level
-	 * @param string|Exception $message
-	 */
-	private static function logMessage($level, $message) {
-		foreach (static::$writers as $writer) {
-			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
-			$writer->logMessage($level, $message);
-		}
 	}
 
 
@@ -101,7 +100,11 @@ class Log {
 	 */
 	public static function debug($string) {
 		static::init();
-		static::logMessage('debug', $string);
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->debug($string);
+		}
 	}
 
 
@@ -113,7 +116,11 @@ class Log {
 	 */
 	public static function notice($string) {
 		static::init();
-		static::logMessage('notice', $string);
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->notice($string);
+		}
 	}
 
 
@@ -125,7 +132,11 @@ class Log {
 	 */
 	public static function info($string) {
 		static::init();
-		static::logMessage('info', $string);
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->info($string);
+		}
 	}
 
 
@@ -137,7 +148,11 @@ class Log {
 	 */
 	public static function warning($string) {
 		static::init();
-		static::logMessage('warning', $string);
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->warning($string);
+		}
 	}
 
 
@@ -149,7 +164,11 @@ class Log {
 	 */
 	public static function error($string) {
 		static::init();
-		static::logMessage('error', $string);
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->error($string);
+		}
 	}
 
 
@@ -161,7 +180,11 @@ class Log {
 	 */
 	public static function sql($sql) {
 		static::init();
-		static::logMessage('sql', $sql);
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->sql($sql);
+		}
 	}
 
 
@@ -173,12 +196,17 @@ class Log {
 	 */
 	public static function exception(\Exception $e) {
 		static::init();
-		static::logMessage('exception', "Exception in {$e->getFile()}:{$e->getLine()}\n\n{$e->getMessage()}\n\n{$e->getTraceAsString()}");
+
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->exception($e);
+		}
 	}
 
 
 	/**
-	 * This method is called internally.
+	 * This method is called internally on request shutdown event. Do not use
+	 * it on your own!
 	 */
 	public static function shutdown() {
 		if (static::isEnabled()) {

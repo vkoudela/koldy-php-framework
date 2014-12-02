@@ -13,15 +13,49 @@ class Request {
 	
 	const GET = 'GET';
 	const POST = 'POST';
-	
+
+
+	/**
+	 * @var string
+	 */
 	protected $url = null;
-	
+
+
+	/**
+	 * @var array
+	 */
 	protected $params = array();
-	
+
+
+	/**
+	 * @var string
+	 */
 	protected $type = 'GET';
-	
+
+
+	/**
+	 * The CURL options
+	 *
+	 * @var array
+	 */
 	protected $options = array();
-	
+
+
+	/**
+	 * Last response instance of the request after executing
+	 *
+	 * @var Response
+	 */
+	protected $lastResponse = null;
+
+
+	/**
+	 * Construct Request
+	 *
+	 * @param string $url
+	 *
+	 * @throws Exception
+	 */
 	public function __construct($url) {
 		if ($url === null) {
 			throw new Exception('Can not make HTTP request when URL is NULL');
@@ -36,6 +70,29 @@ class Request {
 		// default options
 		$this->option(CURLOPT_RETURNTRANSFER, true);
 	}
+
+
+	/**
+	 * Update the request's target URL
+	 *
+	 * @param string $url
+	 * @return \Koldy\Http\Request
+	 */
+	public function url($url) {
+		$this->url = $url;
+		return $this;
+	}
+
+
+	/**
+	 * Get the URL on which the request will be fired
+	 *
+	 * @return string
+	 */
+	public function getUrl() {
+		return $this->url;
+	}
+
 	
 	/**
 	 * Set the request type
@@ -47,6 +104,31 @@ class Request {
 		$this->type = $type;
 		return $this;
 	}
+
+
+	/**
+	 * Get the request's type (method)
+	 *
+	 * @return string GET or POST (for now)
+	 */
+	public function getType() {
+		return $this->type;
+	}
+
+
+	/**
+	 * Set the request parameter
+	 *
+	 * @param string $key
+	 * @param mixed $value
+	 *
+	 * @return \Koldy\Http\Request
+	 */
+	public function param($key, $value) {
+		$this->params[$key] = $value;
+		return $this;
+	}
+
 	
 	/**
 	 * Set the parameters that will be sent. Any previously set parameters will be overriden.
@@ -119,7 +201,7 @@ class Request {
 			curl_setopt($ch, CURLOPT_URL, $this->url);
 			curl_setopt($ch, CURLOPT_POST, true); 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $this->params);
-		} else if ($this->type === static::GET && sizeof($this->params) > 0) {
+		} else if ($this->type === static::GET && count($this->params) > 0) {
 			$url = $this->url;
 			if (strpos($url, '?') === false) {
 				$url .= '?';
@@ -147,7 +229,18 @@ class Request {
 		}
 		
 		curl_close($ch);
-		return new Response($info, $body);
+		$this->lastResponse = new Response($info, $body);
+		return $this->lastResponse;
+	}
+
+
+	/**
+	 * Get the last response object instance after executing the HTTP request
+	 *
+	 * @return Response
+	 */
+	public function getResponse() {
+		return $this->lastResponse;
 	}
 
 
@@ -156,7 +249,7 @@ class Request {
 	 * @param string $url
 	 * @param array $params [optional]
 	 * @return \Koldy\Http\Response
-	 * echo \Koldy\Http\Request::get('http://www.google.com') will output body HTML of google.com
+	 * @example echo \Koldy\Http\Request::get('http://www.google.com') will output body HTML of google.com
 	 */
 	public static function get($url, array $params = array()) {
 		$self = new static($url);
@@ -172,7 +265,7 @@ class Request {
 	 * @param string $url
 	 * @param array $params [optional]
 	 * @return \Koldy\Http\Response
-	 * echo \Koldy\Http\Request::post('http://www.google.com') will output body HTML of google.com
+	 * @example echo \Koldy\Http\Request::post('http://www.google.com') will output body HTML of google.com
 	 */
 	public static function post($url, array $params = array()) {
 		$self = new static($url);
@@ -211,4 +304,5 @@ class Request {
 
 		return new Response($info, null);
 	}
+
 }

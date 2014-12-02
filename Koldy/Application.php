@@ -22,6 +22,14 @@ class Application {
 
 
 	/**
+	 * The registered class aliases. This is for FW internal use only!
+	 *
+	 * @var array
+	 */
+	public static $classAliases = array();
+
+
+	/**
 	 * The enivornment modes. Only theese for now
 	 * 
 	 * @var array
@@ -130,7 +138,7 @@ class Application {
 			if ($config['site_url'] === null) {
 				$config['site_url'] = "//{$_SERVER['HTTP_HOST']}";
 			} else if (is_array($config['site_url'])) {
-				$sizeofSiteUrls = sizeof($config['site_url']);
+				$sizeofSiteUrls = count($config['site_url']);
 				$found = false;
 				for ($i = 0; !$found && $i < $sizeofSiteUrls; $i++) {
 					$siteUrl = $config['site_url'][$i];
@@ -168,7 +176,7 @@ class Application {
 			$config['storage_path'] = dirname($config['application_path']) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
 		}
 
-		if (!is_string($config['key'])) {
+		if (!isset($config['key']) || !is_string($config['key'])) {
 			throw new \Exception('Invalid unique key in config/application.php');
 		}
 
@@ -193,6 +201,7 @@ class Application {
 		}
 
 		static::$configs['application'] = $config;
+		static::$classAliases = $config['classes'];
 	}
 
 
@@ -423,6 +432,17 @@ class Application {
 
 
 	/**
+	 * Dynamically register/add new class alias
+	 *
+	 * @param string $classAlias
+	 * @param string $className
+	 */
+	public static function registerClassAlias($classAlias, $className) {
+		static::$classAliases[$classAlias] = $className;
+	}
+
+
+	/**
 	 * Initialize the application :)
 	 * 
 	 * @throws Exception
@@ -447,7 +467,7 @@ class Application {
 
 		// Register Autoload function
 		spl_autoload_register(function($className) {
-			$classes = \Koldy\Application::getConfig('application', 'classes');
+			$classes = \Koldy\Application::$classAliases;
 
 			if (isset($classes[$className])) {
 				class_alias($classes[$className], $className);
@@ -463,14 +483,13 @@ class Application {
 		// framework(s) located in framework folder with same namespacing style)
 		$includePaths = array(substr(dirname(__FILE__), 0, -6));
 
+		$basePath = static::getApplicationPath();
 
 		// auto registering modules if there are any defined
 		if (isset($config['auto_register_modules'])) {
 			if (!is_array($config['auto_register_modules'])) {
 				throw new Exception('Invalid config for auto_register_modules in config/application.php');
 			}
-
-			$basePath = static::getApplicationPath();
 
 			foreach ($config['auto_register_modules'] as $moduleName) {
 				$includePaths[] = $basePath . 'modules' . DS . $moduleName . DS . 'controllers';
@@ -491,43 +510,72 @@ class Application {
 			}
 		}
 
-		static::addIncludePath($includePaths);
+		// register include path of application itself
+		$includePaths[] = $basePath . 'controllers';
+		$includePaths[] = $basePath . 'library';
+		$includePaths[] = $basePath . 'models';
 
-		// if log is enabled, then register shutdown function
-		if (LOG) {
-			register_shutdown_function(function() {
-				\Koldy\Log::shutdown();
+		// set the include path
+		set_include_path(implode(PATH_SEPARATOR, $includePaths) . PATH_SEPARATOR . get_include_path());
+
+		// set the error handler
+		if (isset($config['error_handler']) && $config['error_handler'] instanceof \Closure) {
+			set_error_handler($config['error_handler']);
+		} else {
+			set_error_handler(function($errno, $errstr, $errfile, $errline) {
+				if (!(error_reporting() & $errno)) {
+					// This error code is not included in error_reporting
+					return;
+				}
+	
+				switch ($errno) {
+					case E_USER_ERROR:
+						\Koldy\Log::error("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+	
+					case E_USER_WARNING:
+					case E_DEPRECATED:
+					case E_STRICT:
+						\Koldy\Log::warning("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+	
+					case E_USER_NOTICE:
+						\Koldy\Log::notice("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+						
+	
+					default:
+						\Koldy\Log::error("PHP Uknown [{$errno}] {$errstr} in file {$errfile}:{$errline}");
+						break;
+				}
+	
+				/* Don't execute PHP internal error handler */
+				return true;
 			});
 		}
 
-		// set the error handler
-		set_error_handler(function($errno, $errstr, $errfile, $errline) {
-			if (!(error_reporting() & $errno)) {
-				// This error code is not included in error_reporting
-				return;
+		// register PHP fatal errors
+		register_shutdown_function(function() {
+			if (!defined('KOLDY_FATAL_ERROR_HANDLER')) {
+				define('KOLDY_FATAL_ERROR_HANDLER', true); // to prevent possible recursion if you run into problems with logger
+
+				$fatalError = error_get_last();
+	
+				if ($fatalError !== null && $fatalError['type'] == E_ERROR) {
+					$errno = E_ERROR;
+					$errstr = $fatalError['message'];
+					$errfile = $fatalError['file'];
+					$errline = $fatalError['line'];
+
+					$config = \Koldy\Application::getConfig('application');
+					if (isset($config['error_handler']) && $config['error_handler'] instanceof \Closure) {
+						call_user_func($config['error_handler'], $errno, $errstr, $errfile, $errline);
+					} else {
+						\Koldy\Log::error("PHP [{$errno}] Fatal error: {$errstr} in {$errfile} on line {$errline}");
+					}
+
+				}
 			}
-
-			switch ($errno) {
-				case E_USER_ERROR:
-					\Koldy\Log::error("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					exit(2);
-					break;
-
-				case E_USER_WARNING:
-					\Koldy\Log::warning("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					break;
-
-				case E_USER_NOTICE:
-					\Koldy\Log::notice("[{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					break;
-
-				default:
-					\Koldy\Log::error("Uknown [{$errno}] {$errstr} in file {$errfile}:{$errline}");
-					break;
-			}
-
-			/* Don't execute PHP internal error handler */
-			return true;
 		});
 
 		// all execeptions will be caught in run() method
@@ -598,9 +646,11 @@ class Application {
 					header('Status: 503 Service Temporarily Unavailable');
 					header('Retry-After: 300'); // 300 seconds / 5 minutes
 
-					echo "<p>{$e->getMessage()}</p>";
 					if (static::inDevelopment()) {
-						echo "<pre>{$e->getTraceAsString()}</pre>";
+						print "<p>{$e->getMessage()}</p>";
+						print "<pre>{$e->getTraceAsString()}</pre>";
+					} else {
+						print '<p>Something went really wrong. Please try again later.</p>';
 					}
 				} else {
 					// otherwise, route should handle exception
@@ -619,14 +669,6 @@ class Application {
 			// $argv[0] - this should be "cli.php", but we don't need this at all
 
 			static::init();
-
-			// register include path of application itself
-			$basePath = static::getApplicationPath();
-			static::addIncludePath(array(
-				$basePath . 'controllers',
-				$basePath . 'library',
-				$basePath . 'models'
-			));
 
 			try {
 				// so, if you run your script as "php cli.php backup", you'll have only two elements
