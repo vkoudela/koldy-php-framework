@@ -4,6 +4,7 @@
  * This cache driver holds cached data only in request's scope. As soon as
  * request ends, everything will disappear
  *
+ * @link http://koldy.net/docs/cache/request
  */
 class Request extends AbstractCacheDriver {
 
@@ -30,6 +31,7 @@ class Request extends AbstractCacheDriver {
 		return null;
 	}
 
+
 	/**
 	 * Set the cache value by the key
 	 * 
@@ -42,6 +44,7 @@ class Request extends AbstractCacheDriver {
 		$this->data[$key] = $value;
 		return true;
 	}
+
 
 	/**
 	 * The will add the value to the cache key only if it doesn't exists yet
@@ -59,17 +62,21 @@ class Request extends AbstractCacheDriver {
 		return $this->set($key, $value, $seconds);
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
+	 * @param string $key
+	 *
+	 * @return bool
 	 */
 	public function has($key) {
 		return array_key_exists($key, $this->data);
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
+	 * @param string $key
+	 *
+	 * @return bool
 	 */
 	public function delete($key) {
 		if ($this->has($key)) {
@@ -78,17 +85,17 @@ class Request extends AbstractCacheDriver {
 		return true;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteAll()
+	 * Delete all
 	 */
 	public function deleteAll() {
 		$this->data = array();
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteOld()
+	 * @param int $olderThenSeconds
 	 */
 	public function deleteOld($olderThenSeconds = null) {
 		// nothing to do

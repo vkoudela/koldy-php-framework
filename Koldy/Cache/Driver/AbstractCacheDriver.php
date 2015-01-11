@@ -161,18 +161,19 @@ abstract class AbstractCacheDriver {
 	 * Get the value from cache if exists, otherwise, set the value returned
 	 * from the function you pass. The function may contain more steps, such as
 	 * fetching data from database or etc.
-	 * 
+	 *
 	 * @param string $key
-	 * @param function $functionOnSet
+	 * @param \Closure $functionOnSet
 	 * @param integer $seconds
+	 *
 	 * @return mixed
-	 * 
+	 *
 	 * @example
 	 * Cache::getOrSet('key', function() {
-	 * 	return "the value";
+	 *    return "the value";
 	 * });
 	 */
-	public function getOrSet($key, $functionOnSet, $seconds = null) {
+	public function getOrSet($key, \Closure $functionOnSet, $seconds = null) {
 		$this->checkKey($key);
 
 		if ($this->has($key)) {
