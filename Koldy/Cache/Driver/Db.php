@@ -34,8 +34,9 @@ class Db extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::get()
+	 * @param string $key
+	 *
+	 * @return mixed|null
 	 */
 	public function get($key) {
 		$this->checkKey($key);
@@ -56,8 +57,12 @@ class Db extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::set()
+	 * @param string $key
+	 * @param mixed $value
+	 * @param null $seconds
+	 *
+	 * @return bool
+	 * @throws \Koldy\Exception
 	 */
 	public function set($key, $value, $seconds = null) {
 		$this->checkKey($key);
@@ -92,8 +97,9 @@ class Db extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
+	 * @param string $key
+	 *
+	 * @return bool
 	 */
 	public function has($key) {
 		$this->checkKey($key);
@@ -112,9 +118,12 @@ class Db extends AbstractCacheDriver {
 		return ($cacheRecord['expires_at'] > time());
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
+	 * @param string $key
+	 *
+	 * @return bool
+	 * @throws \Koldy\Exception
 	 */
 	public function delete($key) {
 		$this->checkKey($key);
@@ -127,18 +136,19 @@ class Db extends AbstractCacheDriver {
 		return true;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteAll()
+	 * @return array|int
+	 * @throws \Koldy\Exception
 	 */
 	public function deleteAll() {
 		$delete = new Delete($this->config['table']);
 		return $delete->exec($this->config['connection']);
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteOld()
+	 * @param int $olderThenSeconds
 	 */
 	public function deleteOld($olderThenSeconds = null) {
 		if ($olderThenSeconds === null) {

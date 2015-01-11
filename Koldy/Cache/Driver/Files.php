@@ -5,6 +5,12 @@ use Koldy\Directory;
 use Koldy\Exception;
 use Koldy\Log;
 
+/**
+ * This cache driver will store all of your data into files somewhere on the server's filesystem. Every key you store
+ * represents one file on filesystem.
+ *
+ * @link http://koldy.net/docs/cache/files
+ */
 class Files extends AbstractCacheDriver {
 
 
@@ -89,7 +95,6 @@ class Files extends AbstractCacheDriver {
 
 			$file = file_get_contents($path);
 			$firstLine = substr($file, 0, strpos($file, "\n"));
-			$semicolon = strpos($firstLine, ';');
 			$firstLine = explode(';', $firstLine);
 
 			$object->created = strtotime($firstLine[0]);
@@ -114,8 +119,9 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::get()
+	 * @param string $key
+	 *
+	 * @return mixed|null
 	 */
 	public function get($key) {
 		$this->checkKey($key);
@@ -129,8 +135,11 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::set()
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $seconds
+	 *
+	 * @return bool
 	 */
 	public function set($key, $value, $seconds = null) {
 		$this->checkKey($key);
@@ -159,8 +168,11 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::add()
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $seconds
+	 *
+	 * @return bool
 	 */
 	public function add($key, $value, $seconds = null) {
 		$this->checkKey($key);
@@ -174,8 +186,9 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
+	 * @param string $key
+	 *
+	 * @return bool
 	 */
 	public function has($key) {
 		$this->checkKey($key);
@@ -200,8 +213,9 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
+	 * @param string $key
+	 *
+	 * @return bool|null
 	 */
 	public function delete($key) {
 		$this->checkKey($key);
@@ -222,8 +236,7 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteAll()
+	 * Delete all files under cached folder
 	 */
 	public function deleteAll() {
 		Directory::emptyDirectory($this->path);
@@ -231,8 +244,7 @@ class Files extends AbstractCacheDriver {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteOld()
+	 * @param int $olderThenSeconds
 	 */
 	public function deleteOld($olderThenSeconds = null) {
 		if ($olderThenSeconds === null) {

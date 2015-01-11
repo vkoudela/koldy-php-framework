@@ -6,92 +6,117 @@
  * 
  * This class handles the cache driver instance, but using it, nothing will happen.
  * This class will be initialized if you try to use driver that is disabled.
- * 
+ *
+ * @link http://koldy.net/docs/cache/devnull
  */
 class DevNull extends AbstractCacheDriver {
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::get()
+	 * @param string $key
+	 *
+	 * @return mixed|null
 	 */
 	public function get($key) {
 		$this->checkKey($key);
 		return null;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::set()
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $seconds
+	 *
+	 * @return bool
 	 */
 	public function set($key, $value, $seconds = null) {
 		$this->checkKey($key);
 		return true;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::add()
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $seconds
+	 *
+	 * @return bool
 	 */
 	public function add($key, $value, $seconds = null) {
 		$this->checkKey($key);
 		return true;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::has()
+	 * @param string $key
+	 *
+	 * @return bool
 	 */
 	public function has($key) {
 		$this->checkKey($key);
 		return false;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::delete()
+	 * @param string $key
+	 *
+	 * @return bool|null
 	 */
 	public function delete($key) {
 		$this->checkKey($key);
 		return null;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteAll()
+	 * Delete all
 	 */
 	public function deleteAll() {
 		// nothing to delete
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractDriver::deleteOld()
+	 * @param int $olderThen
 	 */
 	public function deleteOld($olderThen = null) {
 		// nothing to delete
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::getOrSet()
+	 * @param string $key
+	 * @param \Closure $functionOnSet
+	 * @param int $seconds
+	 *
+	 * @return mixed
 	 */
 	public function getOrSet($key, $functionOnSet, $seconds = null) {
 		$this->checkKey($key);
 		return call_user_func($functionOnSet);
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::increment()
+	 * @param string $key
+	 * @param int $howMuch
+	 *
+	 * @return bool
 	 */
 	public function increment($key, $howMuch = 1) {
 		$this->checkKey($key);
 		return true;
 	}
 
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Cache\Driver\AbstractCacheDriver::decrement()
+	 * @param string $key
+	 * @param int $howMuch
+	 *
+	 * @return bool
 	 */
 	public function decrement($key, $howMuch = 1) {
 		$this->checkKey($key);
