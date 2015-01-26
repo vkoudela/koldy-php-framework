@@ -94,7 +94,7 @@ class DevNull extends AbstractCacheDriver {
 	 *
 	 * @return mixed
 	 */
-	public function getOrSet($key, $functionOnSet, $seconds = null) {
+	public function getOrSet($key, \Closure $functionOnSet, $seconds = null) {
 		$this->checkKey($key);
 		return call_user_func($functionOnSet);
 	}

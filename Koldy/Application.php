@@ -700,7 +700,7 @@ class Application {
 						include static::$cliScript;
 					}
 				} else {
-					throw new Exception("Invalid script name: {$script}");
+					throw new Exception("CLI script name contains invalid characters: {$script}");
 				}
 
 			} catch (\Exception $e) {

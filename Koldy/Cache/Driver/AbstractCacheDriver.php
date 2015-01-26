@@ -176,8 +176,8 @@ abstract class AbstractCacheDriver {
 	public function getOrSet($key, \Closure $functionOnSet, $seconds = null) {
 		$this->checkKey($key);
 
-		if ($this->has($key)) {
-			return $this->get($key);
+		if (($value = $this->get($key)) !== null) {
+			return $value;
 		} else {
 			$value = call_user_func($functionOnSet);
 			$this->set($key, $value, $seconds);
