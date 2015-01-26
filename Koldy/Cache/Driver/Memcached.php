@@ -1,5 +1,6 @@
 <?php namespace Koldy\Cache\Driver;
 
+use Koldy\Application;
 use Koldy\Exception;
 
 /**
@@ -65,6 +66,30 @@ class Memcached extends AbstractCacheDriver {
 
 
 	/**
+	 * Get the key name for the storage into memcached
+	 * @param string $key
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	protected function getKeyName($key) {
+		$prefixKey = null;
+		if (isset($this->config['key'])) {
+			$strlen = strlen($this->config['key']);
+			if ($strlen > 0 && $strlen < 40) {
+				$prefixKey = $this->config['key'];
+			}
+		}
+
+		if ($prefixKey === null) {
+			return Application::getConfig('application', 'key') . '_' . $key;
+		} else {
+			return $prefixKey . $key;
+		}
+	}
+
+
+	/**
 	 * Get the value from cache by given key
 	 *
 	 * @param string $key
@@ -73,6 +98,7 @@ class Memcached extends AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#get
 	 */
 	public function get($key) {
+		$key = $this->getKeyName($key);
 		$value = $this->getInstance()->get($key);
 		return ($value === false) ? null : $value;
 	}
@@ -89,6 +115,7 @@ class Memcached extends AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#set
 	 */
 	public function set($key, $value, $seconds = null) {
+		$key = $this->getKeyName($key);
 		return $this->getInstance()->set($key, $value, ($seconds === null ? $this->defaultDuration : $seconds));
 	}
 
@@ -102,6 +129,7 @@ class Memcached extends AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#has
 	 */
 	public function has($key) {
+		$key = $this->getKeyName($key);
 		return !($this->getInstance()->get($key) === false);
 	}
 
@@ -114,6 +142,7 @@ class Memcached extends AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#delete
 	 */
 	public function delete($key) {
+		$key = $this->getKeyName($key);
 		return $this->getInstance()->delete($key);
 	}
 
@@ -145,6 +174,7 @@ class Memcached extends AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
 	public function increment($key, $howMuch = 1) {
+		$key = $this->getKeyName($key);
 		return !($this->getInstance()->increment($key, $howMuch) === false);
 	}
 
@@ -158,6 +188,7 @@ class Memcached extends AbstractCacheDriver {
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
 	public function decrement($key, $howMuch = 1) {
+		$key = $this->getKeyName($key);
 		return !($this->getInstance()->decrement($key, $howMuch) === false);
 	}
 
