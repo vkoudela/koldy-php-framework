@@ -57,7 +57,8 @@ class Validator {
 		17 =>'Error uploading file.',
 		18 =>'This field doesn\'t have requested value.', // {field}, {value}
 		19 =>'This value should be decimal',
-		20 =>'This mustn\'t have more then {limit} numbers after decimal sign'
+		20 =>'This mustn\'t have more then {limit} numbers after decimal sign',
+		21 =>'This slug contains invalid characters or double dashes'
 	);
 
 
@@ -437,7 +438,7 @@ class Validator {
 	 * @link http://koldy.net/docs/validators/helpers#is-email
 	 */
 	public static function isEmail($email) {
-		return (bool) preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,12})$/', $email);
+		return (bool) preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,63})$/', $email);
 	}
 
 
@@ -452,6 +453,41 @@ class Validator {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
 			if (!static::isEmail($this->input[$param])) {
 				return static::getErrorMessage(7, array('email' => $this->input[$param]));
+			}
+		}
+		return true;
+	}
+
+
+	/**
+	 * Is given variable good formated "slug".
+	 * The "slug" is usually text used in URLs that uniquely defines some object.
+	 *
+	 * @example this-is-good-formatted-123-slug
+	 * @example This-is-NOT-good-formatted-slug--contains-uppercases
+	 * @example slug-shoud never contain any-spaces
+	 * @example slug-should-never-contain-any-other-characters-like-šđčćž
+	 * @example this--is--bad--slug--because-it-has-double-dashes
+	 *
+	 * @param String $slug
+	 * @return bool
+	 */
+	public static function isSlug($slug) {
+		return (bool) preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $slug);
+	}
+
+
+	/**
+	 * Validate the email address
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 */
+	protected function validateSlug($param, $settings = null) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			if (!static::isSlug($this->input[$param])) {
+				return static::getErrorMessage(21);
 			}
 		}
 		return true;

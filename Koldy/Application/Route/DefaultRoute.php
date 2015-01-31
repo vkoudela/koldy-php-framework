@@ -95,8 +95,23 @@ class DefaultRoute extends AbstractRoute {
 
 		// first, check the URI for duplicate slashes - they are not allowed
 		// if you must pass duplicate slashes in URL, then urlencode them
+		$redirect = null;
 		if (strpos($uri, '//') !== false) {
-			header('Location: ' . str_replace('//', '/', $uri));
+			$redirect = str_replace('//', '/', $uri);
+		}
+
+		if (strlen($uri) > 1 && substr($uri, -1) == '/') {
+			// ending slash is not needed
+			// if you need to pass slash on the end of URI, then urlencode it
+			if ($redirect === null) {
+				$redirect = substr($uri, 0, -1);
+			} else {
+				$redirect = substr($redirect, 0, -1);
+			}
+		}
+
+		if ($redirect !== null) {
+			header('Location: ' . $redirect);
 			exit(0);
 		}
 
@@ -360,7 +375,7 @@ class DefaultRoute extends AbstractRoute {
 			$controller = '';
 		}
 
-		$url = $config['site_url'];
+		$url = (defined('KOLDY_CLI') && KOLDY_CLI === true) ? $config['site_url'] : '';
 		$url .= '/' . $controller;
 
 		if ($action !== null) {

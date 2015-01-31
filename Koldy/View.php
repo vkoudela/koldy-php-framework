@@ -27,6 +27,14 @@ class View extends Response {
 
 
 	/**
+	 * The data keys that are set as properties
+	 *
+	 * @var array
+	 */
+	private $data = array();
+
+
+	/**
 	 * Create the object with base view
 	 * 
 	 * @param string $view
@@ -62,9 +70,6 @@ class View extends Response {
 	 * @link http://koldy.net/docs/view#passing-variables
 	 */
 	public function with($key, $value) {
-		if ($key == 'view') {
-			throw new Exception('You can not use key name that exists as reserved property in View class');
-		}
 		$this->$key = $value;
 		return $this;
 	}
@@ -77,7 +82,7 @@ class View extends Response {
 	 * @return boolean
 	 */
 	public function has($key) {
-		return property_exists($this, $key);
+		return array_key_exists($key, $this->data);
 	}
 
 
@@ -156,8 +161,9 @@ class View extends Response {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::flush()
+	 * This method is called by framework, but in some cases, you'll want to call it by yourself.
+	 *
+	 * @throws Exception
 	 */
 	public function flush() {
 		$this->header('Connection', 'close');
@@ -207,6 +213,14 @@ class View extends Response {
 		ob_start();
 		include($path);
 		return ob_get_clean();
+	}
+
+	public function __set($name, $value) {
+		$this->data[$name] = $value;
+	}
+
+	public function __get($name) {
+		return isset($this->data[$name]) ? $this->data[$name] : null;
 	}
 
 }
