@@ -307,7 +307,20 @@ class Application {
 		}
 
 		if (!isset(static::$configs[$file])) {
-			$path = static::getApplicationPath("configs/{$file}.php");
+			if (isset(static::$configs['application']['configs'])) {
+				if (is_array(static::$configs['application']['configs'])) {
+					if (isset(static::$configs['application']['configs'][$file])) {
+						$path = static::$configs['application']['configs'][$file];
+					} else {
+						$path = static::getApplicationPath("configs/{$file}.php");
+					}
+				} else {
+					$path = static::$configs['application']['configs'] . $file . '.php';
+				}
+			} else {
+				$path = static::getApplicationPath("configs/{$file}.php");
+			}
+
 			if (!file_exists($path)) {
 				throw new Exception('Config file not found: ' . $file);
 			} else {
