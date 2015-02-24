@@ -621,7 +621,11 @@ class Application {
 			// this is normal HTTP request that came from Web Server, so we'll handle it
 
 			if ($uri === null && isset($_SERVER['REQUEST_URI'])) {
-				static::$uri = $uri = $_SERVER['REQUEST_URI'];
+				if (isset($config['url_namespace'])) {
+					static::$uri = $uri = str_replace($config['url_namespace'], '', $_SERVER['REQUEST_URI']);
+				} else {
+					static::$uri = $uri = $_SERVER['REQUEST_URI'];
+				}
 				$questionPos = strpos($uri, '?');
 				if ($questionPos !== false) {
 					$uri = substr($uri, 0, $questionPos);

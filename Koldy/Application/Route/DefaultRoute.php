@@ -376,6 +376,11 @@ class DefaultRoute extends AbstractRoute {
 		}
 
 		$url = (defined('KOLDY_CLI') && KOLDY_CLI === true) ? $config['site_url'] : '';
+
+		if (isset($config['url_namespace'])) {
+			$url .= $config['url_namespace'];
+		}
+
 		$url .= '/' . $controller;
 
 		if ($action !== null) {

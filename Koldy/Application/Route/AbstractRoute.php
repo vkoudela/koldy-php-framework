@@ -157,6 +157,10 @@ abstract class AbstractRoute {
 			$path = '/' . $path;
 		}
 
+		if (isset($config['url_namespace'])) {
+			$path = $config['url_namespace'] . $path;
+		}
+
 		if ($server === null) {
 			$url = $config['site_url'];
 		} else {
