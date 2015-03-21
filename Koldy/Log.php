@@ -5,7 +5,7 @@ use Koldy\Log\Writer\AbstractLogWriter;
 
 /**
  * Class to handle the log and writing to log. Be aware that using too much of log slows down the
- * complete application, while other processes are waiting to finish your log. Ofcourse, you can rapidly optimze
+ * complete application, while other processes are waiting to finish your log. Of course, you can rapidly optimize
  * this by using slightly different syntax. As you already know, if you have your log disabled, but you're still
  * calling for an example Log::info("User {$fullName} has logged in"); the PHP interpreter will still have to
  * parse the passing string and then inside of info() method, message will be disregarded. To avoid this, you can
@@ -19,7 +19,7 @@ use Koldy\Log\Writer\AbstractLogWriter;
  * log only important data and never log the code that will always execute successfully.
  *
  * Using file output, this singleton instance will open the file on the first call and won't be closed. Instead
- * of closing, class will register itself in application's shutdown proceses and will close the log file when
+ * of closing, class will register itself in application's shutdown process and will close the log file when
  * request finish its job. That way log file won't be opened and closed every time you want to log something.
  *
  * If you have enabled email logging, then this script will send you log message(s) to your error mail. To reduce

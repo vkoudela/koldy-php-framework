@@ -138,9 +138,10 @@ abstract class AbstractRoute {
 	 * Generate link to the resource file on the same domain
 	 * 
 	 * @param string $path
+	 * @param string $server
 	 * @return string
 	 */
-	public function link($path) {
+	public function link($path, $server = null) {
 
 		// if you pass the full URL that contains "://" part, then it will be immediately
 		// returned without any kind of building or parsing it
@@ -155,8 +156,27 @@ abstract class AbstractRoute {
 		if ($path[0] != '/') {
 			$path = '/' . $path;
 		}
-		
-		return $config['site_url'] . $path;
+
+		if (isset($this->config['url_namespace'])) {
+			$path = $this->config['url_namespace'] . $path;
+		}
+
+		if ($server === null) {
+			$url = $config['site_url'];
+		} else {
+			if (!is_string($server)) {
+				throw new \InvalidArgumentException('$server expected to be string, got ' . gettype($server));
+			}
+
+			if (isset($config['servers']) && isset($config['servers'][$server])) {
+				$url = $config['servers'][$server];
+			} else {
+				$url = $config['site_url'];
+				Log::warning("Missing config '{$server}' used in Url::link call");
+			}
+		}
+
+		return $url . $path;
 	}
 
 

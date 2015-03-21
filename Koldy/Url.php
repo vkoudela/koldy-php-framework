@@ -149,25 +149,27 @@ class Url {
 
 	/**
 	 * Generate the link to static asset on the same host where application is. This method is using link() method in
-	 * routing class, so be careful because it might be overriden in your case.
+	 * routing class, so be careful because it might be overridden in your case.
 	 *
 	 * @param string $path
+	 * @param string $server
+	 *
 	 * @return string
 	 */
-	public static function link($path) {
-		return Application::route()->link($path);
+	public static function link($path, $server = null) {
+		return Application::route()->link($path, $server);
 	}
 
-
 	/**
-	 * Generate URL for asset file depending on configuration for assets located in configs/application.php 'cdn_url'.
-	 * This method is using cdn() method in routing class, so be careful because it might be overriden in your case.
+	 * Catch
 	 *
-	 * @param string $path
+	 * @param string $name
+	 * @param array $args
+	 *
 	 * @return string
 	 */
-	public static function cdn($path) {
-		return Application::route()->cdn($path);
+	public static function __callStatic($name, $args) {
+		return static::link($args[0], $name);
 	}
 
 

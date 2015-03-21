@@ -59,7 +59,7 @@ class Json extends Response {
 	 * $returnObject to get the stdClass.
 	 * 
 	 * @param string $stringData
-	 * @param string $returnObject
+	 * @param boolean $returnObject
 	 * @return array|\stdClass
 	 * @link http://koldy.net/docs/json#encode-decode
 	 */
@@ -150,8 +150,6 @@ class Json extends Response {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::flush()
 	 * @link http://koldy.net/docs/json#usage
 	 */
 	public function flush() {

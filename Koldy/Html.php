@@ -81,8 +81,10 @@ class Html {
 	 * When having plain text with paragraphs and rows delimited only with new
 	 * line and you need to make HTML paragraphs from that omitted with <p>
 	 * tag, then use this method.
-	 * 
+	 *
 	 * @param string $string text
+	 *
+	 * @return string
 	 * @example text "Lorem ipsum\n\ndolor sit amet\nperiod." will become "<p>Lorem ipsum</p><p>dolor sit amet<br/>period.</p>"
 	 */
 	public static function p($string) {

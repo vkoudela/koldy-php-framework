@@ -162,7 +162,7 @@ class Cache {
 	 * @param int $seconds
 	 * @link http://koldy.net/docs/cache#get-or-set
 	 */
-	public static function getOrSet($key, $functionOnSet, $seconds = null) {
+	public static function getOrSet($key, \Closure $functionOnSet, $seconds = null) {
 		return static::getDriver()->getOrSet($key, $functionOnSet, $seconds);
 	}
 

@@ -3,7 +3,7 @@
 /**
  * The view class will properly serve prepared HTML to user.
  * 
- * This framework doesn't have and doesn't use any templating engine so there is
+ * This framework doesn't have and doesn't use any template engine so there is
  * no need to learn extra syntax or what so ever. All you need to know is how to
  * set up file structure.
  * 
@@ -24,6 +24,14 @@ class View extends Response {
 	 * @var string
 	 */
 	private $view = null;
+
+
+	/**
+	 * The data keys that are set as properties
+	 *
+	 * @var array
+	 */
+	private $data = array();
 
 
 	/**
@@ -53,7 +61,7 @@ class View extends Response {
 
 
 	/**
-	 * Add key value pair of data that will be accesible in the view files
+	 * Add key value pair of data that will be accessible in the view files
 	 * 
 	 * @param string $key
 	 * @param mixed $value
@@ -62,9 +70,6 @@ class View extends Response {
 	 * @link http://koldy.net/docs/view#passing-variables
 	 */
 	public function with($key, $value) {
-		if ($key == 'view') {
-			throw new Exception('You can not use key name that exists as reserved property in View class');
-		}
 		$this->$key = $value;
 		return $this;
 	}
@@ -77,14 +82,16 @@ class View extends Response {
 	 * @return boolean
 	 */
 	public function has($key) {
-		return property_exists($this, $key);
+		return array_key_exists($key, $this->data);
 	}
 
 
 	/**
 	 * Add the array of values that will be accessible in the view
-	 * 
+	 *
 	 * @param array $with
+	 *
+	 * @throws Exception
 	 * @return \Koldy\View
 	 * @link http://koldy.net/docs/view#passing-variables
 	 */
@@ -137,8 +144,10 @@ class View extends Response {
 
 	/**
 	 * Render some other view file inside of parent view file
-	 * 
+	 *
 	 * @param string $view
+	 *
+	 * @throws Exception
 	 * @return string
 	 */
 	public function render($view) {
@@ -156,8 +165,9 @@ class View extends Response {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::flush()
+	 * This method is called by framework, but in some cases, you'll want to call it by yourself.
+	 *
+	 * @throws Exception
 	 */
 	public function flush() {
 		$this->header('Connection', 'close');
@@ -190,9 +200,10 @@ class View extends Response {
 
 	/**
 	 * Get the rendered view code.
-	 * If you set after() function, rembember that this method won't
+	 * If you set after() function, remember that this method won't
 	 * do anything with that work.
-	 * 
+	 *
+	 * @throws Exception
 	 * @return string
 	 * @link http://koldy.net/docs/view#get-output
 	 */
@@ -207,6 +218,14 @@ class View extends Response {
 		ob_start();
 		include($path);
 		return ob_get_clean();
+	}
+
+	public function __set($name, $value) {
+		$this->data[$name] = $value;
+	}
+
+	public function __get($name) {
+		return isset($this->data[$name]) ? $this->data[$name] : null;
 	}
 
 }

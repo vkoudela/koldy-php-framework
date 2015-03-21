@@ -57,7 +57,8 @@ class Validator {
 		17 =>'Error uploading file.',
 		18 =>'This field doesn\'t have requested value.', // {field}, {value}
 		19 =>'This value should be decimal',
-		20 =>'This mustn\'t have more then {limit} numbers after decimal sign'
+		20 =>'This mustn\'t have more then {limit} numbers after decimal sign',
+		21 =>'This slug contains invalid characters or double dashes'
 	);
 
 
@@ -209,7 +210,7 @@ class Validator {
 	}
 
 
-	// hmmmm
+	// TODO: Review this
 	protected function validateNotEmpty($param, $settings = null) {
 		if (isset($this->input[$param]) && trim($this->input[$param]) == '' && !isset($this->invalids[$param])) {
 			return static::getErrorMessage(1);
@@ -220,7 +221,7 @@ class Validator {
 
 
 	/**
-	 * Throw error if value is lower then given minimum. Works on numerics only.
+	 * Throw error if value is lower then given minimum. Works on numeric only.
 	 * 
 	 * @param string $param
 	 * @param string $settings
@@ -342,8 +343,10 @@ class Validator {
 	 *
 	 * @param string $param
 	 * @param string $settings
+	 *
+	 * @throws Exception
 	 * @return true|string
-	 * @example decimal:2 - allowes numbers with two decimal points
+	 * @example decimal:2 - allows numbers with two decimal points
 	 */
 	protected function validateDecimal($param, $settings = null) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -437,7 +440,7 @@ class Validator {
 	 * @link http://koldy.net/docs/validators/helpers#is-email
 	 */
 	public static function isEmail($email) {
-		return (bool) preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,12})$/', $email);
+		return (bool) preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,63})$/', $email);
 	}
 
 
@@ -459,10 +462,47 @@ class Validator {
 
 
 	/**
+	 * Is given variable good formatted "slug".
+	 * The "slug" is usually text used in URLs that uniquely defines some object.
+	 *
+	 * @example this-is-good-formatted-123-slug
+	 * @example This-is-NOT-good-formatted-slug--contains-uppercase
+	 * @example slug-should never contain any-spaces
+	 * @example slug-should-never-contain-any-other-characters-like-šđčćž
+	 * @example this--is--bad--slug--because-it-has-double-dashes
+	 *
+	 * @param String $slug
+	 * @return bool
+	 */
+	public static function isSlug($slug) {
+		return (bool) preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $slug);
+	}
+
+
+	/**
+	 * Validate the email address
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 */
+	protected function validateSlug($param, $settings = null) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			if (!static::isSlug($this->input[$param])) {
+				return static::getErrorMessage(21);
+			}
+		}
+		return true;
+	}
+
+
+	/**
 	 * Throw error if value is not unique in database
-	 * 
+	 *
 	 * @param string $param
 	 * @param string $settings (Class\Name,uniqueField[,exceptionValue][,exceptionField])
+	 *
+	 * @throws Exception
 	 * @return true|string
 	 * @example \Db\User,email,my@email.com
 	 * @example \Db\User,email,field:id,id
@@ -502,9 +542,11 @@ class Validator {
 
 	/**
 	 * Throw error if value does not exists in database
-	 * 
+	 *
 	 * @param string $param
 	 * @param string $settings (Class\Name[,fieldToQuery])
+	 *
+	 * @throws Exception
 	 * @return true|string
 	 */
 	protected function validateExists($param, $settings) {
@@ -653,7 +695,7 @@ class Validator {
 
 
 	/**
-	 * Throw error if this field is not image or doesn't fit to given contraints
+	 * Throw error if this field is not image or doesn't fit to given constraints
 	 * 
 	 * @param string $param
 	 * @param string $settings
