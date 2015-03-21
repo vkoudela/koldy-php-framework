@@ -210,7 +210,7 @@ class Validator {
 	}
 
 
-	// hmmmm
+	// TODO: Review this
 	protected function validateNotEmpty($param, $settings = null) {
 		if (isset($this->input[$param]) && trim($this->input[$param]) == '' && !isset($this->invalids[$param])) {
 			return static::getErrorMessage(1);
@@ -221,7 +221,7 @@ class Validator {
 
 
 	/**
-	 * Throw error if value is lower then given minimum. Works on numerics only.
+	 * Throw error if value is lower then given minimum. Works on numeric only.
 	 * 
 	 * @param string $param
 	 * @param string $settings
@@ -343,8 +343,10 @@ class Validator {
 	 *
 	 * @param string $param
 	 * @param string $settings
+	 *
+	 * @throws Exception
 	 * @return true|string
-	 * @example decimal:2 - allowes numbers with two decimal points
+	 * @example decimal:2 - allows numbers with two decimal points
 	 */
 	protected function validateDecimal($param, $settings = null) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -460,12 +462,12 @@ class Validator {
 
 
 	/**
-	 * Is given variable good formated "slug".
+	 * Is given variable good formatted "slug".
 	 * The "slug" is usually text used in URLs that uniquely defines some object.
 	 *
 	 * @example this-is-good-formatted-123-slug
-	 * @example This-is-NOT-good-formatted-slug--contains-uppercases
-	 * @example slug-shoud never contain any-spaces
+	 * @example This-is-NOT-good-formatted-slug--contains-uppercase
+	 * @example slug-should never contain any-spaces
 	 * @example slug-should-never-contain-any-other-characters-like-šđčćž
 	 * @example this--is--bad--slug--because-it-has-double-dashes
 	 *
@@ -496,9 +498,11 @@ class Validator {
 
 	/**
 	 * Throw error if value is not unique in database
-	 * 
+	 *
 	 * @param string $param
 	 * @param string $settings (Class\Name,uniqueField[,exceptionValue][,exceptionField])
+	 *
+	 * @throws Exception
 	 * @return true|string
 	 * @example \Db\User,email,my@email.com
 	 * @example \Db\User,email,field:id,id
@@ -538,9 +542,11 @@ class Validator {
 
 	/**
 	 * Throw error if value does not exists in database
-	 * 
+	 *
 	 * @param string $param
 	 * @param string $settings (Class\Name[,fieldToQuery])
+	 *
+	 * @throws Exception
 	 * @return true|string
 	 */
 	protected function validateExists($param, $settings) {
@@ -689,7 +695,7 @@ class Validator {
 
 
 	/**
-	 * Throw error if this field is not image or doesn't fit to given contraints
+	 * Throw error if this field is not image or doesn't fit to given constraints
 	 * 
 	 * @param string $param
 	 * @param string $settings

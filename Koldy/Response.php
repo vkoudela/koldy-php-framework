@@ -10,13 +10,13 @@ abstract class Response {
 	/**
 	 * The function that should be called when script finishes output
 	 * 
-	 * @var function
+	 * @var \Closure
 	 */
 	protected $workAfterResponse = null;
 
 
 	/**
-	 * The array of headers that will be printed before outputing anyting
+	 * The array of headers that will be printed before outputting anything
 	 * 
 	 * @var array
 	 */
@@ -194,8 +194,10 @@ abstract class Response {
 
 	/**
 	 * Set the function for after work
-	 * 
-	 * @param function $function
+	 *
+	 * @param \Closure $function
+	 *
+	 * @throws Exception
 	 * @return \Koldy\Response
 	 */
 	public function after($function) {

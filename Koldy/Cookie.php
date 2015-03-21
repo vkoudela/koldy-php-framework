@@ -73,7 +73,7 @@ class Cookie {
 	/**
 	 * Set cookie only if this cookie doesn't already exist
 	 * 
-	 * @param string $key
+	 * @param string $name
 	 * @param string|number $value
 	 * @param int $expire [optional] when will cookie expire?
 	 * @param string $path [optional] path of the cookie

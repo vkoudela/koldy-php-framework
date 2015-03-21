@@ -149,9 +149,11 @@ class Url {
 
 	/**
 	 * Generate the link to static asset on the same host where application is. This method is using link() method in
-	 * routing class, so be careful because it might be overriden in your case.
+	 * routing class, so be careful because it might be overridden in your case.
 	 *
 	 * @param string $path
+	 * @param string $server
+	 *
 	 * @return string
 	 */
 	public static function link($path, $server = null) {

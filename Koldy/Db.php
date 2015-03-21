@@ -187,7 +187,7 @@ class Db {
 	/**
 	 * Create new object for DELETE query
 	 * 
-	 * @param string $tableName
+	 * @param string $fromTable
 	 * @return \Koldy\Db\Delete
 	 * @link http://koldy.net/docs/database/query-builder#delete
 	 */

@@ -95,8 +95,6 @@ class Plain extends Response {
 
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::flush()
 	 * @link http://koldy.net/docs/plain#usage
 	 */
 	public function flush() {

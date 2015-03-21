@@ -67,7 +67,7 @@ class Directory {
 	 * Create the target directory
 	 * 
 	 * @param string $path
-	 * @param octal $chmod default 0644
+	 * @param string $chmod default 0644
 	 * @return bool was it successfull
 	 * @example $chmod 0777, 0755, 0700
 	 */

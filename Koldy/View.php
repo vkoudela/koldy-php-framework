@@ -3,7 +3,7 @@
 /**
  * The view class will properly serve prepared HTML to user.
  * 
- * This framework doesn't have and doesn't use any templating engine so there is
+ * This framework doesn't have and doesn't use any template engine so there is
  * no need to learn extra syntax or what so ever. All you need to know is how to
  * set up file structure.
  * 
@@ -61,7 +61,7 @@ class View extends Response {
 
 
 	/**
-	 * Add key value pair of data that will be accesible in the view files
+	 * Add key value pair of data that will be accessible in the view files
 	 * 
 	 * @param string $key
 	 * @param mixed $value
@@ -88,8 +88,10 @@ class View extends Response {
 
 	/**
 	 * Add the array of values that will be accessible in the view
-	 * 
+	 *
 	 * @param array $with
+	 *
+	 * @throws Exception
 	 * @return \Koldy\View
 	 * @link http://koldy.net/docs/view#passing-variables
 	 */
@@ -142,8 +144,10 @@ class View extends Response {
 
 	/**
 	 * Render some other view file inside of parent view file
-	 * 
+	 *
 	 * @param string $view
+	 *
+	 * @throws Exception
 	 * @return string
 	 */
 	public function render($view) {
@@ -196,9 +200,10 @@ class View extends Response {
 
 	/**
 	 * Get the rendered view code.
-	 * If you set after() function, rembember that this method won't
+	 * If you set after() function, remember that this method won't
 	 * do anything with that work.
-	 * 
+	 *
+	 * @throws Exception
 	 * @return string
 	 * @link http://koldy.net/docs/view#get-output
 	 */

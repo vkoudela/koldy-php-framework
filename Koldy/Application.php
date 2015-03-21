@@ -30,7 +30,7 @@ class Application {
 
 
 	/**
-	 * The enivornment modes. Only theese for now
+	 * The environment modes. Only these for now
 	 * 
 	 * @var array
 	 */
@@ -108,9 +108,10 @@ class Application {
 
 	/**
 	 * Use the application config file and validate all values we need
-	 * 
+	 *
 	 * @param string $pathToApplicationConfig this can be relative to your index.php file
-	 * @throws \Koldy\Exception
+	 *
+	 * @throws \Exception
 	 */
 	public static function useConfig($pathToApplicationConfig) {
 		$pathToApplicationConfig = stream_resolve_include_path($pathToApplicationConfig);
@@ -121,7 +122,7 @@ class Application {
 
 		$config = require $pathToApplicationConfig;
 		
-		// first, check if the site can be run on multiple hostnames
+		// first, check if the site can be run on multiple host names
 		if (defined('KOLDY_CLI') && KOLDY_CLI) {
 			if (is_array($config['site_url'])) {
 				if (sizeof($config['site_url']) == 0 || !isset($config['site_url'][0])) {
@@ -267,7 +268,7 @@ class Application {
 
 	/**
 	 * Get the running CLI script name - this is available only if this
-	 * request is running in CLI enviornment
+	 * request is running in CLI environment
 	 * 
 	 * @return string
 	 * @example if you call "php cli.php backup", this method will return "/path/to/application/scripts/backup.php"
@@ -493,7 +494,7 @@ class Application {
 		});
 
 		// set the include path to the framework folder (to Koldy and any other
-		// framework(s) located in framework folder with same namespacing style)
+		// framework(s) located in framework folder with same name spacing style)
 		$includePaths = array(substr(dirname(__FILE__), 0, -6));
 
 		$basePath = static::getApplicationPath();
@@ -608,8 +609,10 @@ class Application {
 	/**
 	 * Run the application with given URI. If URI is not set, then application
 	 * will try to detect it automatically.
-	 * 
+	 *
 	 * @param string $uri [optional]
+	 *
+	 * @throws Exception
 	 */
 	public static function run($uri = null) {
 		static::$requestStartTime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
