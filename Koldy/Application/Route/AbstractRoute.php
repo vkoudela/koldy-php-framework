@@ -157,8 +157,8 @@ abstract class AbstractRoute {
 			$path = '/' . $path;
 		}
 
-		if (isset($config['url_namespace'])) {
-			$path = $config['url_namespace'] . $path;
+		if (isset($this->config['url_namespace'])) {
+			$path = $this->config['url_namespace'] . $path;
 		}
 
 		if ($server === null) {
