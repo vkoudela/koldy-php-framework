@@ -94,12 +94,8 @@ class Request {
 	 * @return string
 	 */
 	public static function hostName() {
-		if (isset($_SERVER['HTTP_HOST'])) {
-			return $_SERVER['HTTP_HOST'];
-		} else {
-			$siteUrl = Application::getConfig('application', 'site_url');
-			return substr($siteUrl, strpos($siteUrl, '//') +2);
-		}
+		$siteUrl = Application::getConfig('application', 'site_url');
+		return substr($siteUrl, strpos($siteUrl, '//') +2);
 	}
 
 

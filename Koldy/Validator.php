@@ -635,16 +635,20 @@ class Validator {
 
 	/**
 	 * Throw error if this field is not identical as other field in validators. Best for validating password inputs.
-	 * 
+	 *
 	 * @param string $param
 	 * @param string $settings
+	 *
+	 * @throws Exception
 	 * @return true|string
 	 */
 	protected function validateIdentical($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param])) {
 			$param2 = $settings;
-			if (!isset($this->input[$param2])) {
-				return static::getErrorMessage(1);
+
+			if (!array_key_exists($param2, $this->input)) {
+				// you must set another field to be compared to
+				throw new Exception('Invalid "identical" identifier; field ' . $param2 . ' doesn\'t exists within the request; check your validation rules');
 			}
 
 			if ($this->input[$param] !== $this->input[$param2]) {
