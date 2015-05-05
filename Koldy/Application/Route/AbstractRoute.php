@@ -126,12 +126,26 @@ abstract class AbstractRoute {
 	/**
 	 * Generate link to another page
 	 * 
-	 * @param string $controller
+	 * @param string $controller [optional]
 	 * @param string $action [optional]
 	 * @param array $params [optional]
 	 * @return string
 	 */
-	abstract public function href($controller, $action = null, array $params = null);
+	abstract public function href($controller = null, $action = null, array $params = null);
+
+
+	/**
+	 * Generate link to another page on another server
+	 *
+     * @param string $server
+	 * @param string $controller [optional]
+	 * @param string $action [optional]
+	 * @param array $params [optional]
+	 * @return string
+	 */
+	public function serverHref($server, $controller = null, $action = null, array $params = null) {
+        return $this->href($controller, $action, $params);
+    }
 
 
 	/**
@@ -141,7 +155,7 @@ abstract class AbstractRoute {
 	 * @param string $server
 	 * @return string
 	 */
-	public function link($path, $server = null) {
+	public function asset($path, $server = null) {
 
 		// if you pass the full URL that contains "://" part, then it will be immediately
 		// returned without any kind of building or parsing it
@@ -168,47 +182,15 @@ abstract class AbstractRoute {
 				throw new \InvalidArgumentException('$server expected to be string, got ' . gettype($server));
 			}
 
-			if (isset($config['servers']) && isset($config['servers'][$server])) {
-				$url = $config['servers'][$server];
+			if (isset($config['assets']) && isset($config['assets'][$server])) {
+				$url = $config['assets'][$server];
 			} else {
 				$url = $config['site_url'];
-				Log::warning("Missing config '{$server}' used in Url::link call");
+				Log::warning("Missing config '{$server}' used in " . __CLASS__ . __METHOD__ . ':' . __LINE__);
 			}
 		}
 
 		return $url . $path;
-	}
-
-
-	/**
-	 * Generate link to the resource file on CDN domain if CDN is set, otherwise
-	 * this acts the same as link() method
-	 * 
-	 * @param string $path
-	 * @return string
-	 */
-	public function cdn($path) {
-
-		// if you pass the full URL that contains "://" part, then it will be immediately
-		// returned without any kind of building or parsing it
-
-		$pos = strpos($path, '://');
-		if ($pos !== false && $pos < 10) {
-			return $path;
-		}
-		
-		$config = Application::getConfig();
-		$cdnUrl = ($config['cdn_url'] === null) ? $config['site_url'] : $config['cdn_url'];
-		
-		if ($path[0] != '/') {
-			$path = '/' . $path;
-		}
-
-		if (substr($path, 0, 2) == '//') {
-			return $path;
-		}
-		
-		return $cdnUrl . $path;
 	}
 
 

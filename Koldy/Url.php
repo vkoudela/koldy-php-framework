@@ -156,8 +156,8 @@ class Url {
 	 *
 	 * @return string
 	 */
-	public static function link($path, $server = null) {
-		return Application::route()->link($path, $server);
+	public static function asset($path, $server = null) {
+		return Application::route()->asset($path, $server);
 	}
 
 	/**
@@ -169,7 +169,7 @@ class Url {
 	 * @return string
 	 */
 	public static function __callStatic($name, $args) {
-		return static::link($args[0], $name);
+		return static::asset($args[0], $name);
 	}
 
 

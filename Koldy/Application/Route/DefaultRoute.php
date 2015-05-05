@@ -359,9 +359,22 @@ class DefaultRoute extends AbstractRoute {
 	 * @param array $params
 	 *
 	 * @return string
-	 * @throws \Koldy\Exception
 	 */
 	public function href($controller = null, $action = null, array $params = null) {
+		return $this->serverHref(null, $controller, $action, $params);
+	}
+
+
+	/**
+     * @param string $server
+	 * @param string $controller
+	 * @param string $action
+	 * @param array $params
+	 *
+	 * @return string
+	 * @throws \Koldy\Exception
+	 */
+	public function serverHref($server, $controller = null, $action = null, array $params = null) {
 		if ($controller !== null && strpos($controller, '/') !== false) {
 			throw new \InvalidArgumentException('Slash is not allowed in controller name');
 		}
@@ -376,11 +389,17 @@ class DefaultRoute extends AbstractRoute {
 		}
 
 		//$url = (defined('KOLDY_CLI') && KOLDY_CLI === true) ? $config['site_url'] : '';
-		$url = $config['site_url'];
 
-		if (isset($this->config['url_namespace'])) {
-			$url .= $this->config['url_namespace'];
-		}
+        if ($server !== null && isset($config['servers']) && isset($config['servers'][$server])) {
+            // we're building link to another server
+            $url = $config['servers'][$server];
+        } else {
+            $url = $config['site_url'];
+        }
+
+        if (isset($this->config['url_namespace'])) {
+            $url .= $this->config['url_namespace'];
+        }
 
 		$url .= '/' . $controller;
 
@@ -397,7 +416,7 @@ class DefaultRoute extends AbstractRoute {
 					$q[$key] = $value;
 				}
 			}
-			
+
 			if (sizeof($q) > 0) {
 				$url .= '?';
 				foreach ($q as $key => $value) {

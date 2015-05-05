@@ -583,17 +583,18 @@ abstract class Model {
 
 	/**
 	 * Fetch numeric array of values from one column in database
-	 * 
+	 *
 	 * @param string $field
 	 * @param mixed $where [optional]
 	 * @param string $orderField [optional]
 	 * @param string $orderDirection [optional]
 	 * @param integer $limit [optional]
+	 * @param integer $start [optional]
 	 * @return array or empty array if not found
 	 * @example User::fetchArrayOf('id', Where::init()->where('id', '>', 50), 'id', 'asc') would return array(51,52,53,54,55,...)
 	 * @link http://koldy.net/docs/database/models#fetchArrayOf
 	 */
-	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null, $limit = null) {
+	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null, $limit = null, $start = 0) {
 		$select = static::query()->field($field, 'key_field');
 
 		if ($where !== null) {
@@ -613,7 +614,7 @@ abstract class Model {
 		}
 
 		if ($limit !== null) {
-			$select->limit(0, $limit);
+			$select->limit($start, $limit);
 		}
 
 		$records = $select->fetchAll();
@@ -629,7 +630,7 @@ abstract class Model {
 
 	/**
 	 * Fetch only one record and return value from given column
-	 * 
+	 *
 	 * @param string $field
 	 * @param mixed $where [optional]
 	 * @param string $orderField [optional]
@@ -656,7 +657,7 @@ abstract class Model {
 		}
 
 		$records = $select->fetchAll();
-		
+
 		if (sizeof($records) > 0) {
 			return $records[0]['key_field'];
 		}
