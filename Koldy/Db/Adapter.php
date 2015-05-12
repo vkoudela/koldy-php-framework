@@ -1,5 +1,7 @@
 <?php namespace Koldy\Db;
 
+use MongoClient;
+use MongoConnectionException;
 use PDO;
 use PDOException;
 use Koldy\Application;
@@ -28,7 +30,7 @@ class Adapter {
 	/**
 	 * @var PDO
 	 */
-	public $pdo = null;
+	public $driver = null;
 
 
 	/**
@@ -108,7 +110,7 @@ class Adapter {
 						$config['port'] = (int) $config['port'];
 					}
 
-					$this->pdo = new PDO(
+					$this->driver = new PDO(
 						"mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}",
 						$config['username'],
 						$config['password'],
@@ -116,7 +118,7 @@ class Adapter {
 					);
 				} else {
 					// the case with unix_socket
-					$this->pdo = new PDO(
+					$this->driver = new PDO(
 						"mysql:unix_socket={$config['socket']};dbname={$config['database']};charset={$config['charset']}",
 						$config['username'],
 						$config['password'],
@@ -148,11 +150,37 @@ class Adapter {
 					}
 				}
 
-				$this->pdo = new PDO('sqlite:' . $path);
+				$this->driver = new PDO('sqlite:' . $path);
 				foreach ($pdoConfig as $key => $value) {
-					$this->pdo->setAttribute($key, $value);
+					$this->driver->setAttribute($key, $value);
 				}
 
+				break;
+
+			case 'mongo':
+				$options = array (
+					// the default options that might be overridden with config
+					'connect' => true
+				);
+
+				if (isset($config['options'])) {
+					foreach ($config['options'] as $key => $value) {
+						$options[$key] = $value;
+					}
+				}
+
+				if (isset($config['host'])) {
+					$host = $config['host'];
+				} else {
+					throw new Exception('Mongo host is not defined in database configuration');
+				}
+
+				if (!isset($config['database'])) {
+					throw new Exception('Mongo database name is not defined in database configuration');
+				}
+
+				$this->driver = new MongoClient('mongodb://' . $host, $options);
+				$this->driver->selectDB($config['database']);
 				break;
 
 				default:
@@ -163,24 +191,26 @@ class Adapter {
 
 
 	/**
-	 * The PDO will be initialized only if needed, not on adapter initialization
+	 * The PDO/MongoClient will be initialized only if needed, not on this adapter class initialization.
+	 * This will return native PHP's driver
 	 *
 	 * @throws Exception
-	 * @return PDO
+	 * @throws \MongoConnectionException
+	 * @return \PDO|\MongoClient
 	 */
 	public function getAdapter() {
-		if ($this->pdo === null) {
+		if ($this->driver === null) {
 			try {
 				$this->tryConnect($this->config);
 			} catch (PDOException $e) {
 				$this->lastException = $e;
 				$this->lastError = $e->getMessage();
-				$this->pdo = null;
+				$this->driver = null;
 
 				if (isset($this->config['backup_connections']) && is_array($this->config['backup_connections'])) {
 					$count = count($this->config['backup_connections']);
 
-					for ($i = 0; $i < $count && $this->pdo === null; $i++) {
+					for ($i = 0; $i < $count && $this->driver === null; $i++) {
 						$config = $this->config['backup_connections'][$i];
 						if (isset($config['log_error']) && $config['log_error'] === true) {
 							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
@@ -189,7 +219,7 @@ class Adapter {
 							Log::notice("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
 						}
 
-						$this->pdo = null;
+						$this->driver = null;
 
 						if (isset($config['wait_before_connect'])) {
 							usleep($config['wait_before_connect'] * 1000);
@@ -201,18 +231,19 @@ class Adapter {
 						} catch (PDOException $e) {
 							$this->lastException = $e;
 							$this->lastError = $e->getMessage();
-							$this->pdo = null;
+							$this->driver = null;
 						}
 					}
 				}
 
-				if ($this->pdo === null) {
+				if ($this->driver === null) {
 					throw new Exception('Error connecting to database');
 				}
+			//} catch (MongoConnectionException $e) { // we're letting exception forward
 			}
 		}
 
-		return $this->pdo;
+		return $this->driver;
 	}
 
 
@@ -361,7 +392,18 @@ class Adapter {
 	 * @return \Koldy\Db\Adapter
 	 */
 	public function close() {
-		$this->pdo = null;
+		if ($this->driver !== null) {
+			switch (get_class($this->driver)) {
+				case 'PDO':
+					$this->driver = null;
+					break;
+
+				case 'MongoClient':
+					$this->driver->close();
+					break;
+			}
+		}
+
 		return $this;
 	}
 
@@ -370,10 +412,22 @@ class Adapter {
 	 * Reconnect to server
 	 */
 	public function reconnect() {
-		$this->close()
-			->getAdapter()
-			->prepare('SELECT 1')
-			->execute();
+		$this->close();
+
+		$adapter = $this->getAdapter();
+		switch (get_class($adapter)) {
+			case 'PDO':
+				/** @var $adapter \PDO */
+				$adapter
+					->prepare('SELECT 1')
+					->execute();
+				break;
+
+			case 'MongoClient':
+				/** @var $adapter \MongoClient */
+				$adapter->connect();
+				break;
+		}
 	}
 
 
