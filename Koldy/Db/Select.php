@@ -466,10 +466,27 @@ class Select extends Where {
 
 	/**
 	 * Fetch all records as array of objects
-	 * @return array
+	 * @param string|\Koldy\Db\Model $class [optional]
+	 * @return array or array of \Koldy\Db\Model
 	 */
-	public function fetchAllObj() {
-		return $this->fetchAll(\PDO::FETCH_OBJ);
+	public function fetchAllObj($class = null) {
+		if ($class === null) {
+			// return fetch records with usual \PDO::FETCH_OBJ
+			return $this->fetchAll(\PDO::FETCH_OBJ);
+		} else {
+			// return instances with given class name
+			// given class name must be a class that extends \Koldy\Db\Model
+			if (is_object($class)) {
+				$class = get_class($class);
+			}
+
+			$objects = array();
+			foreach ($this->fetchAll() as $record) {
+				$objects[] = new $class($record);
+			}
+
+			return $objects;
+		}
 	}
 
 	/**

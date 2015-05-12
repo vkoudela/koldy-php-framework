@@ -146,16 +146,27 @@ class View extends Response {
 	 * Render some other view file inside of parent view file
 	 *
 	 * @param string $view
+	 * @param array $with php variables
 	 *
 	 * @throws Exception
 	 * @return string
 	 */
-	public function render($view) {
+	public function render($view, array $with = null) {
 		$path = static::getViewPath($view);
 
 		if (!file_exists($path)) {
 			Log::error("Can not find view on path={$path}");
 			throw new Exception("View ({$view}) not found");
+		}
+
+		if ($with !== null && count($with) > 0) {
+			foreach ($with as $variableName => $value) {
+				if (!is_string($variableName)) {
+					throw new Exception('Invalid argument name, expected string, got ' . gettype($variableName));
+				}
+
+				$$variableName = $value;
+			}
 		}
 
 		ob_start();

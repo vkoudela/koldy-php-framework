@@ -239,6 +239,10 @@ class Adapter {
 		} catch (PDOException $e) {
 			// the SQL syntax might fail here
 
+			if (LOG) {
+				Log::sql($this->__toString());
+			}
+
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
