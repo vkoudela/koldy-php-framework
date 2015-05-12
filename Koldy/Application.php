@@ -267,6 +267,22 @@ class Application {
 
 
 	/**
+	 * Get the path to directory with views
+	 * @return array|string
+	 * @throws Exception
+	 */
+	public static function getViewPath() {
+		$viewPath = static::getConfig('application', 'view_path');
+
+		if ($viewPath === null) {
+			return static::getApplicationPath('views');
+		} else {
+			return $viewPath;
+		}
+	}
+
+
+	/**
 	 * Get the running CLI script name - this is available only if this
 	 * request is running in CLI environment
 	 * 

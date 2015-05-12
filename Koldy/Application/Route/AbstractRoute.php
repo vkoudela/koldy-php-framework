@@ -143,8 +143,8 @@ abstract class AbstractRoute {
 	 * @param array $params [optional]
 	 * @return string
 	 */
-	public function serverHref($server, $controller = null, $action = null, array $params = null) {
-        return $this->href($controller, $action, $params);
+	public function siteHref($server, $controller = null, $action = null, array $params = null) {
+        return $this->siteHref($controller, $action, $params);
     }
 
 

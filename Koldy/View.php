@@ -120,9 +120,10 @@ class View extends Response {
 
 		$pos = strpos($view, ':');
 		if ($pos === false) {
-			return Application::getApplicationPath() . 'views' . DS . str_replace('.', DS, $view) . '.phtml';
+			return Application::getViewPath() . DS . str_replace('.', DS, $view) . '.phtml';
 		} else {
-			return Application::getApplicationPath() . 'modules'
+			return dirname(substr(Application::getViewPath(), 0, -1))
+				. DS . 'modules'
 				. DS . substr($view, 0, $pos)
 				. DS . 'views'
 				. DS . str_replace('.', DS, substr($view, $pos +1)) . '.phtml';

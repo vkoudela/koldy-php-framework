@@ -138,6 +138,20 @@ class Url {
 
 
 	/**
+	 * Generate the link suitable for <a> tags. Generating links depends about the routing class you're using.
+	 *
+	 * @param string $controller
+	 * @param string $action
+	 * @param array $params
+	 *
+	 * @return string
+	 */
+	public static function siteHref($site, $controller = null, $action = null, array $params = null) {
+		return Application::route()->siteHref($site, $controller, $action, $params);
+	}
+
+
+	/**
 	 * Generate the link to home page
 	 * 
 	 * @return string
