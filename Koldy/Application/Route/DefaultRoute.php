@@ -201,7 +201,7 @@ class DefaultRoute extends AbstractRoute {
 				// module stuff has greater priority then application folder itself
 
 				"{$moduleDir}{$slash}controllers",
-				"{$moduleDir}{$slash}modles",
+				"{$moduleDir}{$slash}models",
 				"{$moduleDir}{$slash}library",
 
 				get_include_path()
