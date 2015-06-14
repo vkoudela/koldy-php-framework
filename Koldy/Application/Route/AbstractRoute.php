@@ -171,12 +171,12 @@ abstract class AbstractRoute {
 			$path = '/' . $path;
 		}
 
-		if (isset($this->config['url_namespace'])) {
-			$path = $this->config['url_namespace'] . $path;
-		}
-
 		if ($server === null) {
 			$url = $config['site_url'];
+
+			if (isset($this->config['url_namespace'])) {
+				$path = $this->config['url_namespace'] . $path;
+			}
 		} else {
 			if (!is_string($server)) {
 				throw new \InvalidArgumentException('$server expected to be string, got ' . gettype($server));

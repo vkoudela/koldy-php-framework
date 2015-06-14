@@ -101,18 +101,30 @@ class DefaultRoute extends AbstractRoute {
 		}
 
 		if (strlen($uri) > 1 && substr($uri, -1) == '/') {
-			// ending slash is not needed
-			// if you need to pass slash on the end of URI, then urlencode it
-			if ($redirect === null) {
-				$redirect = substr($uri, 0, -1);
-			} else {
-				$redirect = substr($redirect, 0, -1);
+			// ending slash is not needed, unless you have a namespace
+
+			if (!isset($this->config['url_namespace'])) {
+				// if you need to pass slash on the end of URI, then urlencode it
+				if ($redirect === null) {
+					$redirect = substr($uri, 0, -1);
+				} else {
+					$redirect = substr($redirect, 0, -1);
+				}
 			}
 		}
 
 		if ($redirect !== null) {
 			header('Location: ' . $redirect);
 			exit(0);
+		}
+
+		if (isset($this->config['url_namespace'])) {
+			if (substr($uri, 0, strlen($this->config['url_namespace'])) == $this->config['url_namespace']) {
+				$uri = substr($uri, strlen($this->config['url_namespace']));
+				$this->uri = explode('/', $uri);
+			} else {
+				Application::error(503, 'Invalid environment or url_namespace configuration');
+			}
 		}
 
 		$slash = DS;

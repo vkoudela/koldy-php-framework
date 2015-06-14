@@ -26,7 +26,7 @@ class Convert {
 	 */
 	private static function getMeasure($size, $count = 0, $round = null) {
 		if ($size >= 1024) {
-			return self::getMeasure($size / 1024, ++$count);
+			return self::getMeasure($size / 1024, ++$count, $round);
 		} else {
 			return round($size, $round) . ' ' . self::$measure[$count];
 		}
