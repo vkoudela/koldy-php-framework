@@ -58,7 +58,8 @@ class Validator {
 		18 =>'This field doesn\'t have requested value.', // {field}, {value}
 		19 =>'This value should be decimal',
 		20 =>'This mustn\'t have more then {limit} numbers after decimal sign',
-		21 =>'This slug contains invalid characters or double dashes'
+		21 =>'This slug contains invalid characters or double dashes',
+		22 =>'Invalid hexadecimal number'
 	);
 
 
@@ -82,9 +83,15 @@ class Validator {
 	 * Construct the object
 	 * 
 	 * @param array $params array of parameter definitions
+	 * @param array $data
 	 */
-	public function __construct(array $params) {
-		$this->input = ($_SERVER['REQUEST_METHOD'] == 'POST') ? $_POST : $_GET;
+	public function __construct(array $params, array $data = null) {
+		if ($data === null) {
+			$this->input = ($_SERVER['REQUEST_METHOD'] == 'POST') ? $_POST : $_GET;
+		} else {
+			$this->input = $data;
+		}
+
 		foreach ($params as $param => $validators) {
 			if ($validators === null) {
 				if (isset($this->input[$param])) {
@@ -142,10 +149,11 @@ class Validator {
 	 * Shorthand for initializing new Validator object
 	 * 
 	 * @param array $params
+	 * @param array $data
 	 * @return \Koldy\Validator
 	 */
-	public static function create(array $params) {
-		return new static($params);
+	public static function create(array $params, array $data = null) {
+		return new static($params, $data);
 	}
 
 
@@ -480,6 +488,17 @@ class Validator {
 
 
 	/**
+	 * Is given string valid hexadecimal number
+	 *
+	 * @param string $string
+	 * @return bool
+	 */
+	public static function isHex($string) {
+		return (bool) preg_match('/^[0-9a-f]*$/', $string);
+	}
+
+
+	/**
 	 * Validate the email address
 	 *
 	 * @param string $param
@@ -490,6 +509,23 @@ class Validator {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
 			if (!static::isSlug($this->input[$param])) {
 				return static::getErrorMessage(21);
+			}
+		}
+		return true;
+	}
+
+
+	/**
+	 * Validate the hexadecimal number
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 */
+	protected function validateHex($param, $settings = null) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			if (!static::isHex($this->input[$param])) {
+				return static::getErrorMessage(22);
 			}
 		}
 		return true;
