@@ -528,6 +528,11 @@ class Application {
 			}
 		}
 
+		// register include path of application itself
+		$includePaths[] = $basePath . 'controllers';
+		$includePaths[] = $basePath . 'library';
+		$includePaths[] = $basePath . 'models';
+
 		// adding additional include paths if there are any
 		if (isset($config['additional_include_path'])) {
 			if (!is_array($config['additional_include_path'])) {
@@ -539,11 +544,6 @@ class Application {
 				$includePaths[] = $path;
 			}
 		}
-
-		// register include path of application itself
-		$includePaths[] = $basePath . 'controllers';
-		$includePaths[] = $basePath . 'library';
-		$includePaths[] = $basePath . 'models';
 
 		// set the include path
 		set_include_path(implode(PATH_SEPARATOR, $includePaths) . PATH_SEPARATOR . get_include_path());
