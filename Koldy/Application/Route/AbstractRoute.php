@@ -44,6 +44,11 @@ abstract class AbstractRoute {
 	 * @example parameter might be "/user/login"
 	 */
 	public function __construct($uri, array $config = null) {
+		$questionPos = strpos($uri, '?');
+		if ($questionPos !== false) {
+			$uri = substr($uri, 0, $questionPos);
+		}
+
 		$this->uri = explode('/', $uri);
 		$this->config = ($config === null) ? array() : $config;
 	}

@@ -645,10 +645,6 @@ class Application {
 				} else {
 					static::$uri = $uri = $_SERVER['REQUEST_URI'];
 				}
-				$questionPos = strpos($uri, '?');
-				if ($questionPos !== false) {
-					$uri = substr($uri, 0, $questionPos);
-				}
 			} else if ($uri === null) {
 				// if your script goes here, then something is really fucked up on your server
 				throw new Exception('URI doesn\'t exists');
