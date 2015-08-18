@@ -177,6 +177,48 @@ class View extends Response {
 
 
 	/**
+	 * Render view if exists - if it doesn't exists, it won't throw any error
+	 *
+	 * @param string $view
+	 * @param array $with
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	public function renderIf($view, array $with = null) {
+		if ($this->has($view)) {
+			return $this->render($view, $with);
+		} else {
+			return '';
+		}
+	}
+
+
+	/**
+	 * Render view from key variable if exists - if it doesn't exists, it won't throw any error
+	 *
+	 * @param string $key
+	 * @param array $with
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	public function renderKeyIf($key, array $with = null) {
+		if (!$this->has($key)) {
+			return '';
+		}
+
+		$view = $this->$key;
+
+		if (static::exists($view)) {
+			return $this->render($view, $with);
+		} else {
+			return '';
+		}
+	}
+
+
+	/**
 	 * This method is called by framework, but in some cases, you'll want to call it by yourself.
 	 *
 	 * @throws Exception
