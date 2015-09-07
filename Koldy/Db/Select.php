@@ -449,7 +449,7 @@ class Select extends Where {
 		}
 
 		if ($this->limit !== null) {
-			$query .= "\nLIMIT {$this->limit->start}, {$this->limit->howMuch}";
+			$query .= "\nLIMIT {$this->limit->howMuch} OFFSET {$this->limit->start}";
 		}
 
 		return $query;
