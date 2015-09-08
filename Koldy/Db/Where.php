@@ -286,7 +286,7 @@ class Where extends Query {
 
 	/**
 	 * @param string $field
-	 *
+	 * @param int $index
 	 * @return string
 	 */
 	private function getBindFieldName($field, $index) {
@@ -294,7 +294,7 @@ class Where extends Query {
 		$field = str_replace('(', '', $field);
 		$field = str_replace(')', '', $field);
 
-		return $field;
+		return $field . $index;
 	}
 
 

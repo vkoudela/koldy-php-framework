@@ -61,7 +61,7 @@ abstract class Query {
 	 * @return int
 	 */
 	protected static function getKeyIndex() {
-		if (static::$keyIndex === PHP_INT_MAX) {
+		if (static::$keyIndex == PHP_INT_MAX) {
 			static::$keyIndex = 0;
 		} else {
 			static::$keyIndex++;
