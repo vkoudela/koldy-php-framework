@@ -126,9 +126,9 @@ class Validator {
 						} else if (isset($this->input[$param])) {
 							if (!is_array($this->input[$param])) {
 								$value = trim($this->input[$param]);
-								$this->valids[$param] = ($value == '') ? null : $value;
+								$this->valids[$param] = ($value == '') ? null : stripslashes($value);
 							} else {
-								$this->valids[$param] = $this->input[$param];
+								$this->valids[$param] = stripslashes($this->input[$param]);
 							}
 						} else {
 							$this->valids[$param] = null;
@@ -138,7 +138,7 @@ class Validator {
 			}
 		}
 
-		if (sizeof($this->badRequest) > 0) {
+		if (count($this->badRequest) > 0) {
 			Log::warning('Missing parameters: ' . implode(', ', $this->badRequest));
 			Application::error(400, 'Bad request. Missing parameters');
 		}
