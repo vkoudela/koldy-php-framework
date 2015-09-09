@@ -394,4 +394,73 @@ class Input {
 		}
 	}
 
+
+	/**
+	 * How many parameters are passed?
+	 *
+	 * @return int
+	 */
+	public static function parametersCount() {
+		return count(static::all());
+	}
+
+
+	/**
+	 * Return true if request contains only parameters from method argument. If there are more parameters then defined,
+	 * method will return false.
+	 *
+	 * @param array $params
+	 *
+	 * @return bool
+	 */
+	public static function only(array $params) {
+		if (static::parametersCount() != count($params)) {
+			return false;
+		}
+
+		return static::containsParams($params);
+	}
+
+
+	/**
+	 * Return true if request contains all of the parameters from method argument. If there are more parameters then
+	 * params passed to methods, method will still return true.
+	 *
+	 * @param array $params
+	 *
+	 * @return bool
+	 */
+	public static function containsParams(array $params) {
+		$params = array_flip($params);
+
+		foreach (static::all() as $name => $value) {
+			if (array_key_exists($name, $params)) {
+				unset($params[$name]);
+			}
+		}
+
+		return count($params) == 0;
+	}
+
+
+	/**
+	 * Return true only if request doesn't have any of the params from method argument.
+	 *
+	 * @param array $params
+	 *
+	 * @return bool
+	 */
+	public static function doesntContainParams(array $params) {
+		$targetCount = count($params);
+		$params = array_flip($params);
+
+		foreach (static::all() as $name => $value) {
+			if (array_key_exists($name, $params)) {
+				unset($params[$name]);
+			}
+		}
+
+		return count($params) == $targetCount;
+	}
+
 }
