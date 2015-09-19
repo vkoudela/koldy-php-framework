@@ -91,7 +91,7 @@ abstract class Model {
 			$setOriginalData = false;
 
 			foreach ($data as $key => $value) {
-				$this->$key = $value;
+				//$this->$key = $value;
 				if (!is_array(static::$primaryKey) && $key === static::$primaryKey) {
 					$setOriginalData = true;
 				}
@@ -100,6 +100,8 @@ abstract class Model {
 			if ($setOriginalData) {
 				$this->originalData = $data;
 			}
+
+			$this->data = $data;
 		}
 	}
 
