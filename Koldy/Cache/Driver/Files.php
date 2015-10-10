@@ -310,7 +310,7 @@ class Files extends AbstractCacheDriver {
 							break;
 					}
 
-					@file_put_contents(
+					file_put_contents(
 						$object->path,
 						sprintf("%s;%d;%s\n%s",
 							date('r', $object->created),
@@ -322,7 +322,7 @@ class Files extends AbstractCacheDriver {
 					break;
 
 				case 'delete':
-					@unlink($object->path);
+					unlink($object->path);
 					break;
 			}
 		}
