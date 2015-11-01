@@ -1,5 +1,6 @@
 <?php namespace Koldy\Db;
 
+use Koldy\Application;
 use Koldy\Db;
 use Koldy\Exception;
 
@@ -78,6 +79,10 @@ abstract class Query {
 	 * @return \Koldy\Db\Query
 	 */
 	public function setConnection($connection) {
+		if (Application::getConfig('database', $connection) === null) {
+			throw new Exception('You\'re trying to use non-existing database connection named: ' . $connection);
+		}
+
 		$this->connection = $connection;
 		return $this;
 	}

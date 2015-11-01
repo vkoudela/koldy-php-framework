@@ -70,6 +70,14 @@ class View extends Response {
 	 * @link http://koldy.net/docs/view#passing-variables
 	 */
 	public function with($key, $value) {
+		if ($key == 'data') {
+			throw new Exception('Key in View class can not be named \'data\'');
+		}
+
+		if ($key == 'view') {
+			throw new Exception('Key in View class can not be named \'view\'');
+		}
+
 		$this->$key = $value;
 		return $this;
 	}
