@@ -285,7 +285,7 @@ abstract class Model {
 		$toUpdate = array();
 
 		foreach ($data as $field => $value) {
-			if (isset($originalData[$field]) || $originalData[$field] === null) {
+			if (array_key_exists($field, $originalData)) {
 				if ($value !== $originalData[$field]) {
 					$toUpdate[$field] = $value;
 				}
@@ -294,7 +294,7 @@ abstract class Model {
 			}
 		}
 
-		if (sizeof($toUpdate) > 0) {
+		if (count($toUpdate) > 0) {
 			if (!is_array(static::$primaryKey)) {
 				if (isset($originalData[static::$primaryKey])) {
 					// we have pk value, so lets update
