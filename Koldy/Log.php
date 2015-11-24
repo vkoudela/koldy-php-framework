@@ -38,6 +38,20 @@ class Log {
 	 */
 	private static $writers = null;
 
+	/**
+	 * The array of enabled log levels, combined for all loggers
+	 *
+	 * @var array of level => true
+	 */
+	private static $enabledLevels = array();
+
+	/**
+	 * The array of enabled classes, stored as class name string
+	 *
+	 * @var array of className => true
+	 */
+	private static $enabledWriters = array();
+
 	protected function __construct() {}
 	protected function __clone() {}
 
@@ -51,11 +65,29 @@ class Log {
 
 			$count = 0;
 			foreach ($configs as $config) {
-				if ($config['enabled']) {
-					// if the config is enabled, then make new instance
+				$ok = $config['enabled']
+						&& (
+							(is_array($config['options']['log']) && count($config['options']['log']) > 0)
+							|| (is_array($config['options']['email_on']) && count($config['options']['email_on']) > 0)
+						);
 
+				if ($ok) {
+					// if the config is enabled, then make new instance
 					$writer = $config['writer_class'];
 					static::$writers[$count] = new $writer($config['options']);
+					static::$enabledWriters[$config['writer_class']] = true;
+
+					if (is_array($config['options']['log']) && count($config['options']['log']) > 0) {
+						foreach ($config['options']['log'] as $level) {
+							static::$enabledLevels[$level] = true;
+						}
+					}
+
+					if (is_array($config['options']['email_on']) && count($config['options']['email_on']) > 0) {
+						foreach ($config['options']['email_on'] as $level) {
+							static::$enabledLevels[$level] = true;
+						}
+					}
 
 					if (!(static::$writers[$count] instanceof AbstractLogWriter)) {
 						throw new Exception("Log driver {$writer} must extend AbstractLogWriter");
@@ -84,6 +116,34 @@ class Log {
 	public static function isEnabled() {
 		static::init();
 		return (sizeof(static::$writers) > 0);
+	}
+
+	/**
+	 * @param string $level
+	 *
+	 * @return bool
+	 */
+	public static function isEnabledLevel($level) {
+		if (!is_string($level)) {
+			throw new \InvalidArgumentException('Expected string for $level, got ' . gettype($level));
+		}
+
+		return array_key_exists($level, static::$enabledLevels);
+	}
+
+	/**
+	 * Was logger under given class name enabled or not?
+	 *
+	 * @param string $className
+	 *
+	 * @return bool
+	 */
+	public static function isEnabledLogger($className) {
+		if (!is_string($className)) {
+			throw new \InvalidArgumentException('Expected string for $className, got ' . gettype($className));
+		}
+
+		return array_key_exists($className, static::$enabledWriters);
 	}
 
 	/**
