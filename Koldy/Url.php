@@ -1,5 +1,7 @@
 <?php namespace Koldy;
 
+use Koldy\Application\Route\AbstractRoute;
+
 /**
  * This is another utility class that know how to handle URL. While developing
  * your site, you'll probably need to generate URL and detect if you're
@@ -169,9 +171,15 @@ class Url {
 	 * @param string $server
 	 *
 	 * @return string
+	 * @throws Exception
 	 */
 	public static function asset($path, $server = null) {
-		return Application::route()->asset($path, $server);
+		$route = Application::route();
+		if (!($route instanceof AbstractRoute)) {
+			throw new Exception('Invalid route; expected instance of \Koldy\Application\Route\AbstractRoute, got ' . gettype($route));
+		}
+
+		return $route->asset($path, $server);
 	}
 
 	/**

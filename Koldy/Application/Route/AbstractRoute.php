@@ -18,14 +18,12 @@ use Koldy\Json;
  */
 abstract class AbstractRoute {
 
-
 	/**
 	 * The URI that is initialized. Do not rely on $_SERVER['REQUEST_URI'].
 	 *
 	 * @var string
 	 */
 	protected $uri = null;
-
 
 	/**
 	 * The route config defined in config/application.php. This property will be
@@ -35,24 +33,22 @@ abstract class AbstractRoute {
 	 */
 	protected $config = null;
 
-
 	/**
 	 * Construct the object
 	 *
-	 * @param string $uri by default is $_SERVER['REQUEST_URI'] but it can be set manually in Application's run() method
 	 * @param array $config [optional]
 	 * @example parameter might be "/user/login"
 	 */
-	public function __construct($uri, array $config = null) {
-		$questionPos = strpos($uri, '?');
-		if ($questionPos !== false) {
-			$uri = substr($uri, 0, $questionPos);
-		}
-
-		$this->uri = explode('/', $uri);
+	public function __construct(array $config = null) {
 		$this->config = ($config === null) ? array() : $config;
 	}
 
+	/**
+	 * Prepare everything for HTTP request before executing exec()
+	 *
+	 * @param string $uri
+	 */
+	abstract public function prepareHttp($uri);
 
 	/**
 	 * Get the module URL part
@@ -61,14 +57,12 @@ abstract class AbstractRoute {
 	 */
 	abstract public function getModuleUrl();
 
-
 	/**
 	 * Get the controller as it is in URI
 	 *
 	 * @return string
 	 */
 	abstract public function getControllerUrl();
-
 
 	/**
 	 * What is the controller class name got from URI. When routing class resolves
@@ -78,7 +72,6 @@ abstract class AbstractRoute {
 	 */
 	abstract public function getControllerClass();
 
-
 	/**
 	 * Get the "action" part as it is URI
 	 *
@@ -87,7 +80,6 @@ abstract class AbstractRoute {
 	 */
 	abstract public function getActionUrl();
 
-
 	/**
 	 * What is the action method name resolved from from URI and request type
 	 *
@@ -95,7 +87,6 @@ abstract class AbstractRoute {
 	 * @example if URI is "/user/show-details/5", then this might return "showDetailsAction"
 	 */
 	abstract public function getActionMethod();
-
 
 	/**
 	 * Get the variable from the URL
@@ -106,7 +97,6 @@ abstract class AbstractRoute {
 	 */
 	abstract public function getVar($whatVar, $default = null);
 
-
 	/**
 	 * If route knows how to detect language, then override this method.
 	 *
@@ -115,7 +105,6 @@ abstract class AbstractRoute {
 	public function getLanguage() {
 		return null;
 	}
-
 
 	/**
 	 * Is this request Ajax request or not? This is used in \Koldy\Application when printing
@@ -127,7 +116,6 @@ abstract class AbstractRoute {
 		return null;
 	}
 
-
 	/**
 	 * Generate link to another page
 	 *
@@ -137,7 +125,6 @@ abstract class AbstractRoute {
 	 * @return string
 	 */
 	abstract public function href($controller = null, $action = null, array $params = null);
-
 
 	/**
 	 * Generate link to another page on another server
@@ -151,7 +138,6 @@ abstract class AbstractRoute {
 	public function siteHref($server, $controller = null, $action = null, array $params = null) {
 		return $this->siteHref($controller, $action, $params);
 	}
-
 
 	/**
 	 * Generate link to the resource file on the same domain
@@ -206,7 +192,6 @@ abstract class AbstractRoute {
 		return $url . $path;
 	}
 
-
 	/**
 	 * And now, execute the Controller->methodAction() detected in routing class
 	 * and return stuff, or throw exception, or show error.
@@ -214,7 +199,6 @@ abstract class AbstractRoute {
 	 * @return mixed
 	 */
 	abstract public function exec();
-
 
 	/**
 	 * If your app throws any kind of exception, it will end up here, so, handle it!
@@ -258,7 +242,6 @@ abstract class AbstractRoute {
 
 		Log::exception($e);
 	}
-
 
 	/**
 	 * I'm sure you sometimes want to show nice error to user! Well, if you call

@@ -7,14 +7,12 @@
  */
 class Session {
 
-
 	/**
 	 * Flag if session has been initialized or not
 	 * 
 	 * @var boolean
 	 */
 	private static $initialized = false;
-
 
 	/**
 	 * Flag if session has been write closed
@@ -23,7 +21,6 @@ class Session {
 	 */
 	private static $closed = false;
 
-
 	/**
 	 * Initialize the session handler and session itself
 	 * 
@@ -31,6 +28,10 @@ class Session {
 	 */
 	private static function init() {
 		if (!static::$initialized) {
+			if (Application::isCli()) {
+				throw new Exception('You can\'t start session in CLI environment!');
+			}
+
 			static::$initialized = true;
 
 			$config = Application::getConfig('session');
@@ -67,7 +68,6 @@ class Session {
 		}
 	}
 
-
 	/**
 	 * Get the value from session under given key name
 	 * 
@@ -86,7 +86,6 @@ class Session {
 			? $_SESSION[$key]
 			: null;
 	}
-
 
 	/**
 	 * Set the key to the session. If key already exists, it will be overwritten
@@ -110,7 +109,6 @@ class Session {
 
 		$_SESSION[$key] = $value;
 	}
-
 
 	/**
 	 * Add the key to session but only if that key doesn't already exist
@@ -137,7 +135,6 @@ class Session {
 		}
 	}
 
-
 	/**
 	 * Does given key exists in session or not?
 	 * 
@@ -155,7 +152,6 @@ class Session {
 
 		return array_key_exists($key, $_SESSION);
 	}
-
 
 	/**
 	 * Delete/remove the key from the session data
@@ -175,7 +171,6 @@ class Session {
 			unset($_SESSION[$key]);
 		}
 	}
-
 
 	/**
 	 * Get or set the key into session. If key already exists in session, then
@@ -212,7 +207,6 @@ class Session {
 		return $_SESSION[$key];
 	}
 
-
 	/**
 	 * Call session_write_close(). Usually, that function is called internally by
 	 * PHP on request execution end, but you can also call it by yourself. But
@@ -227,7 +221,6 @@ class Session {
 		static::$closed = true;
 	}
 
-
 	/**
 	 * Is session write closed or not?
 	 * 
@@ -237,7 +230,6 @@ class Session {
 	public static function isClosed() {
 		return static::$closed;
 	}
-
 
 	/**
 	 * You can start session with this method if you need that. Session start
@@ -250,7 +242,6 @@ class Session {
 		static::init();
 	}
 
-
 	/**
 	 * Is session already started or not?
 	 * 
@@ -260,7 +251,6 @@ class Session {
 	public static function hasStarted() {
 		return static::$initialized;
 	}
-
 
 	/**
 	 * Destroy session completely

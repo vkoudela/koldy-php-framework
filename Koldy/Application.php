@@ -11,7 +11,6 @@
  */
 class Application {
 
-
 	/**
 	 * All loaded configs in one place so feel free to call
 	 * Application::getConfig() as many times as you want
@@ -20,14 +19,12 @@ class Application {
 	 */
 	protected static $configs = array();
 
-
 	/**
 	 * The registered class aliases. This is for FW internal use only!
 	 *
 	 * @var array
 	 */
 	public static $classAliases = array();
-
 
 	/**
 	 * The environment modes. Only these for now
@@ -36,14 +33,12 @@ class Application {
 	 */
 	private static $modes = array('DEVELOPMENT' => 1, 'PRODUCTION' => 2);
 
-
 	/**
 	 * The application environment mode
 	 * 
 	 * @var int
 	 */
 	protected static $mode = 1;
-
 
 	/**
 	 * Thr routing class instance - this is the instance of class
@@ -53,14 +48,12 @@ class Application {
 	 */
 	protected static $routing = null;
 
-
 	/**
 	 * The requested URI. Basically $_SERVER['REQUEST_URI'], but not always
 	 * 
 	 * @var string
 	 */
 	protected static $uri = null;
-
 
 	/**
 	 * If CLI env, then this is the path of CLI script
@@ -69,7 +62,6 @@ class Application {
 	 */
 	protected static $cliScript = null;
 
-
 	/**
 	 * The parameter from CLI call - the script name
 	 * 
@@ -77,14 +69,12 @@ class Application {
 	 */
 	protected static $cliName = null;
 
-
 	/**
 	 * The request start time
 	 * 
 	 * @var int
 	 */
 	private static $requestStartTime = null;
-
 
 	/**
 	 * Add additional include path(s) - add anything you want under include path
@@ -104,7 +94,6 @@ class Application {
 
 		set_include_path(implode(PATH_SEPARATOR, array_unique($paths)));
 	}
-
 
 	/**
 	 * Use the application config file and validate all values we need
@@ -205,7 +194,6 @@ class Application {
 		static::$classAliases = $config['classes'];
 	}
 
-
 	/**
 	 * Get the path to application folder with ending slash
 	 * 
@@ -224,7 +212,6 @@ class Application {
 			return str_replace(DS.DS, DS, static::getConfig('application', 'application_path') . $append);
 		}
 	}
-
 
 	/**
 	 * Get the path to storage folder with ending slash
@@ -245,7 +232,6 @@ class Application {
 		}
 	}
 
-
 	/**
 	 * Get the path to the public folder with ending slash
 	 * 
@@ -265,7 +251,6 @@ class Application {
 		}
 	}
 
-
 	/**
 	 * Get the path to directory with views
 	 * @return array|string
@@ -281,7 +266,6 @@ class Application {
 		}
 	}
 
-
 	/**
 	 * Get the running CLI script name - this is available only if this
 	 * request is running in CLI environment
@@ -293,7 +277,6 @@ class Application {
 		return static::$cliScript;
 	}
 
-
 	/**
 	 * Get the CLI script name
 	 * 
@@ -304,6 +287,13 @@ class Application {
 		return static::$cliName;
 	}
 
+	/**
+	 * Is this CLI request?
+	 * @return bool
+	 */
+	public static function isCli() {
+		return static::$cliName !== null;
+	}
 
 	/**
 	 * Get the configs from any config file. If you don't pass first parameter,
@@ -356,7 +346,6 @@ class Application {
 		}
 	}
 
-
 	/**
 	 * Clear all configs that are already loaded. Actually, this will only
 	 * clear the cache and config file will be reloaded on next call.
@@ -364,7 +353,6 @@ class Application {
 	public static function reloadConfig() {
 		static::$configs = array();
 	}
-
 
 	/**
 	 * Get the application URI. Yes, use this one instead of $_SERVER['REQUEST_URI']
@@ -377,7 +365,6 @@ class Application {
 		return static::$uri;
 	}
 
-	
 	/**
 	 * Show some nice error in HTTP response that will be visible to user.
 	 * If you want to log anything, then log that before calling this method.
@@ -414,7 +401,6 @@ class Application {
 		}
 	}
 
-
 	/**
 	 * Get the initialized routing class
 	 * 
@@ -423,7 +409,6 @@ class Application {
 	public static function route() {
 		return static::$routing;
 	}
-
 
 	/**
 	 * Is application running in development mode or not
@@ -434,7 +419,6 @@ class Application {
 		return static::$mode === static::$modes['DEVELOPMENT'];
 	}
 
-
 	/**
 	 * Is application running in production mode or not
 	 * 
@@ -444,7 +428,6 @@ class Application {
 		return static::$mode === static::$modes['PRODUCTION'];
 	}
 
-
 	/**
 	 * Register all include paths for module
 	 * 
@@ -452,6 +435,14 @@ class Application {
 	 * @example if your module is located on "/application/modules/invoices", then pass "invoices"
 	 */
 	public static function registerModule($name) {
+		if (!is_string($name)) {
+			throw new \InvalidArgumentException('$name not valid, expected string, got ' . gettype($name));
+		}
+
+		if (strpos($name, '/') !== false) {
+			throw new \InvalidArgumentException('$name not valid, it can not contain slash sign (/)');
+		}
+
 		$basePath = static::getApplicationPath();
 		static::addIncludePath(array(
 			$basePath . 'modules' . DS . $name . DS . 'controllers',
@@ -459,7 +450,6 @@ class Application {
 			$basePath . 'modules' . DS . $name . DS . 'library'
 		));
 	}
-
 
 	/**
 	 * Dynamically register/add new class alias
@@ -470,7 +460,6 @@ class Application {
 	public static function registerClassAlias($classAlias, $className) {
 		static::$classAliases[$classAlias] = $className;
 	}
-
 
 	/**
 	 * Initialize the application :)
@@ -611,7 +600,6 @@ class Application {
 		// all execeptions will be caught in run() method
 	}
 
-
 	/**
 	 * Get the request execution time in miliseconds
 	 * 
@@ -620,7 +608,6 @@ class Application {
 	public static function getRequestExecutionTime() {
 		return round((microtime(true) - static::$requestStartTime) * 1000, 2);
 	}
-
 
 	/**
 	 * Run the application with given URI. If URI is not set, then application
@@ -635,6 +622,12 @@ class Application {
 
 		$config = static::getConfig();
 		$isCLI = defined('KOLDY_CLI') && (KOLDY_CLI === true);
+
+		static::init();
+
+		$routingClassName = $config['routing_class'];
+		$routeOptions = isset($config['routing_options']) ? $config['routing_options'] : null;
+		static::$routing = new $routingClassName(null, $routeOptions);
 
 		if (!$isCLI) {
 			// this is normal HTTP request that came from Web Server, so we'll handle it
@@ -652,12 +645,7 @@ class Application {
 
 
 			try {
-				static::init();
-
-				$routingClassName = $config['routing_class'];
-				$routeOptions = isset($config['routing_options']) ? $config['routing_options'] : null;
-				static::$routing = new $routingClassName($uri, $routeOptions);
-
+				static::$routing->prepareHttp(static::$uri);
 				$response = static::$routing->exec();
 				if ($response instanceof Response) {
 					print $response->flush();
@@ -700,14 +688,16 @@ class Application {
 			global $argv;
 			// $argv[0] - this should be "cli.php", but we don't need this at all
 
-			static::init();
-
 			try {
 				// so, if you run your script as "php cli.php backup", you'll have only two elements
 				// in the future, we might handle different number of parameters, but until that, we won't
 
 				// you can also call script in module using standard colon as separator
 				// example: php cli.php user:backup   -> where "user" is module and "backup" is script name
+
+				if (!isset($argv[1])) {
+					throw new Exception('Script name is not set in you CLI call. Check http://koldy.net/docs/cli for more info');
+				}
 
 				$script = $argv[1]; // this should be the second parameter
 				static::$cliName = $script;
@@ -736,7 +726,9 @@ class Application {
 				}
 
 			} catch (\Exception $e) {
-				echo "{$e->getMessage()} in {$e->getFile()}:{$e->getLine()}\n\n{$e->getTraceAsString()}";
+				if (!Log::isEnabledLogger('\Koldy\Log\Writer\Out')) {
+					echo "{$e->getMessage()} in {$e->getFile()}:{$e->getLine()}\n\n{$e->getTraceAsString()}";
+				}
 				Log::exception($e);
 			}
 		}
