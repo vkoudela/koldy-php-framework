@@ -627,22 +627,23 @@ class Application {
 
 		$routingClassName = $config['routing_class'];
 		$routeOptions = isset($config['routing_options']) ? $config['routing_options'] : null;
-		static::$routing = new $routingClassName(null, $routeOptions);
+		static::$routing = new $routingClassName($routeOptions);
 
 		if (!$isCLI) {
 			// this is normal HTTP request that came from Web Server, so we'll handle it
 
 			if ($uri === null && isset($_SERVER['REQUEST_URI'])) {
 				if (isset($config['url_namespace'])) {
-					static::$uri = $uri = str_replace($config['url_namespace'], '', $_SERVER['REQUEST_URI']);
+					$uri = str_replace($config['url_namespace'], '', $_SERVER['REQUEST_URI']);
 				} else {
-					static::$uri = $uri = $_SERVER['REQUEST_URI'];
+					$uri = $_SERVER['REQUEST_URI'];
 				}
 			} else if ($uri === null) {
 				// if your script goes here, then something is really fucked up on your server
 				throw new Exception('URI doesn\'t exists');
 			}
 
+			static::$uri = $uri;
 
 			try {
 				static::$routing->prepareHttp(static::$uri);
