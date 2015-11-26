@@ -77,6 +77,7 @@ class DefaultRoute extends AbstractRoute {
 
 	/**
 	 * Prepare HTTP before executing exec() method
+	 * @param string $uri
 	 */
 	public function prepareHttp($uri) {
 		$this->uri = $uri;
@@ -111,18 +112,20 @@ class DefaultRoute extends AbstractRoute {
 			$this->uri = substr($this->uri, 0, $questionPos);
 		}
 
-		$this->uri = explode('/', $this->uri);
-
 		if (isset($this->config['url_namespace'])) {
 			if (substr($this->uri, 0, strlen($this->config['url_namespace'])) == $this->config['url_namespace']) {
 				$this->uri = substr($this->uri, strlen($this->config['url_namespace']));
-				$this->uri = explode('/', $this->uri);
 			} else {
 				Application::error(503, 'Invalid environment or url_namespace configuration');
 			}
 		}
 
 		$slash = DS;
+
+		$this->uri = explode('/', $this->uri);
+		if (!isset($this->uri[1])) {
+			$this->uri[1] = '';
+		}
 
 		// There are two possible scenarios:
 		// 1. The first part of URL leads to the module controller

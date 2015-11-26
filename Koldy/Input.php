@@ -256,7 +256,7 @@ class Input {
 	 * @param string $name [optional]
 	 * @param string $default [optional]
 	 * @param array $allowed [optional]
-	 * @return string
+	 * @return string|array
 	 */
 	public static function getParam($name = null, $default = null, array $allowed = null) {
 		if ($name === null) {
