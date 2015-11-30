@@ -2,43 +2,41 @@
 
 /**
  * The view class will properly serve prepared HTML to user.
- * 
+ *
  * This framework doesn't have and doesn't use any template engine so there is
  * no need to learn extra syntax or what so ever. All you need to know is how to
  * set up file structure.
- * 
+ *
  * View files should contain all of your HTML code and should never do any logic
  * or data fetching. Try to keep your code clean and in MVC style.
- * 
+ *
  * All view files are located in /application/views folder and must have
  * .phtml extension.
- * 
+ *
  * @link http://koldy.net/docs/view
  */
 class View extends Response {
 
-
 	/**
 	 * View file that will be rendered
-	 * 
+	 *
 	 * @var string
 	 */
-	private $view = null;
-
+	protected $view = null;
 
 	/**
 	 * The data keys that are set as properties
 	 *
 	 * @var array
 	 */
-	private $data = array();
-
+	protected $data = array();
 
 	/**
 	 * Create the object with base view
-	 * 
+	 *
 	 * @param string $view
-	 * @return \Koldy\View
+	 *
+	 * @return $this
 	 * @example View::create('base') will initialize /application/views/base.phtml
 	 * @link http://koldy.net/docs/view
 	 */
@@ -47,24 +45,24 @@ class View extends Response {
 		return $self->setView($view);
 	}
 
-
 	/**
 	 * Set view after object initialization
-	 * 
+	 *
 	 * @param string $view
-	 * @return \Koldy\View
+	 *
+	 * @return $this
 	 */
 	public function setView($view) {
 		$this->view = $view;
 		return $this;
 	}
 
-
 	/**
 	 * Add key value pair of data that will be accessible in the view files
-	 * 
+	 *
 	 * @param string $key
 	 * @param mixed $value
+	 *
 	 * @throws \Exception
 	 * @return \Koldy\View
 	 * @link http://koldy.net/docs/view#passing-variables
@@ -72,53 +70,48 @@ class View extends Response {
 	public function with($key, $value) {
 		if ($key == 'data') {
 			throw new Exception('Key in View class can not be named \'data\'');
-		}
-
-		if ($key == 'view') {
+		} else if ($key == 'view') {
 			throw new Exception('Key in View class can not be named \'view\'');
 		}
 
-		$this->$key = $value;
+		$this->data[$key] = $value;
 		return $this;
 	}
 
+	/**
+	 * Set the whole array of variables for template
+	 * @param array $values
+	 *
+	 * @return $this
+	 * @throws Exception
+	 */
+	public function withArray(array $values) {
+		if (array_key_exists('data', $values)) {
+			throw new Exception('Key in View class can not be named \'data\'');
+		} else if (array_key_exists('view', $values)) {
+			throw new Exception('Key in View class can not be named \'view\'');
+		}
+
+		$this->data = $values;
+		return $this;
+	}
 
 	/**
 	 * Is the given key set or not
-	 * 
+	 *
 	 * @param string $key
+	 *
 	 * @return boolean
 	 */
 	public function has($key) {
 		return array_key_exists($key, $this->data);
 	}
 
-
-	/**
-	 * Add the array of values that will be accessible in the view
-	 *
-	 * @param array $with
-	 *
-	 * @throws Exception
-	 * @return \Koldy\View
-	 * @link http://koldy.net/docs/view#passing-variables
-	 */
-	public function params(array $with) {
-		foreach ($with as $key => $value) {
-			if ($key == 'view') {
-				throw new Exception('You can not use key name that exists as reserved property in View class');
-			}
-			$this->$key = $value;
-		}
-
-		return $this;
-	}
-
-
 	/**
 	 * Get the path of the view
-	 * 
+	 *
 	 * @param string $view
+	 *
 	 * @return string
 	 */
 	protected static function getViewPath($view) {
@@ -130,26 +123,21 @@ class View extends Response {
 		if ($pos === false) {
 			return Application::getViewPath() . DS . str_replace('.', DS, $view) . '.phtml';
 		} else {
-			return dirname(substr(Application::getViewPath(), 0, -1))
-				. DS . 'modules'
-				. DS . substr($view, 0, $pos)
-				. DS . 'views'
-				. DS . str_replace('.', DS, substr($view, $pos +1)) . '.phtml';
+			return dirname(substr(Application::getViewPath(), 0, -1)) . DS . 'modules' . DS . substr($view, 0, $pos) . DS . 'views' . DS . str_replace('.', DS, substr($view, $pos + 1)) . '.phtml';
 		}
 	}
 
-
 	/**
 	 * Does view exists or not
-	 * 
+	 *
 	 * @param string $view
+	 *
 	 * @return boolean
 	 */
 	public static function exists($view) {
 		$path = static::getViewPath($view);
 		return is_file($path);
 	}
-
 
 	/**
 	 * Render some other view file inside of parent view file
@@ -183,7 +171,6 @@ class View extends Response {
 		return ob_get_clean();
 	}
 
-
 	/**
 	 * Render view if exists - if it doesn't exists, it won't throw any error
 	 *
@@ -200,7 +187,6 @@ class View extends Response {
 			return '';
 		}
 	}
-
 
 	/**
 	 * Render view from key variable if exists - if it doesn't exists, it won't throw any error
@@ -225,6 +211,25 @@ class View extends Response {
 		}
 	}
 
+	/**
+	 * Print variable content
+	 * @param string $key
+	 */
+	public function printIf($key) {
+		if ($this->has($key)) {
+			print $this->$key;
+		}
+	}
+
+	/**
+	 * Flush the content we collected to OB. This part is here so you
+	 * can override it if needed.
+	 */
+	protected function flushBuffer() {
+		$this->flushHeaders();
+		ob_end_flush();
+		flush();
+	}
 
 	/**
 	 * This method is called by framework, but in some cases, you'll want to call it by yourself.
@@ -242,14 +247,12 @@ class View extends Response {
 
 		ob_start();
 
-			include($path);
-			$size = ob_get_length();
-			$this->header('Content-Length', $size);
+		include($path);
+		$size = ob_get_length();
+		$this->header('Content-Length', $size);
 
-		$this->flushHeaders();
-		ob_end_flush();
-		flush();
-		
+		$this->flushBuffer();
+
 		if (function_exists('fastcgi_finish_request')) {
 			@fastcgi_finish_request();
 		}
@@ -259,11 +262,8 @@ class View extends Response {
 		}
 	}
 
-
 	/**
 	 * Get the rendered view code.
-	 * If you set after() function, remember that this method won't
-	 * do anything with that work.
 	 *
 	 * @throws Exception
 	 * @return string
@@ -282,10 +282,19 @@ class View extends Response {
 		return ob_get_clean();
 	}
 
+	/**
+	 * @param string $name
+	 * @param mixed $value
+	 */
 	public function __set($name, $value) {
 		$this->data[$name] = $value;
 	}
 
+	/**
+	 * @param string $name
+	 *
+	 * @return null
+	 */
 	public function __get($name) {
 		return isset($this->data[$name]) ? $this->data[$name] : null;
 	}

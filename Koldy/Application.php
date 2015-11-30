@@ -4,7 +4,7 @@
  * The main class of Koldy framework. This class will bootstrap the request. It
  * will prepare everything you need and it will print response to the request by the
  * way you want.
- * 
+ *
  * Enjoy!
  *
  * @link http://koldy.net/docs/how-framework-works
@@ -14,7 +14,7 @@ class Application {
 	/**
 	 * All loaded configs in one place so feel free to call
 	 * Application::getConfig() as many times as you want
-	 * 
+	 *
 	 * @var array
 	 */
 	protected static $configs = array();
@@ -28,14 +28,14 @@ class Application {
 
 	/**
 	 * The environment modes. Only these for now
-	 * 
+	 *
 	 * @var array
 	 */
 	private static $modes = array('DEVELOPMENT' => 1, 'PRODUCTION' => 2);
 
 	/**
 	 * The application environment mode
-	 * 
+	 *
 	 * @var int
 	 */
 	protected static $mode = 1;
@@ -43,42 +43,42 @@ class Application {
 	/**
 	 * Thr routing class instance - this is the instance of class
 	 * defined in config/application.php under routing_class
-	 * 
+	 *
 	 * @var \Koldy\Application\Route\AbstractRoute
 	 */
 	protected static $routing = null;
 
 	/**
 	 * The requested URI. Basically $_SERVER['REQUEST_URI'], but not always
-	 * 
+	 *
 	 * @var string
 	 */
 	protected static $uri = null;
 
 	/**
 	 * If CLI env, then this is the path of CLI script
-	 * 
+	 *
 	 * @var string
 	 */
 	protected static $cliScript = null;
 
 	/**
 	 * The parameter from CLI call - the script name
-	 * 
+	 *
 	 * @var string
 	 */
 	protected static $cliName = null;
 
 	/**
 	 * The request start time
-	 * 
+	 *
 	 * @var int
 	 */
 	private static $requestStartTime = null;
 
 	/**
 	 * Add additional include path(s) - add anything you want under include path
-	 * 
+	 *
 	 * @param string|array $path
 	 */
 	public static function addIncludePath($path) {
@@ -96,31 +96,61 @@ class Application {
 	}
 
 	/**
+	 * Return internal server error headers
+	 */
+	private static function returnInternalServerError() {
+		header('HTTP/1.1 503 Service Temporarily Unavailable', true, 503);
+		header('Status: 503 Service Temporarily Unavailable');
+		header('Retry-After: 300'); // 300 seconds / 5 minutes
+	}
+
+	/**
 	 * Use the application config file and validate all values we need
 	 *
-	 * @param string $pathToApplicationConfig this can be relative to your index.php file
+	 * @param string|array $config if string, then it can be path relative to your index.php file, otherwise it's the
+	 * content of configs/application.php
 	 *
 	 * @throws \Exception
 	 */
-	public static function useConfig($pathToApplicationConfig) {
-		$pathToApplicationConfig = stream_resolve_include_path($pathToApplicationConfig);
-		if ($pathToApplicationConfig === false || !is_file($pathToApplicationConfig)) {
-			echo 'Can not resolve the full path to the main application config file or file doesn\'t exists!';
+	public static function useConfig($config) {
+		if (is_string($config)) {
+			$applicationPath = $config = stream_resolve_include_path($config);
+			if ($config === false || !is_file($config)) {
+				static::returnInternalServerError();
+				print 'Can not resolve the full path to the main application config file or file doesn\'t exists!';
+				exit(1);
+			}
+
+			$config = require $config; // will return array
+
+		} else if (!is_array($config)) {
+			static::returnInternalServerError();
+			print 'Can\'t run without config. Expected string or array, got ' . gettype($config);
 			exit(1);
+
+		} else { // it's good, we got an array
+			// first check if application_path is defined .. because if it's not, then we can't continue
+			if (!isset($config['application_path'])) {
+				static::returnInternalServerError();
+				print 'Can\'t continue without defined application_path';
+				exit(1);
+			} else {
+				$applicationPath = $config['application_path'];
+			}
 		}
 
-		$config = require $pathToApplicationConfig;
-		
 		// first, check if the site can be run on multiple host names
 		if (defined('KOLDY_CLI') && KOLDY_CLI) {
 			if (is_array($config['site_url'])) {
 				if (sizeof($config['site_url']) == 0 || !isset($config['site_url'][0])) {
+					static::returnInternalServerError();
 					print 'Invalid config of site_url';
 					exit(1);
 				}
 
 				$config['site_url'] = $config['site_url'][0];
 			} else if (!isset($config['site_url'])) {
+				static::returnInternalServerError();
 				print 'Invalid config of site_url';
 				exit(1);
 			}
@@ -132,7 +162,7 @@ class Application {
 				$found = false;
 				for ($i = 0; !$found && $i < $sizeofSiteUrls; $i++) {
 					$siteUrl = $config['site_url'][$i];
-					$siteUrl = substr($siteUrl, strpos($siteUrl, '//') +2);
+					$siteUrl = substr($siteUrl, strpos($siteUrl, '//') + 2);
 					if ($siteUrl === $_SERVER['HTTP_HOST']) {
 						$config['site_url'] = $config['site_url'][$i];
 						$found = true;
@@ -140,6 +170,7 @@ class Application {
 				}
 
 				if (!$found) {
+					static::returnInternalServerError();
 					print 'Invalid config of site_url; hostname not found';
 					exit(1);
 				}
@@ -155,7 +186,7 @@ class Application {
 		}
 
 		if (!isset($config['application_path'])) {
-			$config['application_path'] = substr(dirname($pathToApplicationConfig), 0, -7);
+			$config['application_path'] = dirname(dirname($applicationPath)) . DIRECTORY_SEPARATOR;
 		}
 
 		if (!isset($config['public_path'])) {
@@ -163,7 +194,7 @@ class Application {
 		}
 
 		if (!isset($config['storage_path'])) {
-			$config['storage_path'] = dirname($config['application_path']) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
+			$config['storage_path'] = dirname(dirname(dirname($applicationPath))) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
 		}
 
 		if (!isset($config['key']) || !is_string($config['key'])) {
@@ -175,6 +206,7 @@ class Application {
 		}
 
 		// if any of the log writers are enabled, then set LOG to true
+		// TODO: Revise this
 		if (!defined('LOG')) {
 			$enabled = false;
 			foreach ($config['log'] as $logConfig) {
@@ -196,8 +228,9 @@ class Application {
 
 	/**
 	 * Get the path to application folder with ending slash
-	 * 
+	 *
 	 * @param string $append [optional] append anything you want to application path
+	 *
 	 * @return string
 	 * @example /Users/vkoudela/Sites/your.site.com/application/
 	 */
@@ -205,18 +238,15 @@ class Application {
 		if ($append === null) {
 			return static::getConfig('application', 'application_path');
 		} else {
-			if (!is_string($append)) {
-				throw new \InvalidArgumentException('String expected, ' . gettype($append) . ' got');
-			}
-
-			return str_replace(DS.DS, DS, static::getConfig('application', 'application_path') . $append);
+			return str_replace(DS . DS, DS, static::getConfig('application', 'application_path') . $append);
 		}
 	}
 
 	/**
 	 * Get the path to storage folder with ending slash
-	 * 
+	 *
 	 * @param string $append [optional] append anything you want to application path
+	 *
 	 * @return string
 	 * @example /Users/vkoudela/Sites/your.site.com/storage/
 	 */
@@ -224,18 +254,15 @@ class Application {
 		if ($append === null) {
 			return static::getConfig('application', 'storage_path');
 		} else {
-			if (!is_string($append)) {
-				throw new \InvalidArgumentException('String expected, ' . gettype($append) . ' got');
-			}
-
-			return str_replace(DS.DS, DS, static::getConfig('application', 'storage_path') . $append);
+			return str_replace(DS . DS, DS, static::getConfig('application', 'storage_path') . $append);
 		}
 	}
 
 	/**
 	 * Get the path to the public folder with ending slash
-	 * 
+	 *
 	 * @param string $append [optional] append anything you want to application path
+	 *
 	 * @return string
 	 * @example /Users/vkoudela/Sites/your.site.com/public/
 	 */
@@ -247,7 +274,7 @@ class Application {
 				throw new \InvalidArgumentException('String expected, ' . gettype($append) . ' got');
 			}
 
-			return str_replace(DS.DS, DS, static::getConfig('application', 'public_path') . $append);
+			return str_replace(DS . DS, DS, static::getConfig('application', 'public_path') . $append);
 		}
 	}
 
@@ -269,7 +296,7 @@ class Application {
 	/**
 	 * Get the running CLI script name - this is available only if this
 	 * request is running in CLI environment
-	 * 
+	 *
 	 * @return string
 	 * @example if you call "php cli.php backup", this method will return "/path/to/application/scripts/backup.php"
 	 */
@@ -279,7 +306,7 @@ class Application {
 
 	/**
 	 * Get the CLI script name
-	 * 
+	 *
 	 * @return string
 	 * @example if you call "php cli.php backup", this method will return "backup" only
 	 */
@@ -301,9 +328,10 @@ class Application {
 	 * - it is the key name in configuration array. If you define it, then
 	 * you'll get only the value under that key, but if you don't define it,
 	 * then the whole config from that file will be returned.
-	 * 
+	 *
 	 * @param string $file [optional] by default: application
 	 * @param string $segment [optional] the key from config's array
+	 *
 	 * @return array
 	 * @example if you give 'cache' as parameter, you'll get the array from public/config/cache.php file
 	 * @throws \Koldy\Exception
@@ -358,7 +386,7 @@ class Application {
 	 * Get the application URI. Yes, use this one instead of $_SERVER['REQUEST_URI']
 	 * because you can pass this URI in index.php while calling Application::run()
 	 * or somehow different so the real request URI will be overriden.
-	 * 
+	 *
 	 * @return string
 	 */
 	public static function getUri() {
@@ -368,7 +396,7 @@ class Application {
 	/**
 	 * Show some nice error in HTTP response that will be visible to user.
 	 * If you want to log anything, then log that before calling this method.
-	 * 
+	 *
 	 * @param int $code
 	 * @param string $message [optional]
 	 * @param \Exception $e [optional]
@@ -383,7 +411,7 @@ class Application {
 			header('HTTP/1.1 503 Service Temporarily Unavailable', true, 503);
 			header('Status: 503 Service Temporarily Unavailable');
 			header('Retry-After: 300'); // 300 seconds / 5 minutes
-			
+
 			if ($e !== null) {
 				echo "<p>{$e->getMessage()}</p>";
 				if (static::inDevelopment()) {
@@ -403,7 +431,7 @@ class Application {
 
 	/**
 	 * Get the initialized routing class
-	 * 
+	 *
 	 * @return \Koldy\Application\Route\AbstractRoute
 	 */
 	public static function route() {
@@ -412,7 +440,7 @@ class Application {
 
 	/**
 	 * Is application running in development mode or not
-	 * 
+	 *
 	 * @return boolean
 	 */
 	public static function inDevelopment() {
@@ -421,7 +449,7 @@ class Application {
 
 	/**
 	 * Is application running in production mode or not
-	 * 
+	 *
 	 * @return boolean
 	 */
 	public static function inProduction() {
@@ -430,8 +458,9 @@ class Application {
 
 	/**
 	 * Register all include paths for module
-	 * 
+	 *
 	 * @param string $name
+	 *
 	 * @example if your module is located on "/application/modules/invoices", then pass "invoices"
 	 */
 	public static function registerModule($name) {
@@ -463,7 +492,7 @@ class Application {
 
 	/**
 	 * Initialize the application :)
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	protected static function init() {
@@ -485,7 +514,7 @@ class Application {
 		date_default_timezone_set($config['timezone']);
 
 		// Register Autoload function
-		spl_autoload_register(function($className) {
+		spl_autoload_register(function ($className) {
 			$classes = \Koldy\Application::$classAliases;
 
 			if (isset($classes[$className])) {
@@ -541,45 +570,45 @@ class Application {
 		if (isset($config['error_handler']) && $config['error_handler'] instanceof \Closure) {
 			set_error_handler($config['error_handler']);
 		} else {
-			set_error_handler(function($errno, $errstr, $errfile, $errline) {
+			set_error_handler(function ($errno, $errstr, $errfile, $errline) {
 				if (!(error_reporting() & $errno)) {
 					// This error code is not included in error_reporting
 					return;
 				}
-	
-				switch ($errno) {
+
+				switch($errno) {
 					case E_USER_ERROR:
 						\Koldy\Log::error("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
 						break;
-	
+
 					case E_USER_WARNING:
 					case E_DEPRECATED:
 					case E_STRICT:
 						\Koldy\Log::warning("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
 						break;
-	
+
 					case E_USER_NOTICE:
 						\Koldy\Log::notice("PHP [{$errno}] {$errstr} in file {$errfile}:{$errline}");
 						break;
-						
-	
+
+
 					default:
 						\Koldy\Log::error("PHP Uknown [{$errno}] {$errstr} in file {$errfile}:{$errline}");
 						break;
 				}
-	
+
 				/* Don't execute PHP internal error handler */
 				return true;
 			});
 		}
 
 		// register PHP fatal errors
-		register_shutdown_function(function() {
+		register_shutdown_function(function () {
 			if (!defined('KOLDY_FATAL_ERROR_HANDLER')) {
 				define('KOLDY_FATAL_ERROR_HANDLER', true); // to prevent possible recursion if you run into problems with logger
 
 				$fatalError = error_get_last();
-	
+
 				if ($fatalError !== null && $fatalError['type'] == E_ERROR) {
 					$errno = E_ERROR;
 					$errstr = $fatalError['message'];
@@ -592,7 +621,6 @@ class Application {
 					} else {
 						\Koldy\Log::error("PHP [{$errno}] Fatal error: {$errstr} in {$errfile} on line {$errline}");
 					}
-
 				}
 			}
 		});
@@ -602,7 +630,7 @@ class Application {
 
 	/**
 	 * Get the request execution time in miliseconds
-	 * 
+	 *
 	 * @return float
 	 */
 	public static function getRequestExecutionTime() {
@@ -659,13 +687,11 @@ class Application {
 				}
 
 			} catch (\Exception $e) { // something threw up
-				
+
 				$route = static::route();
 				if ($route === null) {
 					// damn, even route class wasn't initialized
-					header('HTTP/1.1 503 Service Temporarily Unavailable', true, 503);
-					header('Status: 503 Service Temporarily Unavailable');
-					header('Retry-After: 300'); // 300 seconds / 5 minutes
+					static::returnInternalServerError();
 
 					if (static::inDevelopment()) {
 						print "<p>{$e->getMessage()}</p>";
