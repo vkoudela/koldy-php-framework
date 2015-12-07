@@ -496,10 +496,12 @@ abstract class Model {
 	 * 
 	 * @param mixed $where the WHERE condition
 	 * @param array $fields [optional] array of fields to select; by default, all fields will be fetched
-	 * @return array array of initialized objects of the model this method is called on
+	 * @param boolean $initializeObject true by default - will initialize instance of model on which method was called,
+	 * otherwise returns array
+	 * @return array array of initialized objects of the model this method is called on or simple associative array
 	 * @link http://koldy.net/docs/database/models#fetch
 	 */
-	public static function fetch($where, array $fields = null) {
+	public static function fetch($where, array $fields = null, $initializeObject = true) {
 		$select = static::query();
 
 		if ($fields !== null) {
@@ -517,8 +519,12 @@ abstract class Model {
 		}
 
 		$records = $select->fetchAll();
-		$data = array();
 
+		if (!$initializeObject) {
+			return $records;
+		}
+
+		$data = array();
 		foreach ($records as $r) {
 			$data[] = new static($r);
 		}
