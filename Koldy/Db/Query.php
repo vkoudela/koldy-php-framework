@@ -11,7 +11,6 @@ use Koldy\Exception;
  */
 abstract class Query {
 
-
 	/**
 	 * The connection name on which this query will be executed
 	 * 
@@ -19,14 +18,12 @@ abstract class Query {
 	 */
 	private $connection = null;
 
-
 	/**
 	 * The binding values for PDO
 	 * 
 	 * @var array
 	 */
 	protected $bindings = array();
-
 
 	/**
 	 * The keyIndex is counter for field bindings. Thanks to this, you're able
@@ -37,14 +34,12 @@ abstract class Query {
 	 */
 	public static $keyIndex = 0;
 
-
 	/**
 	 * Get the query and populate bindings array
 	 * 
 	 * @return string
 	 */
 	abstract protected function getQuery();
-
 
 	/**
 	 * Get bindings for PDO
@@ -54,7 +49,6 @@ abstract class Query {
 	public function getBindings() {
 		return $this->bindings;
 	}
-
 
 	/**
 	 * Get next key index
@@ -71,12 +65,11 @@ abstract class Query {
 		return static::$keyIndex;
 	}
 
-
 	/**
 	 * Set adapter connection's name
 	 * 
 	 * @param string $connection
-	 * @return \Koldy\Db\Query
+	 * @return $this
 	 */
 	public function setConnection($connection) {
 		if (Application::getConfig('database', $connection) === null) {
@@ -87,7 +80,6 @@ abstract class Query {
 		return $this;
 	}
 
-
 	/**
 	 * Get the connection name
 	 * 
@@ -97,7 +89,6 @@ abstract class Query {
 		return $this->connection;
 	}
 
-
 	/**
 	 * Get the database adapter
 	 * 
@@ -106,7 +97,6 @@ abstract class Query {
 	public function getAdapter() {
 		return Db::getAdapter($this->connection);
 	}
-
 
 	/**
 	 * Execute the query
@@ -134,7 +124,6 @@ abstract class Query {
 
 		return $adapter->query($query, $this->getBindings());
 	}
-
 
 	/**
 	 * Return some debug information about the query you built
@@ -172,7 +161,6 @@ abstract class Query {
 
 		return $query;
 	}
-
 
 	/**
 	 * If printing query builder instance, then just show the generated SQL
