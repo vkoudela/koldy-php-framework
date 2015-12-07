@@ -48,6 +48,10 @@ class Pagination {
 	
 	protected $format = '<a href="{href}" class="{class}" data-page="{page}">{text}</a>';
 
+	protected $htmlWrapInnerLinksClass = false;
+
+	protected $htmlWrapPrevNextClass = false;
+
 	/**
 	 * Create the object
 	 * @param int $currentPage
@@ -203,7 +207,7 @@ class Pagination {
 	 * Set the URL format. Use %s as placeholder for page number
 	 * @param string $href
 	 * @return \Koldy\Pagination
-	 * @example pass #/page/%s
+	 * @example pass #/page/{page}
 	 */
 	public function setLink($href) {
 		$this->link = $href;
@@ -299,10 +303,18 @@ class Pagination {
 			}
 		}
 
+		if ($this->htmlWrapPrevNextClass !== false) {
+			$html .= "<div class=\"{$this->htmlWrapPrevNextClass}\">";
+		}
+
 		if ($this->showPrevAndNext) {
 			if ($currentPage > 1) {
 				$html .= $this->getLinkHtml($this->previousText, $currentPage -1, $this->getLinkCss($this->prevCss));
 			}
+		}
+
+		if ($this->htmlWrapInnerLinksClass !== false) {
+			$html .= "<div class=\"{$this->htmlWrapInnerLinksClass}\">";
 		}
 
 		for ($i = $startPage; $i <= $endPage; $i++) {
@@ -313,6 +325,14 @@ class Pagination {
 			}
 			
 			$html .= $this->getLinkHtml($i, $i, $this->getLinkCss($css));
+		}
+
+		if ($this->htmlWrapInnerLinksClass !== false) {
+			$html .= '</div>';
+		}
+
+		if ($this->htmlWrapPrevNextClass !== false) {
+			$html .= '</div>';
 		}
 
 		if ($this->showPrevAndNext) {
