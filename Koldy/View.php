@@ -64,7 +64,7 @@ class View extends Response {
 	 * @param mixed $value
 	 *
 	 * @throws \Exception
-	 * @return \Koldy\View
+	 * @return $this
 	 * @link http://koldy.net/docs/view#passing-variables
 	 */
 	public function with($key, $value) {
