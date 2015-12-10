@@ -87,6 +87,10 @@ class Select extends Where {
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
 	 * @example leftJoin('user u', 'u.id', '=', 'r.user_role_id')
+	 * @example leftJoin('user u', array(
+	 *   array('u.id', '=', 'r.user_role_id'),
+	 *   array('u.group_id', '=', 2)
+	 * ))
 	 */
 	public function leftJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
 		$this->joins[] = array(
