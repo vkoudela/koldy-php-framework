@@ -494,7 +494,7 @@ class Validator {
 	 * @return bool
 	 */
 	public static function isHex($string) {
-		return (bool) preg_match('/^[0-9a-f]*$/', $string);
+		return ctype_xdigit($string);
 	}
 
 
