@@ -167,6 +167,7 @@ class Request {
 	 * Get the IP address of proxy server if exists
 	 * 
 	 * @return string|null
+	 * @deprecated in favor of httpXForwadedFor()
 	 */
 	public static function proxyForwardedFor() {
 		if (isset($_SERVER) && isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -208,7 +209,7 @@ class Request {
 
 
 	/**
-	 * Get HTTP X_FORWARDED_FOR header
+	 * Get HTTP_X_FORWARDED_FOR header
 	 * 
 	 * @return string|null
 	 * @example 58.22.246.105
