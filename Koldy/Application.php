@@ -464,20 +464,33 @@ class Application {
 	 * @example if your module is located on "/application/modules/invoices", then pass "invoices"
 	 */
 	public static function registerModule($name) {
-		if (!is_string($name)) {
-			throw new \InvalidArgumentException('$name not valid, expected string, got ' . gettype($name));
-		}
-
 		if (strpos($name, '/') !== false) {
 			throw new \InvalidArgumentException('$name not valid, it can not contain slash sign (/)');
 		}
 
-		$basePath = static::getApplicationPath();
+		$basePath = static::getModulePath($name);
 		static::addIncludePath(array(
-			$basePath . 'modules' . DS . $name . DS . 'controllers',
-			$basePath . 'modules' . DS . $name . DS . 'models',
-			$basePath . 'modules' . DS . $name . DS . 'library'
+			$basePath . 'controllers',
+			$basePath . 'models',
+			$basePath . 'library'
 		));
+	}
+
+	/**
+	 * Get the path on file system to the module
+	 * @param string $name
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	public static function getModulePath($name) {
+		$modulePath = static::getConfig('application', 'module_path');
+
+		if ($modulePath === null) {
+			return static::getApplicationPath('modules') . $name . DS;
+		} else {
+			return $modulePath . $name . DS;
+		}
 	}
 
 	/**
