@@ -487,10 +487,10 @@ class Application {
 		$modulePath = static::getConfig('application', 'module_path');
 
 		if ($modulePath === null) {
-			return static::getApplicationPath('modules') . $name . DS;
-		} else {
-			return $modulePath . $name . DS;
+			$modulePath = static::getApplicationPath('modules');
 		}
+
+		return str_replace(DS.DS, DS, $modulePath . DS . $name . DS);
 	}
 
 	/**
