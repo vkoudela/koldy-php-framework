@@ -27,6 +27,13 @@ class Application {
 	public static $classAliases = array();
 
 	/**
+	 * The array of already registered modules, so we don't execute code if you already registered your module
+	 *
+	 * @var array
+	 */
+	private static $registeredModules = array();
+
+	/**
 	 * The environment modes. Only these for now
 	 *
 	 * @var array
@@ -464,20 +471,21 @@ class Application {
 	 * @example if your module is located on "/application/modules/invoices", then pass "invoices"
 	 */
 	public static function registerModule($name) {
-		if (strpos($name, '/') !== false) {
-			throw new \InvalidArgumentException('$name not valid, it can not contain slash sign (/)');
-		}
+		if (!isset(static::$registeredModules[$name])) {
+			$modulePath = static::getModulePath($name);
 
-		$basePath = static::getModulePath($name);
-		static::addIncludePath(array(
-			$basePath . 'controllers',
-			$basePath . 'models',
-			$basePath . 'library'
-		));
+			static::addIncludePath(array(
+				$modulePath . 'controllers',
+				$modulePath . 'models',
+				$modulePath . 'library'
+			));
+
+			static::$registeredModules[$name] = true;
+		}
 	}
 
 	/**
-	 * Get the path on file system to the module
+	 * Get the path on file system to the module WITH ending slash
 	 * @param string $name
 	 *
 	 * @return string
@@ -491,6 +499,16 @@ class Application {
 		}
 
 		return str_replace(DS.DS, DS, $modulePath . DS . $name . DS);
+	}
+
+	/**
+	 * Is module with given name already registered in system or not
+	 * @param string $name
+	 *
+	 * @return bool
+	 */
+	public static function isModuleRegistered($name) {
+		return isset(static::$registeredModules[$name]);
 	}
 
 	/**
@@ -553,9 +571,10 @@ class Application {
 			}
 
 			foreach ($config['auto_register_modules'] as $moduleName) {
-				$includePaths[] = $basePath . 'modules' . DS . $moduleName . DS . 'controllers';
-				$includePaths[] = $basePath . 'modules' . DS . $moduleName . DS . 'models';
-				$includePaths[] = $basePath . 'modules' . DS . $moduleName . DS . 'library';
+				$modulePath = static::getModulePath($moduleName);
+				$includePaths[] = $modulePath . 'controllers';
+				$includePaths[] = $modulePath . 'models';
+				$includePaths[] = $modulePath . 'library';
 			}
 		}
 
