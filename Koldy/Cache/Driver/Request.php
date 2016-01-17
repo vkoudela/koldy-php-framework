@@ -8,14 +8,12 @@
  */
 class Request extends AbstractCacheDriver {
 
-
 	/**
 	 * The array of loaded and/or data that will be stored
 	 * 
 	 * @var array
 	 */
 	private $data = array();
-
 
 	/**
 	 * Get the value from the cache by key
@@ -31,7 +29,6 @@ class Request extends AbstractCacheDriver {
 		return null;
 	}
 
-
 	/**
 	 * Set the cache value by the key
 	 * 
@@ -44,7 +41,6 @@ class Request extends AbstractCacheDriver {
 		$this->data[$key] = $value;
 		return true;
 	}
-
 
 	/**
 	 * The will add the value to the cache key only if it doesn't exists yet
@@ -62,7 +58,6 @@ class Request extends AbstractCacheDriver {
 		return $this->set($key, $value, $seconds);
 	}
 
-
 	/**
 	 * @param string $key
 	 *
@@ -71,7 +66,6 @@ class Request extends AbstractCacheDriver {
 	public function has($key) {
 		return array_key_exists($key, $this->data);
 	}
-
 
 	/**
 	 * @param string $key
@@ -85,14 +79,12 @@ class Request extends AbstractCacheDriver {
 		return true;
 	}
 
-
 	/**
 	 * Delete all
 	 */
 	public function deleteAll() {
 		$this->data = array();
 	}
-
 
 	/**
 	 * @param int $olderThenSeconds

@@ -12,12 +12,10 @@ use Koldy\Exception;
  */
 class Memcached extends AbstractCacheDriver {
 
-
 	/**
 	 * @var Memcached
 	 */
 	private $memcached = null;
-
 
 	/**
 	 * Construct the object by array of config properties. Config keys are set
@@ -34,7 +32,6 @@ class Memcached extends AbstractCacheDriver {
 
 		$this->config = $config;
 	}
-
 
 	/**
 	 * @throws Exception
@@ -64,7 +61,6 @@ class Memcached extends AbstractCacheDriver {
 		return $this->memcached;
 	}
 
-
 	/**
 	 * Get the key name for the storage into memcached
 	 * @param string $key
@@ -88,7 +84,6 @@ class Memcached extends AbstractCacheDriver {
 		}
 	}
 
-
 	/**
 	 * Get the value from cache by given key
 	 *
@@ -102,7 +97,6 @@ class Memcached extends AbstractCacheDriver {
 		$value = $this->getInstance()->get($key);
 		return ($value === false) ? null : $value;
 	}
-
 
 	/**
 	 * Set the value to cache identified by key
@@ -118,7 +112,6 @@ class Memcached extends AbstractCacheDriver {
 		$key = $this->getKeyName($key);
 		return $this->getInstance()->set($key, $value, ($seconds === null ? $this->defaultDuration : $seconds));
 	}
-
 
 	/**
 	 * Check if item under key name exists. It will return false if item expired.
@@ -146,7 +139,6 @@ class Memcached extends AbstractCacheDriver {
 		return $this->getInstance()->delete($key);
 	}
 
-
 	/**
 	 * Delete all cached items
 	 */
@@ -164,7 +156,6 @@ class Memcached extends AbstractCacheDriver {
 		// accidentally iterate through it
 	}
 
-
 	/**
 	 * Increment number value in cache. This will not work if item expired!
 	 *
@@ -177,7 +168,6 @@ class Memcached extends AbstractCacheDriver {
 		$key = $this->getKeyName($key);
 		return !($this->getInstance()->increment($key, $howMuch) === false);
 	}
-
 
 	/**
 	 * Decrement number value in cache. This will not work if item expired!

@@ -12,7 +12,6 @@ use Koldy\Db\Delete;
  */
 class Db extends AbstractCacheDriver {
 
-
 	/**
 	 * Construct the database cache adapter
 	 * 
@@ -31,7 +30,6 @@ class Db extends AbstractCacheDriver {
 
 		parent::__construct($config);
 	}
-
 
 	/**
 	 * @param string $key
@@ -55,7 +53,6 @@ class Db extends AbstractCacheDriver {
 		}
 	}
 
-
 	/**
 	 * @param string $key
 	 * @param mixed $value
@@ -74,7 +71,7 @@ class Db extends AbstractCacheDriver {
 		$update = new Update($this->config['table']);
 		$update->setConnection($this->config['connection']);
 		$ok = $update
-			->set('updated_at', date('Y-m-d H:i:s'))
+			->set('updated_at', gmdate('Y-m-d H:i:s'))
 			->set('expires_at', time() + $seconds)
 			->set('data', serialize($value))
 			->where('id', $key)
@@ -85,7 +82,7 @@ class Db extends AbstractCacheDriver {
 			$insert->setConnection($this->config['connection']);
 			$insert->add(array(
 				'id' => $key,
-				'updated_at' => date('Y-m-d H:i:s'),
+				'updated_at' => gmdate('Y-m-d H:i:s'),
 				'expires_at' => time() + $seconds,
 				'data' => serialize($value)
 			));
@@ -94,7 +91,6 @@ class Db extends AbstractCacheDriver {
 
 		return true;
 	}
-
 
 	/**
 	 * @param string $key
@@ -118,7 +114,6 @@ class Db extends AbstractCacheDriver {
 		return ($cacheRecord['expires_at'] > time());
 	}
 
-
 	/**
 	 * @param string $key
 	 *
@@ -136,7 +131,6 @@ class Db extends AbstractCacheDriver {
 		return true;
 	}
 
-
 	/**
 	 * @return array|int
 	 * @throws \Koldy\Exception
@@ -145,7 +139,6 @@ class Db extends AbstractCacheDriver {
 		$delete = new Delete($this->config['table']);
 		return $delete->exec($this->config['connection']);
 	}
-
 
 	/**
 	 * @param int $olderThenSeconds

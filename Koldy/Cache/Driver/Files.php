@@ -13,7 +13,6 @@ use Koldy\Log;
  */
 class Files extends AbstractCacheDriver {
 
-
 	/**
 	 * The path to the folder where cache files will be stored
 	 * 
@@ -21,22 +20,19 @@ class Files extends AbstractCacheDriver {
 	 */
 	protected $path = null;
 
-
 	/**
 	 * The array of loaded and/or data that will be stored
 	 * 
 	 * @var array
 	 */
-	private $data = array();
-
+	protected $data = array();
 
 	/**
 	 * Flag if shutdown function is registered or not
 	 * 
 	 * @var boolean
 	 */
-	private $shutdown = false;
-
+	protected $shutdown = false;
 
 	/**
 	 * Construct the object by array of config properties. Config keys are set
@@ -67,7 +63,6 @@ class Files extends AbstractCacheDriver {
 		parent::__construct($config);
 	}
 
-
 	/**
 	 * Get path to the cache file by $key
 	 * 
@@ -77,7 +72,6 @@ class Files extends AbstractCacheDriver {
 	protected function getPath($key) {
 		return $this->path . $key . '_' . md5($key . Application::getConfig('application', 'key'));
 	}
-
 
 	/**
 	 * Load the data from the file and store it in this request's memory
@@ -117,7 +111,6 @@ class Files extends AbstractCacheDriver {
 		return false;
 	}
 
-
 	/**
 	 * @param string $key
 	 *
@@ -132,7 +125,6 @@ class Files extends AbstractCacheDriver {
 
 		return null;
 	}
-
 
 	/**
 	 * @param string $key
@@ -166,7 +158,6 @@ class Files extends AbstractCacheDriver {
 		return true;
 	}
 
-
 	/**
 	 * @param string $key
 	 * @param mixed $value
@@ -183,7 +174,6 @@ class Files extends AbstractCacheDriver {
 
 		return $this->set($key, $value, $seconds);
 	}
-
 
 	/**
 	 * @param string $key
@@ -211,7 +201,6 @@ class Files extends AbstractCacheDriver {
 		return $ok;
 	}
 
-
 	/**
 	 * @param string $key
 	 *
@@ -234,14 +223,12 @@ class Files extends AbstractCacheDriver {
 		}
 	}
 
-
 	/**
 	 * Delete all files under cached folder
 	 */
 	public function deleteAll() {
 		Directory::emptyDirectory($this->path);
 	}
-
 
 	/**
 	 * @param int $olderThenSeconds
@@ -256,7 +243,7 @@ class Files extends AbstractCacheDriver {
 		/**
 		 * This is probably not good since lifetime is written in file
 		 * But going into every file and read might be even worse idea
-		 * XXX: Think about this
+		 * TODO: Think about this
 		 */
 		foreach (Directory::read($this->path) as $fullPath => $fileName) {
 			$timeCreated = @filemtime($fullPath);
@@ -274,7 +261,6 @@ class Files extends AbstractCacheDriver {
 		}
 	}
 
-
 	/**
 	 * Initialize the shutdown function when request execution ends
 	 */
@@ -287,7 +273,6 @@ class Files extends AbstractCacheDriver {
 			});
 		}
 	}
-
 
 	/**
 	 * Execute this method on request's execution end. When you're working with
@@ -313,7 +298,7 @@ class Files extends AbstractCacheDriver {
 					file_put_contents(
 						$object->path,
 						sprintf("%s;%d;%s\n%s",
-							date('r', $object->created),
+							gmdate('r', $object->created),
 							$object->seconds,
 							$object->type,
 							$data
