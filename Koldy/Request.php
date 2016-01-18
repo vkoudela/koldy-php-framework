@@ -306,4 +306,13 @@ class Request {
 		return (defined('KOLDY_CLI') && KOLDY_CLI === true);
 	}
 
+	/**
+	 * Is this request called on HTTPS or not?
+	 *
+	 * @return bool
+	 */
+	public static function isSSL() {
+		return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on';
+	}
+
 }
