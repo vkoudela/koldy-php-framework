@@ -182,22 +182,22 @@ class Pagination {
 	/**
 	 * @var int
 	 */
-	protected $totalPages;
+	protected $totalPages = null;
 
 	/**
 	 * @var int
 	 */
-	protected $startPage;
+	protected $startPage = null;
 
 	/**
 	 * @var int
 	 */
-	protected $endPage;
+	protected $endPage = null;
 
 	/**
 	 * @var int
 	 */
-	protected $half;
+	protected $half = null;
 
 
 	/**
@@ -414,6 +414,58 @@ class Pagination {
 		if ($this->endPage > $this->totalPages) {
 			$this->endPage = $this->totalPages;
 		}
+	}
+
+	/**
+	 * Get how many items is there per page
+	 * @return int
+	 */
+	public function getItemsPerPage() {
+		return $this->itemsPerPage;
+	}
+
+	/**
+	 * Get how many max items is there
+	 * @return int
+	 */
+	public function getMaxItems() {
+		return $this->maxItems;
+	}
+
+	/**
+	 * Get the start page number
+	 * @return int
+	 */
+	public function getStartPage() {
+		if ($this->startPage == null) {
+			$this->detectOtherValues();
+		}
+
+		return $this->startPage;
+	}
+
+	/**
+	 * Get the end page number
+	 * @return int
+	 */
+	public function getEndPage() {
+		if ($this->endPage == null) {
+			$this->detectOtherValues();
+		}
+
+		return $this->endPage;
+	}
+
+	/**
+	 * Get how many total pages is there
+	 * @return int
+	 */
+	public function getTotalPages() {
+		if ($this->totalPages == null) {
+			$this->detectOtherValues();
+		}
+
+		return $this->totalPages;
 	}
 
 	/**
