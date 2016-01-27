@@ -185,7 +185,7 @@ class Session {
 	 * @return mixed
 	 * @link http://koldy.net/docs/session#getOrSet
 	 */
-	public static function getOrSet($key, $functionOnSet) {
+	public static function getOrSet($key, \Closure $functionOnSet) {
 		static::init();
 
 		if (is_object($key) || is_array($key)) {
@@ -195,10 +195,6 @@ class Session {
 		if (!array_key_exists($key, $_SESSION)) {
 			if (static::$closed) {
 				throw new Exception('Can not set any other value to session because all data has been already committed');
-			}
-
-			if (!($functionOnSet instanceof \Closure)) {
-				throw new \InvalidArgumentException('Second parameter in Session::getOrSet must be the instance of PHP\'s Closure');
 			}
 
 			$_SESSION[$key] = call_user_func($functionOnSet);
