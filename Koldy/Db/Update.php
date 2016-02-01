@@ -22,6 +22,11 @@ class Update extends Where {
 	protected $what = array();
 
 	/**
+	 * @var array
+	 */
+	protected $orderBy = array();
+
+	/**
 	 * @param string $table
 	 * @param array $values [optional] auto set values in this query
 	 * @link http://koldy.net/docs/database/query-builder#update
@@ -52,6 +57,42 @@ class Update extends Where {
 	 */
 	public function setValues(array $values) {
 		$this->what = $values;
+		return $this;
+	}
+
+	/**
+	 * Add field to ORDER BY
+	 *
+	 * @param string $field
+	 * @param string $direction
+	 *
+	 * @throws Exception
+	 * @return \Koldy\Db\Select
+	 */
+	public function orderBy($field, $direction = null) {
+		if ($direction === null) {
+			$direction = 'ASC';
+		} else {
+			$direction = strtoupper($direction);
+		}
+
+		if ($direction !== 'ASC' && $direction !== 'DESC') {
+			throw new Exception("Can not use invalid direction order ({$direction}) in ORDER BY statement");
+		}
+
+		$this->orderBy[] = array(
+			'field' => $field,
+			'direction' => $direction
+		);
+		return $this;
+	}
+
+	/**
+	 * Reset ORDER BY (remove ORDER BY)
+	 * @return \Koldy\Db\Select
+	 */
+	public function resetOrderBy() {
+		$this->orderBy = array();
 		return $this;
 	}
 
@@ -105,6 +146,14 @@ class Update extends Where {
 		
 		if ($this->hasWhere()) {
 			$sql .= "\nWHERE{$this->getWhereSql()}";
+		}
+
+		if (sizeof($this->orderBy) > 0) {
+			$sql .= "\nORDER BY";
+			foreach ($this->orderBy as $r) {
+				$sql .= "\n\t{$r['field']} {$r['direction']},";
+			}
+			$sql = substr($sql, 0, -1);
 		}
 		
 		return $sql;
