@@ -59,7 +59,14 @@ class Validator {
 		19 =>'This value should be decimal',
 		20 =>'This mustn\'t have more then {limit} numbers after decimal sign',
 		21 =>'This slug contains invalid characters or double dashes',
-		22 =>'Invalid hexadecimal number'
+		22 =>'Invalid hexadecimal number',
+		23 =>'Uploaded file size is too big', // {maxSize}, {maxSizeKB}, {maxSizeMB}
+		24 =>'Uploaded file size is too small', // {minSize}, {minSizeKB}, {minSizeMB}
+		25 =>'File is not an image',
+		26 =>'Uploaded image is too small', // {minWidth}, {minHeight}
+		27 =>'Uploaded image is too big',
+		28 =>'Uploaded image is doesn\'t have square dimensions',
+		29 =>'File is required'
 	);
 
 
@@ -169,6 +176,15 @@ class Validator {
 
 
 	/**
+	 * @param int $index
+	 * @param string $message
+	 */
+	public static function setMessage($index, $message) {
+		static::$error[$index] = $message;
+	}
+
+
+	/**
 	 * Get the error message according to given code
 	 * 
 	 * @param int $code
@@ -201,8 +217,10 @@ class Validator {
 	protected function validateRequired($param, $settings = null) {
 		if (!isset($this->invalids[$param])) {
 			if (!isset($this->input[$param])) {
-				$this->badRequest[] = $param;
-				return static::getErrorMessage(1);
+				if (!isset($_FILES) && !isset($_FILES[$param])) {
+					$this->badRequest[] = $param;
+					return static::getErrorMessage(1);
+				}
 			} else {
 				if (is_array($this->input[$param])) {
 					if (sizeof($this->input[$param]) == 0) {
@@ -709,6 +727,8 @@ class Validator {
 	 * @param string $param
 	 * @param string $settings
 	 * @return true|string
+	 *
+	 * @example 'extensions:gif,jpg,jpeg,txt,csv'
 	 */
 	protected function validateExtensions($param, $settings) {
 		if (isset($this->input[$param])) {
@@ -735,11 +755,59 @@ class Validator {
 
 
 	/**
+	 * Throw error if given input doesn't have given extension.
+	 * If you pass post parameter, then this will be validated on string and second,
+	 * if you pass the name of file, then file name will be validated.
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 *
+	 * @example 'fileSize:1024,2048'
+	 * @example 'fileSize:,2048' or 'fileSize:0,2048'
+	 */
+	protected function validateFileSize($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			if (isset($_FILES) && isset($_FILES[$param])) {
+				$size = $_FILES[$param]['size'];
+			} else {
+				$size = null;
+			}
+
+			if ($size !== null) {
+				list($minSize, $maxSize) = explode(',', $settings);
+
+				$minSize = (int)$minSize;
+				$maxSize = (int)$maxSize;
+
+				if ($minSize > 0 && $size < $minSize) {
+					return static::getErrorMessage(24, array(
+						'minSize' => $minSize,
+						'minSizeKB' => round($minSize / 1024),
+						'minSizeMB' => round($minSize / 1024 / 1024, 2)
+					));
+				} else if ($maxSize > 0 && $size > $maxSize) {
+					return static::getErrorMessage(23, array(
+						'maxSize' => $minSize,
+						'maxSizeKB' => round($minSize / 1024),
+						'maxSizeMB' => round($minSize / 1024 / 1024, 2)
+					));
+				}
+			}
+		}
+
+		return true;
+	}
+
+
+	/**
 	 * Throw error if this field is not image or doesn't fit to given constraints
 	 * 
 	 * @param string $param
 	 * @param string $settings
 	 * @return true|string
+	 *
+	 * @example 'image'
 	 */
 	protected function validateImage($param, $settings) {
 		$input = $_FILES;
@@ -749,12 +817,100 @@ class Validator {
 				return static::getErrorMessage(17);
 			}
 
-			if (!in_array($file['type'], array('image/jpeg', 'image/gif', 'image/png'))) {
+			if (!in_array($file['type'], array('image/jpeg', 'image/gif', 'image/png')) || @getimagesize($file['tmp_name']) === false) {
 				return static::getErrorMessage(16, array(
 					'extensions' => 'jpg, png, gif'
 				));
 			}
 		}
+		return true;
+	}
+
+
+	/**
+	 * Throw error if given image is not in defined dimensions
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 *
+	 * @example pattern is: 'imageSize:minWidth,minHeight,maxWidth,maxHeight'
+	 * @example to set just maxWidth: 'imageSize:0,0,800' or 'imageSize:,,800'
+	 * @example 'imageSize:200,100,2500,2200'
+	 */
+	protected function validateImageSize($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			if (isset($_FILES) && isset($_FILES[$param])) {
+				$path = $_FILES[$param]['tmp_name'];
+			} else {
+				$path = null;
+			}
+
+			if ($size !== null) {
+				$info = getimagesize($path);
+
+				if ($info === false) {
+					return static::getErrorMessage(25);
+				}
+
+				list($width, $height) = $info;
+				list($minWidth, $minHeight, $maxWidth, $maxHeight) = explode(',', $settings);
+
+				$minWidth = (int)$minWidth;
+				$minHeight = (int)$minHeight;
+				$maxWidth = (int)$maxWidth;
+				$maxHeight = (int)$maxHeight;
+
+				if (($minWidth > 0 && $width < $minWidth) || ($minHeight > 0 && $height < $minHeight)) {
+					return static::getErrorMessage(26, array(
+						'minWidth' => $minWidth,
+						'minHeight' => $minHeight
+					));
+				} else if (($maxWidth > 0 && $width > $maxWidth) || ($maxHeight > 0 && $height > $maxHeight)) {
+					return static::getErrorMessage(27, array(
+						'maxWidth' => $maxWidth,
+						'maxHeight' => $maxHeight
+					));
+				}
+			}
+		}
+
+		return true;
+	}
+
+
+	/**
+	 * Throw error if uploaded image doesn't have square dimensions / the same width & height
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 * @return true|string
+	 *
+	 * @example pattern is: 'imageSquare'
+	 */
+	protected function validateImageSquare($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			if (isset($_FILES) && isset($_FILES[$param])) {
+				$path = $_FILES[$param]['tmp_name'];
+			} else {
+				$path = null;
+			}
+
+			if ($size !== null) {
+				$info = getimagesize($path);
+
+				if ($info === false) {
+					return static::getErrorMessage(25);
+				}
+
+				list($width, $height) = $info;
+
+				if ($width != $height) {
+					return static::getErrorMessage(28);
+				}
+			}
+		}
+
 		return true;
 	}
 
