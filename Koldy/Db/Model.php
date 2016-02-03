@@ -165,6 +165,33 @@ abstract class Model {
 
 
 	/**
+	 * Begin transaction using this model's DB adapter
+	 * @return bool
+	 */
+	public static function beginTransaction() {
+		return static::getAdapter()->beginTransaction();
+	}
+
+
+	/**
+	 * Commit current transaction using this model's DB adapter
+	 * @return bool
+	 */
+	public static function commit() {
+		return static::getAdapter()->commit();
+	}
+
+
+	/**
+	 * Rollback current transaction on this model's DB adapter
+	 * @return bool
+	 */
+	public static function rollBack() {
+		return static::getAdapter()->rollBack();
+	}
+
+
+	/**
 	 * Get the connection string defined in this model
 	 * 
 	 * @return string|null
