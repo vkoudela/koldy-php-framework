@@ -71,7 +71,6 @@ class Db extends AbstractCacheDriver {
 		$update = new Update($this->config['table']);
 		$update->setConnection($this->config['connection']);
 		$ok = $update
-			->set('updated_at', gmdate('Y-m-d H:i:s'))
 			->set('expires_at', time() + $seconds)
 			->set('data', serialize($value))
 			->where('id', $key)
@@ -82,7 +81,6 @@ class Db extends AbstractCacheDriver {
 			$insert->setConnection($this->config['connection']);
 			$insert->add(array(
 				'id' => $key,
-				'updated_at' => gmdate('Y-m-d H:i:s'),
 				'expires_at' => time() + $seconds,
 				'data' => serialize($value)
 			));
