@@ -1,41 +1,39 @@
 <?php namespace Koldy\Db;
+
 /**
  * The ResultSet class needs to handle data sets fetched from database ready
  * for pagination and searching. Long story short, you can easily create
  * DataTables to work with this simply by passing the ResultSet instance.
- * 
+ *
  */
 class ResultSet extends Select {
-
 
 	/**
 	 * @var \Koldy\Select
 	 */
 	protected $countQuery = null;
 
-
 	/**
 	 * The search string
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $searchTerm = null;
 
-
 	/**
 	 * The fields on which search will be performed - if not set, search
 	 * will be performed on all fields
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $searchFields = null;
 
-
 	/**
 	 * Set the custom count query. If you're working with custom count query,
 	 * then you must handle the search terms by yourself.
-	 * 
+	 *
 	 * @param Select $query
+	 *
 	 * @return \Koldy\Db\ResultSet
 	 */
 	public function setCountQuery(Select $query) {
@@ -43,11 +41,10 @@ class ResultSet extends Select {
 		return $this;
 	}
 
-
 	/**
 	 * Get SELECT query for total count
-	 * 
-	 * @return \Koldy\Db\Select
+	 *
+	 * @return $this
 	 */
 	protected function getCountQuery() {
 		if ($this->countQuery !== null) {
@@ -77,53 +74,51 @@ class ResultSet extends Select {
 		return $query;
 	}
 
-
 	/**
 	 * Set search fields
-	 * 
+	 *
 	 * @param array $fields
-	 * @return \Koldy\Db\ResultSet
+	 *
+	 * @return $this
 	 */
 	public function setSearchFields(array $fields) {
 		$this->searchFields = $fields;
 		return $this;
 	}
 
-
 	/**
 	 * Search for the fields
-	 * 
+	 *
 	 * @param string $searchText
-	 * @return \Koldy\Db\ResultSet
+	 *
+	 * @return $this
 	 */
 	public function search($searchText) {
 		$this->searchTerm = $searchText;
 		return $this;
 	}
 
-
 	/**
 	 * Count results
-	 * 
+	 *
 	 * @return int
 	 */
 	public function count() {
 		$result = $this->getCountQuery()->fetchAllObj();
 
 		if (sizeof($result) == 1) {
-			return (int) $result[0]->total;
+			return (int)$result[0]->total;
 		}
 
 		return 0;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Db\Select::getQuery()
+	 * @return string
+	 * @throws \Koldy\Exception
 	 */
 	protected function getQuery() {
-		if ($this->searchTerm !== null)  {
+		if ($this->searchTerm !== null) {
 
 			// there is search term set, so we'll need to include this to where statements
 

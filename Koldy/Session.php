@@ -7,14 +7,12 @@
  */
 class Session {
 
-
 	/**
 	 * Flag if session has been initialized or not
 	 * 
 	 * @var boolean
 	 */
 	private static $initialized = false;
-
 
 	/**
 	 * Flag if session has been write closed
@@ -23,7 +21,6 @@ class Session {
 	 */
 	private static $closed = false;
 
-
 	/**
 	 * Initialize the session handler and session itself
 	 * 
@@ -31,6 +28,10 @@ class Session {
 	 */
 	private static function init() {
 		if (!static::$initialized) {
+			if (Application::isCli()) {
+				throw new Exception('You can\'t start session in CLI environment!');
+			}
+
 			static::$initialized = true;
 
 			$config = Application::getConfig('session');
@@ -67,7 +68,6 @@ class Session {
 		}
 	}
 
-
 	/**
 	 * Get the value from session under given key name
 	 * 
@@ -86,7 +86,6 @@ class Session {
 			? $_SESSION[$key]
 			: null;
 	}
-
 
 	/**
 	 * Set the key to the session. If key already exists, it will be overwritten
@@ -110,7 +109,6 @@ class Session {
 
 		$_SESSION[$key] = $value;
 	}
-
 
 	/**
 	 * Add the key to session but only if that key doesn't already exist
@@ -137,7 +135,6 @@ class Session {
 		}
 	}
 
-
 	/**
 	 * Does given key exists in session or not?
 	 * 
@@ -155,7 +152,6 @@ class Session {
 
 		return array_key_exists($key, $_SESSION);
 	}
-
 
 	/**
 	 * Delete/remove the key from the session data
@@ -176,7 +172,6 @@ class Session {
 		}
 	}
 
-
 	/**
 	 * Get or set the key into session. If key already exists in session, then
 	 * its value will be returned, otherwise, function will be called, key
@@ -190,7 +185,7 @@ class Session {
 	 * @return mixed
 	 * @link http://koldy.net/docs/session#getOrSet
 	 */
-	public static function getOrSet($key, $functionOnSet) {
+	public static function getOrSet($key, \Closure $functionOnSet) {
 		static::init();
 
 		if (is_object($key) || is_array($key)) {
@@ -202,16 +197,11 @@ class Session {
 				throw new Exception('Can not set any other value to session because all data has been already committed');
 			}
 
-			if (!($functionOnSet instanceof \Closure)) {
-				throw new \InvalidArgumentException('Second parameter in Session::getOrSet must be the instance of PHP\'s Closure');
-			}
-
 			$_SESSION[$key] = call_user_func($functionOnSet);
 		}
 
 		return $_SESSION[$key];
 	}
-
 
 	/**
 	 * Call session_write_close(). Usually, that function is called internally by
@@ -227,7 +217,6 @@ class Session {
 		static::$closed = true;
 	}
 
-
 	/**
 	 * Is session write closed or not?
 	 * 
@@ -237,7 +226,6 @@ class Session {
 	public static function isClosed() {
 		return static::$closed;
 	}
-
 
 	/**
 	 * You can start session with this method if you need that. Session start
@@ -250,7 +238,6 @@ class Session {
 		static::init();
 	}
 
-
 	/**
 	 * Is session already started or not?
 	 * 
@@ -260,7 +247,6 @@ class Session {
 	public static function hasStarted() {
 		return static::$initialized;
 	}
-
 
 	/**
 	 * Destroy session completely

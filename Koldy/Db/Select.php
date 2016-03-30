@@ -87,6 +87,10 @@ class Select extends Where {
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
 	 * @example leftJoin('user u', 'u.id', '=', 'r.user_role_id')
+	 * @example leftJoin('user u', array(
+	 *   array('u.id', '=', 'r.user_role_id'),
+	 *   array('u.group_id', '=', 2)
+	 * ))
 	 */
 	public function leftJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
 		$this->joins[] = array(
@@ -449,7 +453,7 @@ class Select extends Where {
 		}
 
 		if ($this->limit !== null) {
-			$query .= "\nLIMIT {$this->limit->start}, {$this->limit->howMuch}";
+			$query .= "\nLIMIT {$this->limit->howMuch} OFFSET {$this->limit->start}";
 		}
 
 		return $query;
@@ -466,10 +470,27 @@ class Select extends Where {
 
 	/**
 	 * Fetch all records as array of objects
-	 * @return array
+	 * @param string|\Koldy\Db\Model $class [optional]
+	 * @return array or array of \Koldy\Db\Model
 	 */
-	public function fetchAllObj() {
-		return $this->fetchAll(\PDO::FETCH_OBJ);
+	public function fetchAllObj($class = null) {
+		if ($class === null) {
+			// return fetch records with usual \PDO::FETCH_OBJ
+			return $this->fetchAll(\PDO::FETCH_OBJ);
+		} else {
+			// return instances with given class name
+			// given class name must be a class that extends \Koldy\Db\Model
+			if (is_object($class)) {
+				$class = get_class($class);
+			}
+
+			$objects = array();
+			foreach ($this->fetchAll() as $record) {
+				$objects[] = new $class($record);
+			}
+
+			return $objects;
+		}
 	}
 
 	/**

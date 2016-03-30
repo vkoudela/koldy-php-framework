@@ -1,5 +1,7 @@
 <?php namespace Koldy;
 
+use Koldy\Application\Route\AbstractRoute;
+
 /**
  * This is another utility class that know how to handle URL. While developing
  * your site, you'll probably need to generate URL and detect if you're
@@ -138,6 +140,20 @@ class Url {
 
 
 	/**
+	 * Generate the link suitable for <a> tags. Generating links depends about the routing class you're using.
+	 *
+	 * @param string $controller
+	 * @param string $action
+	 * @param array $params
+	 *
+	 * @return string
+	 */
+	public static function siteHref($site, $controller = null, $action = null, array $params = null) {
+		return Application::route()->siteHref($site, $controller, $action, $params);
+	}
+
+
+	/**
 	 * Generate the link to home page
 	 * 
 	 * @return string
@@ -155,9 +171,15 @@ class Url {
 	 * @param string $server
 	 *
 	 * @return string
+	 * @throws Exception
 	 */
-	public static function link($path, $server = null) {
-		return Application::route()->link($path, $server);
+	public static function asset($path, $server = null) {
+		$route = Application::route();
+		if (!($route instanceof AbstractRoute)) {
+			throw new Exception('Invalid route; expected instance of \Koldy\Application\Route\AbstractRoute, got ' . gettype($route));
+		}
+
+		return $route->asset($path, $server);
 	}
 
 	/**
@@ -169,7 +191,7 @@ class Url {
 	 * @return string
 	 */
 	public static function __callStatic($name, $args) {
-		return static::link($args[0], $name);
+		return static::asset($args[0], $name);
 	}
 
 

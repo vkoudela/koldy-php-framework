@@ -11,7 +11,6 @@
  */
 class DevNull extends AbstractCacheDriver {
 
-
 	/**
 	 * @param string $key
 	 *
@@ -21,7 +20,6 @@ class DevNull extends AbstractCacheDriver {
 		$this->checkKey($key);
 		return null;
 	}
-
 
 	/**
 	 * @param string $key
@@ -35,7 +33,6 @@ class DevNull extends AbstractCacheDriver {
 		return true;
 	}
 
-
 	/**
 	 * @param string $key
 	 * @param mixed $value
@@ -48,7 +45,6 @@ class DevNull extends AbstractCacheDriver {
 		return true;
 	}
 
-
 	/**
 	 * @param string $key
 	 *
@@ -58,7 +54,6 @@ class DevNull extends AbstractCacheDriver {
 		$this->checkKey($key);
 		return false;
 	}
-
 
 	/**
 	 * @param string $key
@@ -70,7 +65,6 @@ class DevNull extends AbstractCacheDriver {
 		return null;
 	}
 
-
 	/**
 	 * Delete all
 	 */
@@ -78,14 +72,12 @@ class DevNull extends AbstractCacheDriver {
 		// nothing to delete
 	}
 
-
 	/**
 	 * @param int $olderThen
 	 */
 	public function deleteOld($olderThen = null) {
 		// nothing to delete
 	}
-
 
 	/**
 	 * @param string $key
@@ -99,7 +91,6 @@ class DevNull extends AbstractCacheDriver {
 		return call_user_func($functionOnSet);
 	}
 
-
 	/**
 	 * @param string $key
 	 * @param int $howMuch
@@ -110,7 +101,6 @@ class DevNull extends AbstractCacheDriver {
 		$this->checkKey($key);
 		return true;
 	}
-
 
 	/**
 	 * @param string $key

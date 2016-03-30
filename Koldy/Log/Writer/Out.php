@@ -18,7 +18,6 @@ class Out extends AbstractLogWriter {
 	 */
 	protected $getMessageFunction = null;
 
-
 	/**
 	 * Construct the handler to log to files. The config array will be check
 	 * because all configs are strict
@@ -64,7 +63,6 @@ class Out extends AbstractLogWriter {
 		parent::__construct($config);
 	}
 
-
 	/**
 	 * Get the message that will be printed in console. You have to return the
 	 * whole line including the time if you want. This is default, but you can
@@ -81,7 +79,6 @@ class Out extends AbstractLogWriter {
 
 		return date('Y-m-d H:i:sO') . "\t{$level}\t{$message}\n";
 	}
-
 
 	/**
 	 * Actually print message out
@@ -107,7 +104,6 @@ class Out extends AbstractLogWriter {
 		}
 	}
 
-
 	/**
 	 * This method is called internally.
 	 */
@@ -116,10 +112,8 @@ class Out extends AbstractLogWriter {
 		$this->sendEmailReport();
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Log\Writer\AbstractLogWriter::processExtendedReports()
+	 * Process reports that needs to be sent by email
 	 */
 	protected function processExtendedReports() {
 		if (!isset($this->config['dump'])) {

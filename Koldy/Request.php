@@ -94,12 +94,8 @@ class Request {
 	 * @return string
 	 */
 	public static function hostName() {
-		if (isset($_SERVER['HTTP_HOST'])) {
-			return $_SERVER['HTTP_HOST'];
-		} else {
-			$siteUrl = Application::getConfig('application', 'site_url');
-			return substr($siteUrl, strpos($siteUrl, '//') +2);
-		}
+		$siteUrl = Application::getConfig('application', 'site_url');
+		return substr($siteUrl, strpos($siteUrl, '//') +2);
 	}
 
 
@@ -171,6 +167,7 @@ class Request {
 	 * Get the IP address of proxy server if exists
 	 * 
 	 * @return string|null
+	 * @deprecated in favor of httpXForwadedFor()
 	 */
 	public static function proxyForwardedFor() {
 		if (isset($_SERVER) && isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -212,7 +209,7 @@ class Request {
 
 
 	/**
-	 * Get HTTP X_FORWARDED_FOR header
+	 * Get HTTP_X_FORWARDED_FOR header
 	 * 
 	 * @return string|null
 	 * @example 58.22.246.105
@@ -307,6 +304,15 @@ class Request {
 	 */
 	public static function isCli() {
 		return (defined('KOLDY_CLI') && KOLDY_CLI === true);
+	}
+
+	/**
+	 * Is this request called on HTTPS or not?
+	 *
+	 * @return bool
+	 */
+	public static function isSSL() {
+		return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on';
 	}
 
 }

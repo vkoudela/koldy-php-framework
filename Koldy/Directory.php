@@ -46,9 +46,12 @@ class Directory {
 	public static function readFiles($path, $filter = null) {
 		if (is_dir($path) && $handle = opendir($path)) {
 			$files = array();
+
+			// append slash if path doesn't contain slash
 			if (substr($path, -1) != '/') {
 				$path .= '/';
 			}
+
 			while (false !== ($entry = readdir($handle))) {
 				if ($entry !== '.' && $entry !== '..' && !is_dir($path . $entry)) {
 					if ($filter === null || preg_match($filter, $entry)) {
@@ -56,6 +59,44 @@ class Directory {
 					}
 				}
 			}
+
+			return $files;
+		} else {
+			return null;
+		}
+	}
+
+
+	/**
+	 * Get the list of all only files from the given folder and its subfolders
+	 *
+	 * @param string $path the directory path to read
+	 * @param string $filter [optional] regex for filtering the list
+	 * @return array assoc; the key is full path of the file and value is only file name
+	 * @example return array('/Users/vkoudela/Sites/site.tld/folder/croatia.png' => 'croatia.png')
+	 */
+	public static function readFilesRecursive($path, $filter = null) {
+		if (is_dir($path) && $handle = opendir($path)) {
+			$files = array();
+
+			// append slash if path doesn't contain slash
+			if (substr($path, -1) != '/') {
+				$path .= '/';
+			}
+
+			while (false !== ($entry = readdir($handle))) {
+				if ($entry !== '.' && $entry !== '..') {
+					if (!is_dir($path . $entry)) {
+						if ($filter === null || preg_match($filter, $entry)) {
+							$files[$path . $entry] = $entry;
+						}
+					} else {
+						// it is sub-directory
+						$files = array_merge($files, static::readFilesRecursive($path . $entry . '/', $filter));
+					}
+				}
+			}
+
 			return $files;
 		} else {
 			return null;

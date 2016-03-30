@@ -8,105 +8,97 @@ use Koldy\Log;
  * sites in the world. This class will parse and generate the URLs to the
  * following criteria:
  *
- * 	http://your.domain.com/[controller]/[action]/[param1]/[param2]/[paramN]
+ *  http://your.domain.com/[controller]/[action]/[param1]/[param2]/[paramN]
  *  or if module exists under that controller URL:
  *  http://your.domain.com/[module]/[controller]/[action]/[param1]/[param2]/[paramN]
- * 
+ *
  * Parameters can be caught with getVar() method by passing the position of it.
- * 
+ *
  * @link http://koldy.net/docs/routes/default-route
  */
 class DefaultRoute extends AbstractRoute {
 
-
 	/**
 	 * The resolved module URL part
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $moduleUrl = null;
 
-
 	/**
 	 * The resolved controller URL part
-	 * 
+	 *
 	 * @var string
 	 * @example if URI is "/users/login", this will be "users"
 	 */
 	protected $controllerUrl = null;
 
-
 	/**
 	 * The resolved controller class name
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $controllerClass = null;
 
-
 	/**
 	 * The controller path
-	 * 
+	 *
 	 * @var string
 	 */
 	private $controllerPath = null;
 
-
 	/**
 	 * The resolved action url
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $actionUrl = null;
 
-
 	/**
 	 * The resolved action method name
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $actionMethod = null;
 
-
 	/**
 	 * Flag if this request is an ajax request maybe?
-	 * 
+	 *
 	 * @var boolean
 	 */
 	protected $isAjax = false;
 
-
 	/**
 	 * The controller's instance
-	 * 
+	 *
 	 * @var object
 	 */
 	protected $controllerInstance = null;
 
-
 	/**
-	 * Construct the object
-	 *
+	 * Prepare HTTP before executing exec() method
 	 * @param string $uri
-	 * @param array $config
 	 */
-	public function __construct($uri, array $config = null) {
-		parent::__construct($uri, $config);
+	public function prepareHttp($uri) {
+		$this->uri = $uri;
 
 		// first, check the URI for duplicate slashes - they are not allowed
 		// if you must pass duplicate slashes in URL, then urlencode them
 		$redirect = null;
-		if (strpos($uri, '//') !== false) {
-			$redirect = str_replace('//', '/', $uri);
+		if (strpos($this->uri, '//') !== false) {
+			$redirect = str_replace('//', '/', $this->uri);
 		}
 
-		if (strlen($uri) > 1 && substr($uri, -1) == '/') {
-			// ending slash is not needed
-			// if you need to pass slash on the end of URI, then urlencode it
-			if ($redirect === null) {
-				$redirect = substr($uri, 0, -1);
-			} else {
-				$redirect = substr($redirect, 0, -1);
+		if (strlen($this->uri) > 1 && substr($this->uri, -1) == '/') {
+			// ending slash is not needed, unless you have a namespace
+
+			if (!isset($this->config['url_namespace'])) {
+				// if you need to pass slash on the end of URI, then urlencode it
+				if ($redirect === null) {
+					$redirect = substr($this->uri, 0, -1);
+				} else {
+					$redirect = substr($redirect, 0, -1);
+				}
 			}
 		}
 
@@ -115,12 +107,30 @@ class DefaultRoute extends AbstractRoute {
 			exit(0);
 		}
 
+		$questionPos = strpos($this->uri, '?');
+		if ($questionPos !== false) {
+			$this->uri = substr($this->uri, 0, $questionPos);
+		}
+
+		if (isset($this->config['url_namespace'])) {
+			if (substr($this->uri, 0, strlen($this->config['url_namespace'])) == $this->config['url_namespace']) {
+				$this->uri = substr($this->uri, strlen($this->config['url_namespace']));
+			} else {
+				Application::error(503, 'Invalid environment or url_namespace configuration');
+			}
+		}
+
 		$slash = DS;
+
+		$this->uri = explode('/', $this->uri);
+		if (!isset($this->uri[1])) {
+			$this->uri[1] = '';
+		}
 
 		// There are two possible scenarios:
 		// 1. The first part of URL leads to the module controller
 		// 2. The first part of URL leads to the default controller
-		
+
 		if ($this->uri[1] == '') {
 			$this->controllerUrl = 'index';
 			$this->controllerClass = 'IndexController';
@@ -131,7 +141,7 @@ class DefaultRoute extends AbstractRoute {
 
 		// Now we have the controller class name detected, but, should it be
 		// taken from module or from default controllers?
-		
+
 		$moduleDir = Application::getApplicationPath("modules{$slash}{$this->controllerUrl}");
 		if (is_dir($moduleDir)) {
 
@@ -185,15 +195,11 @@ class DefaultRoute extends AbstractRoute {
 			}
 
 			// and now, configure the include paths according to the case
-			$includePath = array(
-				// module stuff has greater priority then application folder itself
+			$includePath = array(// module stuff has greater priority then application folder itself
 
-				"{$moduleDir}{$slash}controllers",
-				"{$moduleDir}{$slash}modles",
-				"{$moduleDir}{$slash}library",
+				"{$moduleDir}{$slash}controllers", "{$moduleDir}{$slash}models", "{$moduleDir}{$slash}library",
 
-				get_include_path()
-			);
+				get_include_path());
 
 			set_include_path(implode(PATH_SEPARATOR, $includePath));
 
@@ -236,22 +242,13 @@ class DefaultRoute extends AbstractRoute {
 
 			// and now, configure the include paths according to the case
 			$basePath = Application::getApplicationPath();
-			Application::addIncludePath(array(
-				$basePath . 'controllers',		// so you can extend abstract controllers in the same directory if needed,
-				$basePath . 'models',			// all models should be in this directory
-				$basePath . 'library'			// the place where you can define your own classes and methods
+			Application::addIncludePath(array($basePath . 'controllers',    // so you can extend abstract controllers in the same directory if needed,
+				$basePath . 'models',      // all models should be in this directory
+				$basePath . 'library'      // the place where you can define your own classes and methods
 			));
 		}
 
-		$this->isAjax = (
-			isset($_SERVER['REQUEST_METHOD'])
-			&& $_SERVER['REQUEST_METHOD'] == 'POST'
-			&& isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-			&& strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
-		) || (
-			isset($_SERVER['HTTP_ACCEPT'])
-			&& strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
-		);
+		$this->isAjax = (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 
 		$controllerClassName = $this->getControllerClass();
 		$controllerInstance = new $controllerClassName();
@@ -273,7 +270,6 @@ class DefaultRoute extends AbstractRoute {
 		$this->controllerInstance = $controllerInstance;
 	}
 
-
 	/**
 	 * Is this ajax request or not?
 	 *
@@ -282,7 +278,6 @@ class DefaultRoute extends AbstractRoute {
 	public function isAjax() {
 		return $this->isAjax;
 	}
-
 
 	/**
 	 * Get the variable value from parameters
@@ -294,8 +289,8 @@ class DefaultRoute extends AbstractRoute {
 	 */
 	public function getVar($whatVar, $default = null) {
 		if (is_numeric($whatVar)) {
-			$whatVar = (int) $whatVar +1;
-			
+			$whatVar = (int)$whatVar + 1;
+
 			if (isset($this->uri[$whatVar])) {
 				$value = trim($this->uri[$whatVar]);
 				return ($value != '') ? $value : $default;
@@ -313,14 +308,12 @@ class DefaultRoute extends AbstractRoute {
 		}
 	}
 
-
 	/**
 	 * @return string
 	 */
 	public function getModuleUrl() {
 		return $this->moduleUrl;
 	}
-
 
 	/**
 	 * @return string
@@ -329,7 +322,6 @@ class DefaultRoute extends AbstractRoute {
 		return $this->controllerUrl;
 	}
 
-
 	/**
 	 * @return string
 	 */
@@ -337,14 +329,12 @@ class DefaultRoute extends AbstractRoute {
 		return $this->controllerClass;
 	}
 
-
 	/**
 	 * @return string
 	 */
 	public function getActionUrl() {
 		return $this->actionUrl;
 	}
-
 
 	/**
 	 * @return string
@@ -359,9 +349,21 @@ class DefaultRoute extends AbstractRoute {
 	 * @param array $params
 	 *
 	 * @return string
-	 * @throws \Koldy\Exception
 	 */
 	public function href($controller = null, $action = null, array $params = null) {
+		return $this->siteHref(null, $controller, $action, $params);
+	}
+
+	/**
+	 * @param string $site
+	 * @param string $controller
+	 * @param string $action
+	 * @param array $params
+	 *
+	 * @return string
+	 * @throws \Koldy\Exception
+	 */
+	public function siteHref($site, $controller = null, $action = null, array $params = null) {
 		if ($controller !== null && strpos($controller, '/') !== false) {
 			throw new \InvalidArgumentException('Slash is not allowed in controller name');
 		}
@@ -375,7 +377,19 @@ class DefaultRoute extends AbstractRoute {
 			$controller = '';
 		}
 
-		$url = (defined('KOLDY_CLI') && KOLDY_CLI === true) ? $config['site_url'] : '';
+		//$url = (defined('KOLDY_CLI') && KOLDY_CLI === true) ? $config['site_url'] : '';
+
+		if ($site !== null) {
+			// we're building link to another server
+			if (isset($config['sites']) && isset($config['sites'][$site])) {
+				$url = $config['sites'][$site];
+			} else {
+				Log::warning('Missing sites definition key \'' . $site . '\'; please define it in your application.php under \'sites\' array');
+				$url = $config['site_url'];
+			}
+		} else {
+			$url = $config['site_url'];
+		}
 
 		if (isset($this->config['url_namespace'])) {
 			$url .= $this->config['url_namespace'];
@@ -396,7 +410,7 @@ class DefaultRoute extends AbstractRoute {
 					$q[$key] = $value;
 				}
 			}
-			
+
 			if (sizeof($q) > 0) {
 				$url .= '?';
 				foreach ($q as $key => $value) {
@@ -408,7 +422,6 @@ class DefaultRoute extends AbstractRoute {
 
 		return $url;
 	}
-
 
 	/**
 	 * @return mixed|void

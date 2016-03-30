@@ -126,6 +126,45 @@ class Adapter {
 				
 				break;
 
+			case 'postgres':
+				$pdoConfig = array (
+					//PDO::ATTR_EMULATE_PREPARES => false,
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::ATTR_PERSISTENT => $config['persistent'],
+					PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
+				);
+
+				if (isset($config['driver_options'])) {
+					foreach ($config['driver_options'] as $key => $value) {
+						$pdoConfig[$key] = $value;
+					}
+				}
+
+				if (!isset($config['port'])) {
+					$config['port'] = 5432;
+				} else {
+					$config['port'] = (int) $config['port'];
+				}
+
+				$this->pdo = new PDO(
+					"pgsql:host={$config['host']};dbname={$config['database']};port={$config['port']};",
+					$config['username'],
+					$config['password'],
+					$pdoConfig
+				);
+
+				if (isset($config['schema'])) {
+					$schemaSql = 'SET search_path TO ' . $config['schema'];
+					$this->pdo->exec($schemaSql);
+
+					if (LOG) {
+						Log::sql($schemaSql);
+					}
+
+					unset($schemaSql);
+				}
+				break;
+
 			case 'sqlite':
 				if (!isset($config['path'])) {
 					throw new Exception('SQLite configuration must have defined path to the storage file');
@@ -238,6 +277,10 @@ class Adapter {
 			$stmt = $adapter->prepare($sql);
 		} catch (PDOException $e) {
 			// the SQL syntax might fail here
+
+			if (LOG) {
+				Log::sql($this->__toString());
+			}
 
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();

@@ -7,20 +7,18 @@
  */
 class Json extends Response {
 
-
 	/**
 	 * Holding array that will be converted into JSON string on page output
 	 * 
 	 * @var array
 	 */
-	private $data = null;
-
+	protected $data = null;
 
 	/**
 	 * Create the object with initial data
 	 * 
 	 * @param array $data [optional]
-	 * @return \Koldy\Json
+	 * @return $this
 	 * @link http://koldy.net/docs/json#usage
 	 */
 	public static function create(array $data = array()) {
@@ -29,7 +27,6 @@ class Json extends Response {
 
 		return $self->header('Content-Type', 'application/json');
 	}
-
 
 	/**
 	 * Get the response data
@@ -41,7 +38,6 @@ class Json extends Response {
 		return $this->data;
 	}
 
-
 	/**
 	 * JSON helper to quickly encode some data
 	 * 
@@ -52,7 +48,6 @@ class Json extends Response {
 	public static function encode($data) {
 		return json_encode($data);
 	}
-
 
 	/**
 	 * JSON helper to quickly decode JSON string into array or stdClass. Returns array by default. Pass TRUE to
@@ -67,20 +62,18 @@ class Json extends Response {
 		return json_decode($stringData, !$returnObject);
 	}
 
-
 	/**
 	 * Set the key into JSON response
 	 * 
 	 * @param string $key
 	 * @param mixed $value
-	 * @return \Koldy\Json
+	 * @return $this
 	 * @link http://koldy.net/docs/json#usage
 	 */
 	public function set($key, $value) {
 		$this->data[$key] = $value;
 		return $this;
 	}
-
 
 	/**
 	 * Is there key set in JSON data
@@ -93,12 +86,11 @@ class Json extends Response {
 		return array_key_exists($key, $this->data);
 	}
 
-
 	/**
 	 * Remove the JSON key from data
 	 * 
 	 * @param string $key
-	 * @return \Koldy\Json
+	 * @return $this
 	 * @link http://koldy.net/docs/json#usage
 	 */
 	public function remove($key) {
@@ -106,6 +98,14 @@ class Json extends Response {
 		return $this;
 	}
 
+	/**
+	 * Remove all data that was stored in this instance
+	 * @return $this
+	 */
+	public function removeAll() {
+		$this->data = array();
+		return $this;
+	}
 
 	/**
 	 * Get the key from JSON data
@@ -116,7 +116,6 @@ class Json extends Response {
 	public function get($key) {
 		return $this->has($key) ? $this->data[$key] : null;
 	}
-
 
 	/**
 	 * Just setter ...
@@ -138,7 +137,6 @@ class Json extends Response {
 		return $this->get($key);
 	}
 
-
 	/**
 	 * If you try to print your JSON object instance, you'll get JSON encoded string
 	 * 
@@ -147,7 +145,6 @@ class Json extends Response {
 	public function __toString() {
 		return static::encode($this->getData());
 	}
-
 
 	/**
 	 * @link http://koldy.net/docs/json#usage

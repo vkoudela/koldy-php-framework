@@ -37,7 +37,14 @@ class Cache {
 				throw new Exception('You\'re trying to use cache without any driver defined in cache config!');
 			}
 
-			static::$defaultDriver = $default[0];
+			if (static::$defaultDriver === null) {
+				static::$defaultDriver = $default[0];
+			} else {
+				if (!isset($config[static::$defaultDriver])) {
+					Log::warning('Cache driver ' . static::$defaultDriver . ' is not set, using first one (' . $default[0] . ') instead');
+					static::$defaultDriver = $default[0];
+				}
+			}
 		}
 	}
 

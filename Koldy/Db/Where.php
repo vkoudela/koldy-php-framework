@@ -4,22 +4,19 @@ use Koldy\Exception;
 
 class Where extends Query {
 
-
 	/**
 	 * The array of where statements
 	 * @var array
 	 */
 	private $where = array();
 
-
 	/**
 	 * Initialize instance of this class
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public static function init() {
 		return new static();
 	}
-
 
 	/**
 	 * Add condition to where statements
@@ -28,7 +25,7 @@ class Where extends Query {
 	 * @param string $field
 	 * @param mixed $value
 	 * @param string $operator
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	private function addCondition($link, $field, $value, $operator) {
 		$this->where[] = array(
@@ -41,14 +38,13 @@ class Where extends Query {
 		return $this;
 	}
 
-
 	/**
 	 * Add AND where statement
 	 * 
 	 * @param string $field
 	 * @param mixed $valueOrOperator
 	 * @param mixed $value
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 * 
 	 * @example where('id', 2) produces WHERE id = 2
 	 * @example where('id', '00385') produces WHERE id = '00385'
@@ -63,14 +59,13 @@ class Where extends Query {
 		return $this->addCondition('AND', $field, ($value === null) ? $valueOrOperator : $value, ($value === null) ? '=' : $valueOrOperator);
 	}
 
-
 	/**
 	 * Add OR where statement
 	 * 
 	 * @param string $field
 	 * @param mixed $valueOrOperator
 	 * @param mixed $value
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhere($field, $valueOrOperator = null, $value = null) {
 		if (is_string($field) && $valueOrOperator === null) {
@@ -80,50 +75,45 @@ class Where extends Query {
 		return $this->addCondition('OR', $field, ($value === null) ? $valueOrOperator : $value, ($value === null) ? '=' : $valueOrOperator);
 	}
 
-
 	/**
 	 * Add WHERE field IS NULL
 	 * 
 	 * @param string $field
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereNull($field) {
 		return $this->addCondition('AND', $field, new Expr('NULL'), 'IS');
 	}
 
-
 	/**
 	 * Add OR field IS NULL
 	 * 
 	 * @param string $field
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereNull($field) {
 		return $this->addCondition('OR', $field, new Expr('NULL'), 'IS');
 	}
 
-
 	/**
 	 * Add WHERE field IS NOT NULL
 	 * 
 	 * @param string $field
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereNotNull($field) {
 		return $this->addCondition('AND', $field, new Expr('NULL'), 'IS NOT');
 	}
 
-
 	/**
 	 * Add OR field IS NOT NULL
 	 * 
 	 * @param string $field
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereNotNull($field) {
 		return $this->addCondition('OR', $field, new Expr('NULL'), 'IS NOT');
 	}
-
 
 	/**
 	 * Add WHERE field is BETWEEN two values
@@ -131,12 +121,11 @@ class Where extends Query {
 	 * @param string $field
 	 * @param mixed $value1
 	 * @param mixed $value2
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereBetween($field, $value1, $value2) {
 		return $this->addCondition('AND', $field, array($value1, $value2), 'BETWEEN');
 	}
-
 
 	/**
 	 * Add OR field is BETWEEN two values
@@ -144,12 +133,11 @@ class Where extends Query {
 	 * @param string $field
 	 * @param mixed $value1
 	 * @param mixed $value2
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereBetween($field, $value1, $value2) {
 		return $this->addCondition('OR', $field, array($value1, $value2), 'BETWEEN');
 	}
-
 
 	/**
 	 * Add WHERE field is NOT BETWEEN two values
@@ -157,12 +145,11 @@ class Where extends Query {
 	 * @param string $field
 	 * @param mixed $value1
 	 * @param mixed $value2
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereNotBetween($field, $value1, $value2) {
 		return $this->addCondition('AND', $field, array($value1, $value2), 'NOT BETWEEN');
 	}
-
 
 	/**
 	 * Add OR field is NOT BETWEEN two values
@@ -170,109 +157,100 @@ class Where extends Query {
 	 * @param string $field
 	 * @param mixed $value1
 	 * @param mixed $value2
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereNotBetween($field, $value1, $value2) {
 		return $this->addCondition('OR', $field, array($value1, $value2), 'NOT BETWEEN');
 	}
-
 
 	/**
 	 * Add WHERE field is IN array of values
 	 * 
 	 * @param string $field
 	 * @param array $values
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereIn($field, array $values) {
 		return $this->addCondition('AND', $field, array_values($values), 'IN');
 	}
-
 
 	/**
 	 * Add OR field is IN array of values
 	 * 
 	 * @param string $field
 	 * @param array $values
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereIn($field, array $values) {
 		// todo: extend this with select query
 		return $this->addCondition('OR', $field, array_values($values), 'IN');
 	}
 
-
 	/**
 	 * Add WHERE field is NOT IN array of values
 	 * 
 	 * @param string $field
 	 * @param array $values
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereNotIn($field, array $values) {
 		return $this->addCondition('AND', $field, array_values($values), 'NOT IN');
 	}
-
 
 	/**
 	 * Add OR field is NOT IN array of values
 	 * 
 	 * @param string $field
 	 * @param array $values
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereNotIn($field, array $values) {
 		return $this->addCondition('OR', $field, array_values($values), 'NOT IN');
 	}
-
 
 	/**
 	 * Add WHERE field is LIKE
 	 * 
 	 * @param string $field
 	 * @param string $value
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereLike($field, $value) {
 		return $this->addCondition('AND', $field, $value, 'LIKE');
 	}
-
 
 	/**
 	 * Add OR field is LIKE
 	 * 
 	 * @param string $field
 	 * @param string $value
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereLike($field, $value) {
 		return $this->addCondition('OR', $field, $value, 'LIKE');
 	}
-
 
 	/**
 	 * Add WHERE field is NOT LIKE
 	 * 
 	 * @param string $field
 	 * @param string $value
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function whereNotLike($field, $value) {
 		return $this->addCondition('AND', $field, $value, 'NOT LIKE');
 	}
-
 
 	/**
 	 * Add OR field is NOT LIKE
 	 * 
 	 * @param string $field
 	 * @param string $value
-	 * @return \Koldy\Db\Where
+	 * @return $this
 	 */
 	public function orWhereNotLike($field, $value) {
 		return $this->addCondition('OR', $field, $value, 'NOT LIKE');
 	}
-
 
 	/**
 	 * Is there any WHERE statement
@@ -283,6 +261,18 @@ class Where extends Query {
 		return count($this->where) > 0;
 	}
 
+	/**
+	 * @param string $field
+	 * @param int $index
+	 * @return string
+	 */
+	private function getBindFieldName($field, $index) {
+		$field = 'f' . str_replace('.', '_', $field);
+		$field = str_replace('(', '', $field);
+		$field = str_replace(')', '', $field);
+
+		return $field . $index;
+	}
 
 	/**
 	 * Get where statement appended to query
@@ -338,7 +328,7 @@ class Where extends Query {
 						if ($value[0] instanceof Expr) {
 							$query .= $value[0];
 						} else {
-							$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
+							$key = $this->getBindFieldName($field, static::getKeyIndex());
 							$query .= ":{$key}";
 							$this->bindings[$key] = $value[0];
 						}
@@ -348,7 +338,7 @@ class Where extends Query {
 						if ($value[1] instanceof Expr) {
 							$query .= $value[1];
 						} else {
-							$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
+							$key = $this->getBindFieldName($field, static::getKeyIndex());
 							$query .= ":{$key}";
 							$this->bindings[$key] = $value[1];
 						}
@@ -361,7 +351,7 @@ class Where extends Query {
 						$query .= " ({$field} {$where['operator']} (";
 
 						foreach ($value as $val) {
-							$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
+							$key = $this->getBindFieldName($field, static::getKeyIndex());
 							$query .= ":{$key},";
 							$this->bindings[$key] = $val;
 						}
@@ -374,7 +364,7 @@ class Where extends Query {
 				}
 
 			} else {
-				$key = 'f' . str_replace('.', '_', $field) . (static::getKeyIndex());
+				$key = $this->getBindFieldName($field, static::getKeyIndex());
 				$query .= " ({$field} {$where['operator']} :{$key})\n";
 				$this->bindings[$key] = $where['value'];
 
@@ -384,7 +374,6 @@ class Where extends Query {
 
 		return $query;
 	}
-
 
 	/**
 	 * This method is here because this class sometimes has to be initialized.

@@ -4,91 +4,64 @@ use Koldy\Application;
 use Koldy\Exception;
 
 /**
- * I call this the default route because this will be just fine for the most
- * sites in the world. This class will parse and generate the URLs to the
- * following criteria:
- *
- * 	http://your.domain.com/[controller]/[action]/[param1]/[param2]/[paramN]
- *  or if module exists under that controller URL:
- *  http://your.domain.com/[module]/[controller]/[action]/[param1]/[param2]/[paramN]
- * 
- * 
  * TODO: Finish this! Not tested! damn
  */
 class OldStyle extends AbstractRoute {
 
-
 	/**
 	 * The resolved module URL part
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $moduleUrl = null;
 
-
 	/**
 	 * The resolved controller URL part
-	 * 
+	 *
 	 * @var string
-	 * @example if URI is "/users/login", this will be "users"
 	 */
 	protected $controllerUrl = null;
 
-
 	/**
 	 * The resolved controller class name
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $controllerClass = null;
 
-
 	/**
 	 * The controller path
-	 * 
+	 *
 	 * @var string
 	 */
 	private $controllerPath = null;
 
-
 	/**
 	 * The resolved action url
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $actionUrl = null;
 
-
 	/**
 	 * The resolved action method name
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $actionMethod = null;
 
-
 	/**
 	 * Flag if this request is an ajax request maybe?
-	 * 
+	 *
 	 * @var boolean
 	 */
 	protected $isAjax = false;
 
-
 	/**
-	 * Construct the object
-	 *
-	 * @param string $uri
-	 * @param array $config
-	 *
-	 * @throws Exception
+	 * Prepare HTTP before executing exec() method
 	 */
-	public function __construct($uri, array $config = null) {
-		if ($config === null || count($config) == 0 || !isset($config['module_param']) || !isset($config['controller_param']) || !isset($config['action_param'])) {
-			throw new Exception('Route config options are missing');
-		}
-
-		parent::__construct($uri, $config);
+	public function prepareHttp($uri) {
+		$this->uri = $uri;
 
 		if (isset($_GET[$config['controller_param']])) {
 			$c = trim($_GET[$config['controller_param']]);
@@ -103,7 +76,7 @@ class OldStyle extends AbstractRoute {
 			$this->controllerUrl = 'index';
 			$this->controllerClass = 'IndexController';
 		}
-		
+
 		// Now we have the controller class name detected, but, should it be
 		// taken from module or from default controllers?
 
@@ -113,7 +86,7 @@ class OldStyle extends AbstractRoute {
 			// ok, it is a module with module/controller/action path
 			$moduleUrl = $this->controllerUrl;
 			$this->moduleUrl = $moduleUrl;
-			
+
 			$a = isset($_GET[$config['action_param']]) ? trim($_GET[$config['action_param']]) : '';
 			if ($a != '') {
 				$this->controllerUrl = strtolower($a);
@@ -123,12 +96,11 @@ class OldStyle extends AbstractRoute {
 				$this->controllerClass = 'IndexController';
 			}
 			$this->controllerPath = $moduleDir . DS . 'controllers' . DS . $this->controllerClass . '.php';
-			
+
 			$mainControllerExists = true;
 
 			if (!is_file($this->controllerPath)) {
-				$this->controllerPath = Application::getApplicationPath() . 'modules' . DS . $moduleUrl . DS . 'controllers' . DS
-					. 'IndexController.php';
+				$this->controllerPath = Application::getApplicationPath() . 'modules' . DS . $moduleUrl . DS . 'controllers' . DS . 'IndexController.php';
 
 				if (!is_file($this->controllerPath)) {
 					// Even IndexController is missing. Can not resolve that.
@@ -164,25 +136,19 @@ class OldStyle extends AbstractRoute {
 			}
 
 			// and now, configure the include paths according to the case
-			Application::addIncludePath(array(
-				// module paths has higher priority then default stuff
-				$moduleDir . DS . 'controllers' . DS,
-				$moduleDir . DS . 'models' . DS,
-				$moduleDir . DS . 'library' . DS,
-				Application::getApplicationPath() . 'controllers' . DS, // so you can extend abstract controllers in the same directory if needed,
+			Application::addIncludePath(array(// module paths has higher priority then default stuff
+				$moduleDir . DS . 'controllers' . DS, $moduleDir . DS . 'models' . DS, $moduleDir . DS . 'library' . DS, Application::getApplicationPath() . 'controllers' . DS, // so you can extend abstract controllers in the same directory if needed,
 				Application::getApplicationPath() . 'models' . DS, // all models should be in this directory
 				Application::getApplicationPath() . 'library' . DS, // the place where you can define your own classes and methods
 			));
 		} else {
 			// ok, it is the default controller/action
-			$this->controllerPath = Application::getApplicationPath() . 'controllers' . DS
-				. $this->controllerClass . '.php';
+			$this->controllerPath = Application::getApplicationPath() . 'controllers' . DS . $this->controllerClass . '.php';
 
 			$mainControllerExists = true;
 
 			if (!is_file($this->controllerPath)) {
-				$this->controllerPath = Application::getApplicationPath() . 'controllers' . DS
-					. 'IndexController.php';
+				$this->controllerPath = Application::getApplicationPath() . 'controllers' . DS . 'IndexController.php';
 
 				if (!is_file($this->controllerPath)) {
 					// Even IndexController is missing. Can not resolve that.
@@ -215,22 +181,13 @@ class OldStyle extends AbstractRoute {
 			}
 
 			// and now, configure the include paths according to the case
-			Application::addIncludePath(array(
-				Application::getApplicationPath() . 'controllers' . DS, // so you can extend abstract controllers in the same directory if needed,
+			Application::addIncludePath(array(Application::getApplicationPath() . 'controllers' . DS, // so you can extend abstract controllers in the same directory if needed,
 				Application::getApplicationPath() . 'models' . DS, // all models should be in this directory
 				Application::getApplicationPath() . 'library' . DS // the place where you can define your own classes and methods
 			));
 		}
-		
-		$this->isAjax = (
-			isset($_SERVER['REQUEST_METHOD'])
-			&& $_SERVER['REQUEST_METHOD'] == 'POST'
-			&& isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-			&& strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
-		) || (
-			isset($_SERVER['HTTP_ACCEPT'])
-			&& strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
-		);
+
+		$this->isAjax = (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 
 		if ($this->isAjax) {
 			$this->actionMethod .= 'Ajax';
@@ -238,23 +195,24 @@ class OldStyle extends AbstractRoute {
 			$this->actionMethod .= 'Action';
 		}
 	}
-	
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::isAjax()
+	 * @return bool
 	 */
 	public function isAjax() {
 		return $this->isAjax;
 	}
-	
+
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getVar()
+	 * @param mixed $whatVar
+	 * @param mixed $default
+	 *
+	 * @return null|string
 	 */
 	public function getVar($whatVar, $default = null) {
 		if (is_numeric($whatVar)) {
-			$whatVar = (int) $whatVar +1;
-			
+			$whatVar = (int)$whatVar + 1;
+
 			if (isset($this->uri[$whatVar])) {
 				$value = trim($this->uri[$whatVar]);
 				return ($value != '') ? $value : $default;
@@ -273,48 +231,47 @@ class OldStyle extends AbstractRoute {
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getModuleUrl()
+	 * @return string
 	 */
 	public function getModuleUrl() {
 		return $this->moduleUrl;
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getControllerUrl()
+	 * @return string
 	 */
 	public function getControllerUrl() {
 		return $this->controllerUrl;
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getControllerClass()
+	 * @return string
 	 */
 	public function getControllerClass() {
 		return $this->controllerClass;
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getActionUrl()
+	 * @return string
 	 */
 	public function getActionUrl() {
 		return $this->actionUrl;
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::getActionMethod()
+	 * @return string
 	 */
 	public function getActionMethod() {
 		return $this->actionMethod;
 	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::href()
+	 * @param null $controller
+	 * @param null $action
+	 * @param array|null $params
+	 *
+	 * @return string
+	 * @throws Exception
 	 */
 	public function href($controller = null, $action = null, array $params = null) {
 		if ($controller !== null && strpos($controller, '/') !== false) {
@@ -347,10 +304,9 @@ class OldStyle extends AbstractRoute {
 		return $url;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Application\Route\AbstractRoute::exec()
+	 * @return mixed
+	 * @throws Exception
 	 */
 	public function exec() {
 		if (method_exists($this->controllerInstance, 'before')) {
@@ -360,12 +316,12 @@ class OldStyle extends AbstractRoute {
 				return $response;
 			}
 		}
-		
+
 		$method = $this->getActionMethod();
 		if (method_exists($this->controllerInstance, $method) || method_exists($this->controllerInstance, '__call')) {
 			// get the return value of your method (json, xml, view object, download, string or nothing)
 			return $this->controllerInstance->$method();
-		
+
 		} else {
 			// the method we need doesn't exists, so, there is nothing we can do about it any more
 			Log::notice("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath}");

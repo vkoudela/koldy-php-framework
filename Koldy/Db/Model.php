@@ -66,7 +66,7 @@ abstract class Model {
 	 * 
 	 * @var array
 	 */
-	protected $data = null;
+	private $data = null;
 
 
 	/**
@@ -78,7 +78,7 @@ abstract class Model {
 	 * 
 	 * @var array
 	 */
-	protected $originalData = null;
+	private $originalData = null;
 
 
 	/**
@@ -91,7 +91,7 @@ abstract class Model {
 			$setOriginalData = false;
 
 			foreach ($data as $key => $value) {
-				$this->$key = $value;
+				//$this->$key = $value;
 				if (!is_array(static::$primaryKey) && $key === static::$primaryKey) {
 					$setOriginalData = true;
 				}
@@ -100,18 +100,20 @@ abstract class Model {
 			if ($setOriginalData) {
 				$this->originalData = $data;
 			}
+
+			$this->data = $data;
 		}
 	}
 
 
-	public function __get($property) {
+	final public function __get($property) {
 		return (isset($this->data[$property]))
 			? $this->data[$property]
 			: null;
 	}
 
 
-	public function __set($property, $value) {
+	final public function __set($property, $value) {
 		$this->data[$property] = $value;
 	}
 
@@ -122,7 +124,7 @@ abstract class Model {
 	 * @param array $values
 	 * @return \Koldy\Db\Model
 	 */
-	public function set(array $values) {
+	final public function set(array $values) {
 		foreach ($values as $key => $value) {
 			$this->data[$key] = $value;
 		}
@@ -136,7 +138,7 @@ abstract class Model {
 	 * 
 	 * @return array
 	 */
-	public function getData() {
+	final public function getData() {
 		return $this->data;
 	}
 
@@ -147,7 +149,7 @@ abstract class Model {
 	 * @param string $field
 	 * @return bool
 	 */
-	public function has($field) {
+	final public function has($field) {
 		return array_key_exists($field, $this->data);
 	}
 
@@ -159,6 +161,33 @@ abstract class Model {
 	 */
 	public static function getAdapter() {
 		return \Koldy\Db::getAdapter(static::$connection);
+	}
+
+
+	/**
+	 * Begin transaction using this model's DB adapter
+	 * @return bool
+	 */
+	public static function beginTransaction() {
+		return static::getAdapter()->beginTransaction();
+	}
+
+
+	/**
+	 * Commit current transaction using this model's DB adapter
+	 * @return bool
+	 */
+	public static function commit() {
+		return static::getAdapter()->commit();
+	}
+
+
+	/**
+	 * Rollback current transaction on this model's DB adapter
+	 * @return bool
+	 */
+	public static function rollBack() {
+		return static::getAdapter()->rollBack();
 	}
 
 
@@ -178,7 +207,7 @@ abstract class Model {
 	 * 
 	 * @return string
 	 */
-	public static function getTableName() {
+	final public static function getTableName() {
 		if (static::$table === null) {
 			return str_replace('\\', '_', strtolower(get_called_class()));
 		}
@@ -283,7 +312,7 @@ abstract class Model {
 		$toUpdate = array();
 
 		foreach ($data as $field => $value) {
-			if (isset($originalData[$field]) || $originalData[$field] === null) {
+			if (array_key_exists($field, $originalData)) {
 				if ($value !== $originalData[$field]) {
 					$toUpdate[$field] = $value;
 				}
@@ -292,7 +321,7 @@ abstract class Model {
 			}
 		}
 
-		if (sizeof($toUpdate) > 0) {
+		if (count($toUpdate) > 0) {
 			if (!is_array(static::$primaryKey)) {
 				if (isset($originalData[static::$primaryKey])) {
 					// we have pk value, so lets update
@@ -494,10 +523,12 @@ abstract class Model {
 	 * 
 	 * @param mixed $where the WHERE condition
 	 * @param array $fields [optional] array of fields to select; by default, all fields will be fetched
-	 * @return array array of initialized objects of the model this method is called on
+	 * @param boolean $initializeObject true by default - will initialize instance of model on which method was called,
+	 * otherwise returns array
+	 * @return array array of initialized objects of the model this method is called on or simple associative array
 	 * @link http://koldy.net/docs/database/models#fetch
 	 */
-	public static function fetch($where, array $fields = null) {
+	public static function fetch($where, array $fields = null, $initializeObject = true) {
 		$select = static::query();
 
 		if ($fields !== null) {
@@ -515,8 +546,12 @@ abstract class Model {
 		}
 
 		$records = $select->fetchAll();
-		$data = array();
 
+		if (!$initializeObject) {
+			return $records;
+		}
+
+		$data = array();
 		foreach ($records as $r) {
 			$data[] = new static($r);
 		}
@@ -583,17 +618,18 @@ abstract class Model {
 
 	/**
 	 * Fetch numeric array of values from one column in database
-	 * 
+	 *
 	 * @param string $field
 	 * @param mixed $where [optional]
 	 * @param string $orderField [optional]
 	 * @param string $orderDirection [optional]
 	 * @param integer $limit [optional]
+	 * @param integer $start [optional]
 	 * @return array or empty array if not found
 	 * @example User::fetchArrayOf('id', Where::init()->where('id', '>', 50), 'id', 'asc') would return array(51,52,53,54,55,...)
 	 * @link http://koldy.net/docs/database/models#fetchArrayOf
 	 */
-	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null, $limit = null) {
+	public static function fetchArrayOf($field, $where = null, $orderField = null, $orderDirection = null, $limit = null, $start = 0) {
 		$select = static::query()->field($field, 'key_field');
 
 		if ($where !== null) {
@@ -613,7 +649,7 @@ abstract class Model {
 		}
 
 		if ($limit !== null) {
-			$select->limit(0, $limit);
+			$select->limit($start, $limit);
 		}
 
 		$records = $select->fetchAll();
@@ -629,7 +665,7 @@ abstract class Model {
 
 	/**
 	 * Fetch only one record and return value from given column
-	 * 
+	 *
 	 * @param string $field
 	 * @param mixed $where [optional]
 	 * @param string $orderField [optional]
@@ -656,7 +692,7 @@ abstract class Model {
 		}
 
 		$records = $select->fetchAll();
-		
+
 		if (sizeof($records) > 0) {
 			return $records[0]['key_field'];
 		}
