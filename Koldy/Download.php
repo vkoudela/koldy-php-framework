@@ -172,7 +172,7 @@ class Download extends Response {
 
 			// XXX: Check this few more times
 			@fclose($file);
-			ob_flush();
+			@ob_flush();
 			flush();
 		}
 

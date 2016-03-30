@@ -66,7 +66,7 @@ abstract class Model {
 	 * 
 	 * @var array
 	 */
-	protected $data = null;
+	private $data = null;
 
 
 	/**
@@ -78,7 +78,7 @@ abstract class Model {
 	 * 
 	 * @var array
 	 */
-	protected $originalData = null;
+	private $originalData = null;
 
 
 	/**
@@ -106,14 +106,14 @@ abstract class Model {
 	}
 
 
-	public function __get($property) {
+	final public function __get($property) {
 		return (isset($this->data[$property]))
 			? $this->data[$property]
 			: null;
 	}
 
 
-	public function __set($property, $value) {
+	final public function __set($property, $value) {
 		$this->data[$property] = $value;
 	}
 
@@ -124,7 +124,7 @@ abstract class Model {
 	 * @param array $values
 	 * @return \Koldy\Db\Model
 	 */
-	public function set(array $values) {
+	final public function set(array $values) {
 		foreach ($values as $key => $value) {
 			$this->data[$key] = $value;
 		}
@@ -138,7 +138,7 @@ abstract class Model {
 	 * 
 	 * @return array
 	 */
-	public function getData() {
+	final public function getData() {
 		return $this->data;
 	}
 
@@ -149,7 +149,7 @@ abstract class Model {
 	 * @param string $field
 	 * @return bool
 	 */
-	public function has($field) {
+	final public function has($field) {
 		return array_key_exists($field, $this->data);
 	}
 
@@ -207,7 +207,7 @@ abstract class Model {
 	 * 
 	 * @return string
 	 */
-	public static function getTableName() {
+	final public static function getTableName() {
 		if (static::$table === null) {
 			return str_replace('\\', '_', strtolower(get_called_class()));
 		}
