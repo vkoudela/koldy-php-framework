@@ -6,7 +6,6 @@
  */
 class Highlight {
 
-
 	/**
 	 * Highlight the PHP code and get results as string with HTML tags
 	 * 
@@ -16,7 +15,6 @@ class Highlight {
 	public static function php($phpCode) {
 		return highlight_string($phpCode, true);
 	}
-
 
 	/**
 	 * Highlight the javascript code
@@ -31,6 +29,7 @@ class Highlight {
 		$options = false;
 		$cString = '#DD0000';
 		$flushOnClosingBrace = false;
+		$advanced_optimizations = false;
 
 		if (is_array($options)) { // check for alternative usage
 			extract($options, EXTR_OVERWRITE); // extract the variables from the array if so

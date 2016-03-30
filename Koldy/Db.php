@@ -9,39 +9,34 @@ use Koldy\Db\Adapter;
  */
 class Db {
 
-
 	/**
 	 * Config array from public/config/database.php
-	 * 
+	 *
 	 * @var array
 	 */
 	private static $config = null;
 
-
 	/**
 	 * The array of initialized adapters
-	 * 
+	 *
 	 * @var array
 	 */
 	private static $adapter = array();
 
-
 	/**
 	 * The array of adapters that will be tried to use. If connection parameters
 	 * doesn't exists, the next one will be tried
-	 * 
+	 *
 	 * @var array
 	 */
 	private static $defaultKeys = null;
 
-
 	/**
 	 * The default adapter key (automatically detected)
-	 * 
+	 *
 	 * @var string
 	 */
 	private static $defaultKey = null;
-
 
 	/**
 	 * Initialize the config for database(s)
@@ -54,11 +49,11 @@ class Db {
 		}
 	}
 
-
 	/**
 	 * Get adapter. If parameter not set, default is returned
-	 * 
+	 *
 	 * @param string $whatAdapter [optional]
+	 *
 	 * @return \Koldy\Db\Adapter
 	 */
 	public static function getAdapter($whatAdapter = null) {
@@ -91,10 +86,9 @@ class Db {
 		return static::$adapter[$adapter];
 	}
 
-
 	/**
 	 * Add adapter manually to the list of registered adapters
-	 * 
+	 *
 	 * @param string $name
 	 * @param array $config
 	 */
@@ -102,35 +96,33 @@ class Db {
 		static::$config[$name] = $config;
 	}
 
-
 	/**
 	 * Set the array of default adapter keys. This is useful if you're using adapter
 	 * keys that sometimes are not registered. In that case, system will try to lookup
 	 * for next adapter key.
-	 * 
+	 *
 	 * @param array $defaultKeys
 	 */
 	public static function setDefaultKeys(array $defaultKeys) {
 		static::$defaultKeys = $defaultKeys;
 	}
 
-
 	/**
 	 * Get the default key
-	 * 
+	 *
 	 * @return string
 	 */
 	public static function getDefaultKey() {
 		return static::$defaultKey;
 	}
 
-
 	/**
 	 * Execute the query on default adapter
-	 * 
+	 *
 	 * @param string $query
 	 * @param array $bindings
 	 * @param integer $fetchMode pass only PDO::FETCH_* constants
+	 *
 	 * @return mixed
 	 */
 	public static function query($query, array $bindings = null, $fetchMode = null) {
@@ -138,12 +130,12 @@ class Db {
 		return $adapter->query($query, $bindings, $fetchMode);
 	}
 
-
 	/**
 	 * Create new object for INSERT query
-	 * 
+	 *
 	 * @param string $intoTable
 	 * @param array $rowValues is key => value array to insert into database
+	 *
 	 * @return \Koldy\Db\Insert
 	 * @link http://koldy.net/docs/database/query-builder#insert
 	 */
@@ -151,12 +143,12 @@ class Db {
 		return new Db\Insert($intoTable, $rowValues);
 	}
 
-
 	/**
 	 * Create new SELECT query
-	 * 
+	 *
 	 * @param string $fromTable
 	 * @param array $fields
+	 *
 	 * @return \Koldy\Db\Select
 	 * @link http://koldy.net/docs/database/query-builder#select
 	 */
@@ -170,12 +162,12 @@ class Db {
 		return $select;
 	}
 
-
 	/**
 	 * Create new object for UPDATE query
-	 * 
+	 *
 	 * @param string $whatTable
 	 * @param array $values
+	 *
 	 * @return \Koldy\Db\Update
 	 * @link http://koldy.net/docs/database/query-builder#update
 	 */
@@ -183,11 +175,11 @@ class Db {
 		return new Db\Update($whatTable, $values);
 	}
 
-
 	/**
 	 * Create new object for DELETE query
-	 * 
+	 *
 	 * @param string $fromTable
+	 *
 	 * @return \Koldy\Db\Delete
 	 * @link http://koldy.net/docs/database/query-builder#delete
 	 */
@@ -195,47 +187,46 @@ class Db {
 		return new Db\Delete($fromTable);
 	}
 
-
 	/**
 	 * Get the last executed query
-	 * 
+	 *
 	 * @param string $connection
+	 *
 	 * @return string
 	 */
 	public static function getLastQuery($connection = null) {
 		return static::getAdapter($connection)->getLastQuery();
 	}
 
-
 	/**
 	 * Get the last insert ID
-	 * 
+	 *
 	 * @param string $connection
+	 *
 	 * @return int
 	 */
 	public static function lastInsertId($connection = null) {
 		return static::getAdapter($connection)->getLastInsertId();
 	}
 
-
 	/**
 	 * Get the last error
-	 * 
+	 *
 	 * @param string $connection
+	 *
 	 * @return string
 	 */
 	public static function getLastError($connection = null) {
 		return static::getAdapter($connection)->getLastError();
 	}
 
-
 	/**
-	 * Close connection
-	 * 
+	 * Close default connection
+	 *
 	 * @return \Koldy\Db\Adapter
 	 */
 	public function close() {
-		$this->pdo = null;
+		static::getAdapter()->close();
 		return $this;
 	}
 
@@ -243,17 +234,14 @@ class Db {
 	 * Reconnect to server
 	 */
 	public function reconnect() {
-		$this->close()
-			->getAdapter()
-			->prepare('SELECT 1')
-			->execute();
+		$this->close()->getAdapter()->prepare('SELECT 1')->execute();
 	}
-
 
 	/**
 	 * Get raw expression string
-	 * 
+	 *
 	 * @param string $expr
+	 *
 	 * @return \Koldy\Db\Expr
 	 */
 	public static function expr($expr) {

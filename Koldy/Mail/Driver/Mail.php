@@ -10,7 +10,6 @@ use Koldy\Exception;
  */
 class Mail extends AbstractDriver {
 
-
 	/**
 	 * The array of recipients
 	 * 
@@ -18,52 +17,48 @@ class Mail extends AbstractDriver {
 	 */
 	private $to = array();
 
-
 	/**
 	 * @var string
 	 */
 	private $fromEmail = null;
-
 
 	/**
 	 * @var string
 	 */
 	private $fromName = null;
 
-
 	/**
 	 * @var string
 	 */
 	private $subject = null;
-
 
 	/**
 	 * @var string
 	 */
 	private $body = null;
 
-
 	/**
 	 * @var boolean
 	 */
 	private $isHTML = null;
-
 
 	/**
 	 * @var array
 	 */
 	private $headers = array();
 
-
 	/**
 	 * @var string
 	 */
 	private $alternativeText = null;
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::from()
+	 * Set email's "from"
+	 *
+	 * @param string $email
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function from($email, $name = null) {
 		$this->fromEmail = $email;
@@ -71,10 +66,13 @@ class Mail extends AbstractDriver {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::to()
+	 * Set email's "to"
+	 *
+	 * @param string $email
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function to($email, $name = null) {
 		$this->to[] = array(
@@ -84,21 +82,26 @@ class Mail extends AbstractDriver {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::subject()
+	 * Set email's subject
+	 *
+	 * @param string $subject
+	 *
+	 * @return $this
 	 */
 	public function subject($subject) {
 		$this->subject = $subject;
 		return $this;
 	}
 
-
 	/**
 	 * Sets the e-mail's body in HTML format. If you want to send plain text only, please use plain() method.
-	 * 
+	 *
 	 * @param string $body
+	 * @param bool $isHTML
+	 * @param string $alternativeText is email's plain text which will be shown if recipient's email client doesn't support HTML version
+	 *
+	 * @return $this
 	 */
 	public function body($body, $isHTML = false, $alternativeText = null) {
 		$this->body = $body;
@@ -112,30 +115,30 @@ class Mail extends AbstractDriver {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::attachFile()
+	 * @param string $filePath
+	 * @param string $name
+	 *
+	 * @return void
+	 * @throws Exception
 	 */
 	public function attachFile($filePath, $name = null) {
-		throw new Exception('AttachFile is not yet implemented in Mail driver');
-		return $this;
+		throw new Exception('AttachFile is not implemented in Mail driver');
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::header()
+	 * @param string $name
+	 * @param string $value
+	 *
+	 * @return $this
 	 */
 	public function header($name, $value) {
 		$this->headers[$name] = $value;
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::send()
+	 * @return bool
 	 */
 	public function send() {
 		$from = ($this->fromName !== null) ? "{$this->fromName} <{$this->fromEmail}>" : $this->fromEmail;

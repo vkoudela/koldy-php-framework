@@ -15,14 +15,12 @@ use Koldy\Server;
  */
 abstract class AbstractLogWriter {
 
-
 	/**
 	 * The config array got from 'options' part in config/application.php
 	 * 
 	 * @var array
 	 */
 	protected $config = null;
-
 
 	/**
 	 * The array of last X messages (by default, the last 100 messages)
@@ -39,7 +37,6 @@ abstract class AbstractLogWriter {
 	 */
 	private $emailReport = false;
 
-
 	/**
 	 * Constructor
 	 * 
@@ -48,7 +45,7 @@ abstract class AbstractLogWriter {
 	public function __construct(array $config) {
 		$this->config = $config;
 	}
-	
+
 	/**
 	 * Handle message logging
 	 * 
@@ -56,7 +53,6 @@ abstract class AbstractLogWriter {
 	 * @param mixed $message
 	 */
 	abstract protected function logMessage($level, $message);
-
 
 	/**
 	 * Write DEBUG message to log
@@ -68,7 +64,6 @@ abstract class AbstractLogWriter {
 		$this->logMessage('debug', $message);
 	}
 
-
 	/**
 	 * Write NOTICE message to log
 	 *
@@ -78,7 +73,6 @@ abstract class AbstractLogWriter {
 	public function notice($message) {
 		$this->logMessage('notice', $message);
 	}
-
 
 	/**
 	 * Write SQL message to log
@@ -90,7 +84,6 @@ abstract class AbstractLogWriter {
 		$this->logMessage('sql', $query);
 	}
 
-
 	/**
 	 * Write INFO message to log
 	 *
@@ -100,7 +93,6 @@ abstract class AbstractLogWriter {
 	public function info($message) {
 		$this->logMessage('info', $message);
 	}
-
 
 	/**
 	 * Write WARNING message to log
@@ -112,7 +104,6 @@ abstract class AbstractLogWriter {
 		$this->logMessage('warning', $message);
 	}
 
-
 	/**
 	 * Write ERROR message to log
 	 *
@@ -123,7 +114,6 @@ abstract class AbstractLogWriter {
 		$this->logMessage('error', $message);
 	}
 
-
 	/**
 	 * Write EXCEPTION message to log
 	 *
@@ -133,7 +123,6 @@ abstract class AbstractLogWriter {
 	public function exception(\Exception $e) {
 		$this->logMessage('exception', "Exception in {$e->getFile()}:{$e->getLine()}\n\n{$e->getMessage()}\n\n{$e->getTraceAsString()}");
 	}
-
 
 	/**
 	 * Append log message to the request's scope
@@ -148,7 +137,6 @@ abstract class AbstractLogWriter {
 		}
 	}
 
-
 	/**
 	 * Detect if e-mail alert should be sent
 	 * 
@@ -160,7 +148,6 @@ abstract class AbstractLogWriter {
 		}
 	}
 
-
 	/**
 	 * Override this method if you have anything you need to do on
 	 * request shutdown except of just sending e-mail alerts
@@ -169,12 +156,10 @@ abstract class AbstractLogWriter {
 		$this->sendEmailReport();
 	}
 
-
 	/**
 	 * Process extended reports
 	 */
 	protected function processExtendedReports() {}
-
 
 	/**
 	 * Send e-mail report if system detected that e-mail should be sent
@@ -182,59 +167,11 @@ abstract class AbstractLogWriter {
 	 * @return boolean|null true if mail was sent and null if mail shouldn't be sent
 	 */
 	protected function sendEmailReport() {
-		if ($this->emailReport === true && $this->config['email'] !== null) {
+		if ($this->emailReport === true && $this->config['email'] !== null && $this->config['email'] !== 'your@email.com') {
 			$body = implode('', $this->messages);
 
-			/* this doesn't have sense any more :::
-			$body .= "\n\n---------- debug_backtrace:\n";
-
-			foreach (debug_backtrace() as $r) {
-				if (isset($r['file']) && isset($r['line'])) {
-					$body .= "{$r['file']}:{$r['line']} ";
-				}
-
-				if (isset($r['function'])) {
-					$body .= "{$r['function']} ";
-				}
-
-				if (isset($r['args'])) {
-					$body .= implode(', ', $r['args']);
-				}
-
-				$body .= "\n";
-			}
-			*/
-			
 			$body .= "\n----------\n";
-			$body .= sprintf("server: %s (%s)\n", Request::serverIp(), Request::hostName());
-
-			if (PHP_SAPI != 'cli') {
-				$body .= 'URI: ' . $_SERVER['REQUEST_METHOD'] . '=' . Application::getConfig('application', 'site_url') . Application::getUri() . "\n";
-				$body .= sprintf("User IP: %s (%s)%s", Request::ip(), Request::host(), (Request::hasProxy() ? sprintf(" via %s for %s\n", Request::proxySignature(), Request::httpXForwardedFor()) : "\n"));
-				$body .= sprintf("UAS: %s\n", (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'no user agent set'));
-			} else {
-				$body .= 'CLI Name: ' . Application::getCliName() . "\n";
-				$body .= 'CLI Script: ' . Application::getCliScript() . "\n";
-
-				$params = Cli::getParameters();
-				if (count($params) > 0) {
-					$body .= 'CLI Params: ' . print_r($params, true) . "\n";
-				}
-			}
-
-			$body .= sprintf("Server load: %s\n", Server::getServerLoad());
-
-			$peak = memory_get_peak_usage(true);
-			$memoryLimit = ini_get('memory_limit');
-
-			$body .= sprintf("Memory: %s; peak: %s; limit: %s; spent: %s%%\n",
-				Convert::bytesToString(memory_get_usage(true)),
-				Convert::bytesToString($peak),
-				$memoryLimit,
-				($memoryLimit !== false && $memoryLimit > 0 ? round($peak * 100 / Convert::stringToBytes($memoryLimit), 2) : 'null')
-			);
-
-			$body .= sprintf("included files: %s\n", print_r(get_included_files(), true));
+			$body .= Request::signature(true);
 
 			$mail = Mail::create();
 			$mail

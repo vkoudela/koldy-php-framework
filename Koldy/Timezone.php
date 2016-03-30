@@ -1,14 +1,12 @@
 <?php namespace Koldy;
 
 /**
- * Another utility class: the timezones. It is usually PITA, but either way,
- * you'll need to handle it somehow.
+ * Another utility class: the timezones. It is usually PITA, but either way, you'll need to handle it somehow.
  * 
  * @link http://www.urbandictionary.com/define.php?term=pita
  * @TODO needs testing
  */
 class Timezone {
-
 
 	/**
 	 * The timezone list defined as "timezone"=>"(GMT) City"
@@ -131,7 +129,6 @@ class Timezone {
 		'Pacific/Fiji' => '(GMT+12:00) Fiji'
 	);
 
-
 	/**
 	 * The timezone offsets in format timezone => offset
 	 * 
@@ -253,7 +250,6 @@ class Timezone {
 		'Pacific/Fiji' => 12
 	);
 
-
 	/**
 	 * Get the timezone offset
 	 * 
@@ -269,7 +265,6 @@ class Timezone {
 		return static::$timezoneOffsets[$timezone];
 	}
 
-
 	/**
 	 * Get the timezone offset in minutes
 	 * 
@@ -284,7 +279,6 @@ class Timezone {
 		return (static::$timezoneOffsets[$timezone] * 60);
 	}
 
-
 	/**
 	 * Does given timezone exists or not
 	 * 
@@ -294,7 +288,6 @@ class Timezone {
 	public static function exists($timezone) {
 		return array_key_exists($timezone, static::$timezones);
 	}
-
 
 	/**
 	 * Get the date
@@ -313,7 +306,6 @@ class Timezone {
 		$timestamp += $minutesOffset * 60;
 		return date($format, $timestamp);
 	}
-
 
 	/**
 	 * Get the UTC date from given timezone (this is opposite to date() method in this class)

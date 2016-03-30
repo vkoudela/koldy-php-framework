@@ -6,10 +6,9 @@
  */
 class Directory {
 
-
 	/**
 	 * Get the list of all files and folders from the given folder
-	 * 
+	 *
 	 * @param string $path the directory path to read
 	 * @param string $filter [optional] regex for filtering the list
 	 * @return array assoc; the key is full path of the file and value is only file name
@@ -34,10 +33,9 @@ class Directory {
 		}
 	}
 
-
 	/**
 	 * Get the list of all only files from the given folder
-	 * 
+	 *
 	 * @param string $path the directory path to read
 	 * @param string $filter [optional] regex for filtering the list
 	 * @return array assoc; the key is full path of the file and value is only file name
@@ -65,7 +63,6 @@ class Directory {
 			return null;
 		}
 	}
-
 
 	/**
 	 * Get the list of all only files from the given folder and its subfolders
@@ -103,13 +100,13 @@ class Directory {
 		}
 	}
 
-
 	/**
 	 * Create the target directory
-	 * 
+	 *
 	 * @param string $path
-	 * @param string $chmod default 0644
-	 * @return bool was it successfull
+	 * @param int $chmod default 0644
+	 *
+	 * @return bool was it successful
 	 * @example $chmod 0777, 0755, 0700
 	 */
 	public static function mkdir($path, $chmod = 0644) {
@@ -136,10 +133,9 @@ class Directory {
 		return false;
 	}
 
-
 	/**
 	 * Remove directory and content inside recursively
-	 * 
+	 *
 	 * @param string $directory
 	 * @return boolean
 	 */
@@ -151,10 +147,9 @@ class Directory {
 		return true;
 	}
 
-
 	/**
 	 * Empty all directory content, but do not delete the directory
-	 * 
+	 *
 	 * @param string $directory
 	 * @return boolean
 	 */

@@ -7,7 +7,6 @@
  */
 class Server {
 
-
 	/**
 	 * Get server load ... if linux, returns all three averages, if windows, returns
 	 * average load for all CPU cores
@@ -28,14 +27,14 @@ class Server {
 					return implode(',', $load);
 				} else if (function_exists('shell_exec')) {
 					$load = @shell_exec('uptime');
-					$load = split('load average' . (PHP_OS == 'Darwin' ? 's' : '') . ':', $load);
+					$load = explode('load average' . (PHP_OS == 'Darwin' ? 's' : '') . ':', $load);
 					return implode(',', $load);
 					//return $load[count($load)-1];
 				} else {
 					return null;
 				}
 			} else if (class_exists('COM')) {
-				$wmi = new COM("WinMgmts:\\\\.");
+				$wmi = new \COM("WinMgmts:\\\\.");
 				$cpus = $wmi->InstancesOf('Win32_Processor');
 
 				$cpuload = 0;

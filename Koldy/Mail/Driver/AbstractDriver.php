@@ -7,14 +7,12 @@
  */
 abstract class AbstractDriver {
 
-
 	/**
 	 * The config array passed from config/mail.php; the 'options' key
 	 * 
 	 * @var array
 	 */
 	protected $config;
-
 
 	/**
 	 * If error occured, then last message is set here
@@ -23,14 +21,12 @@ abstract class AbstractDriver {
 	 */
 	protected $lastError = null;
 
-
 	/**
-	 * If exception occured, then last exception instance is stored here
+	 * If exception occurred, then last exception instance is stored here
 	 * 
 	 * @var \Exception
 	 */
 	protected $lastException = null;
-
 
 	/**
 	 * Construct the object with configuration array from config/mail.php, from 'options' key
@@ -40,7 +36,6 @@ abstract class AbstractDriver {
 	public function __construct(array $config){
 		$this->config = $config;
 	}
-
 
 	/**
 	 * Set From
@@ -52,7 +47,6 @@ abstract class AbstractDriver {
 	 */
 	abstract public function from($email, $name = null);
 
-
 	/**
 	 * Send mail to this e-mail
 	 * 
@@ -63,7 +57,6 @@ abstract class AbstractDriver {
 	 */
 	abstract public function to($email, $name = null);
 
-
 	/**
 	 * Set the e-mail subject
 	 * 
@@ -72,7 +65,6 @@ abstract class AbstractDriver {
 	 * @link http://koldy.net/docs/mail#example
 	 */
 	abstract public function subject($subject);
-
 
 	/**
 	 * Set e-mail body
@@ -85,7 +77,6 @@ abstract class AbstractDriver {
 	 */
 	abstract public function body($body, $isHTML = false, $alternativeText = null);
 
-
 	/**
 	 * Attach file into this e-mail
 	 * 
@@ -96,7 +87,6 @@ abstract class AbstractDriver {
 	 */
 	abstract public function attachFile($filePath, $name = null);
 
-
 	/**
 	 * Sends an e-mail
 	 * 
@@ -104,7 +94,6 @@ abstract class AbstractDriver {
 	 * @link http://koldy.net/docs/mail#example
 	 */
 	abstract public function send();
-
 
 	/**
 	 * Set the custom mail header
@@ -115,9 +104,8 @@ abstract class AbstractDriver {
 	 */
 	abstract public function header($name, $value);
 
-
 	/**
-	 * Set last error message that occured
+	 * Set last error message that occurred
 	 * 
 	 * @param string $message
 	 * @return \Koldy\Mail\Driver\AbstractDriver
@@ -126,7 +114,6 @@ abstract class AbstractDriver {
 		$this->lastError = $message;
 		return $this;
 	}
-
 
 	/**
 	 * Set last error exception
@@ -139,7 +126,6 @@ abstract class AbstractDriver {
 		return $this;
 	}
 
-
 	/**
 	 * Is error string set or not
 	 * 
@@ -149,7 +135,6 @@ abstract class AbstractDriver {
 	public function hasError() {
 		return $this->lastError !== null;
 	}
-
 
 	/**
 	 * Get the error message as string
@@ -161,7 +146,6 @@ abstract class AbstractDriver {
 		return $this->lastError;
 	}
 
-
 	/**
 	 * Is error exception set or not
 	 * 
@@ -172,17 +156,15 @@ abstract class AbstractDriver {
 		return $this->lastException !== null;
 	}
 
-
 	/**
 	 * Get the error exception if there is any
 	 * 
-	 * @return Exception or null
+	 * @return \Exception or null
 	 * @link http://koldy.net/docs/mail#example
 	 */
 	public function getException() {
 		return $this->lastException;
 	}
-
 
 	/**
 	 * Is mail sending mailed or not

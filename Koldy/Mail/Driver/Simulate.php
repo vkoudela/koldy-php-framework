@@ -10,7 +10,6 @@ use Koldy\Log;
  */
 class Simulate extends AbstractDriver {
 
-
 	/**
 	 * The array of recipients
 	 * 
@@ -18,28 +17,43 @@ class Simulate extends AbstractDriver {
 	 */
 	private $to = array();
 
-
 	/**
 	 * @var string
 	 */
 	private $fromEmail = null;
-
 
 	/**
 	 * @var string
 	 */
 	private $fromName = null;
 
-
 	/**
 	 * @var string
 	 */
 	private $subject = null;
 
+	/**
+	 * @var string
+	 */
+	private $body = null;
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::from()
+	 * @var string
+	 */
+	private $alternativeText = null;
+
+	/**
+	 * @var bool
+	 */
+	private $isHTML = false;
+
+	/**
+	 * Set email's "from"
+	 *
+	 * @param string $email
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function from($email, $name = null) {
 		$this->fromEmail = $email;
@@ -47,10 +61,13 @@ class Simulate extends AbstractDriver {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::to()
+	 * Set email's "to"
+	 *
+	 * @param string $email
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function to($email, $name = null) {
 		$this->to[] = array(
@@ -60,16 +77,17 @@ class Simulate extends AbstractDriver {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::subject()
+	 * Set email's subject
+	 *
+	 * @param string $subject
+	 *
+	 * @return $this
 	 */
 	public function subject($subject) {
 		$this->subject = $subject;
 		return $this;
 	}
-
 
 	/**
 	 * Sets the e-mail's body in HTML format. If you want to send plain text only, please use plain() method.
@@ -77,34 +95,37 @@ class Simulate extends AbstractDriver {
 	 * @param string $body
 	 * @param boolean $isHTML
 	 * @param string $alternativeText
-	 * @return \Koldy\Mail\Driver\Simulate
+	 * @return $this
 	 */
 	public function body($body, $isHTML = false, $alternativeText = null) {
+		$this->body = $body;
+		$this->isHTML = $isHTML;
+		$this->alternativeText = $alternativeText;
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::attachFile()
+	 * @param string $filePath
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function attachFile($filePath, $name = null) {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::header()
+	 * @param string $name
+	 * @param string $value
+	 *
+	 * @return $this
 	 */
 	public function header($name, $value) {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::send()
+	 * @return bool
 	 */
 	public function send() {
 		$from = ($this->fromName !== null) ? "{$this->fromName} <{$this->fromEmail}>" : $this->fromEmail;
@@ -118,7 +139,7 @@ class Simulate extends AbstractDriver {
 
 		$to = substr($to, 0, -2);
 
-		Log::info("E-mail [SIMULATED] is sent from {$from} to {$to} with subject: {$this->subject}");
+		Log::info("E-mail [SIMULATED] is sent from {$from} to {$to} with subject \"{$this->subject}\" and content length: " . strlen($this->body));
 		return true;
 	}
 

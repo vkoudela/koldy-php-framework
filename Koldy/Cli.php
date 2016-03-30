@@ -1,14 +1,11 @@
 <?php namespace Koldy;
 
-use Koldy\Exception;
-
 /**
  * This is helper class when you're running your scripts in CLI env. By using
  * this class, you can easily catch some script parameters passed to the
  * script call.
  */
 class Cli {
-
 
 	/**
 	 * The global $argv variable
@@ -17,14 +14,12 @@ class Cli {
 	 */
 	protected static $argv = null;
 
-
 	/**
 	 * Parsed parameters from script arguments
 	 * 
 	 * @var array
 	 */
 	protected static $parameters = null;
-
 
 	/**
 	 * Get the $argv global variable in CLI env
@@ -46,7 +41,6 @@ class Cli {
 		static::$argv = $argv;
 		return static::$argv;
 	}
-
 
 	/**
 	 * Parse the script arguments into parameters ready for later use
@@ -70,7 +64,6 @@ class Cli {
 		}
 	}
 
-
 	/**
 	 * Is there given parameter name in the script arguments
 	 * 
@@ -84,7 +77,6 @@ class Cli {
 		return isset(static::$parameters[$parameter]);
 	}
 
-
 	/**
 	 * Get the parameter's value
 	 * 
@@ -97,7 +89,6 @@ class Cli {
 		static::parseArgvIntoParameters();
 		return (isset(static::$parameters[$name]) ? static::$parameters[$name] : null);
 	}
-
 
 	/**
 	 * Get the parameter from any position
@@ -113,7 +104,6 @@ class Cli {
 		return isset(static::$argv[$index]) ? static::$argv[$index] : null;
 	}
 
-
 	/**
 	 * Is there any parameter set on given position?
 	 * 
@@ -124,7 +114,6 @@ class Cli {
 		static::parseArgvIntoParameters();
 		return isset(static::$argv[$index]);
 	}
-
 
 	/**
 	 * Get all parsed parameters

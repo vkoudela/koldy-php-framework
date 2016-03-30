@@ -14,7 +14,6 @@ class Plain extends Response {
 	 */
 	private $text = null;
 
-
 	/**
 	 * Create the instance statically
 	 * 
@@ -26,6 +25,7 @@ class Plain extends Response {
 			throw new \InvalidArgumentException('String expected, got ' . gettype($text));
 		}
 
+		/** @var \Koldy\Plain $self */
 		$self = new static();
 
 		return $self
@@ -33,12 +33,11 @@ class Plain extends Response {
 			->header('Content-Type', 'text/plain');
 	}
 
-
 	/**
 	 * Set the text in this object
 	 * 
 	 * @param string $text
-	 * @return \Koldy\Plain
+	 * @return $this
 	 */
 	public function setText($text) {
 		if (!is_string($text)) {
@@ -49,7 +48,6 @@ class Plain extends Response {
 		return $this;
 	}
 
-
 	/**
 	 * Get the text stored in this object
 	 * 
@@ -59,13 +57,12 @@ class Plain extends Response {
 		return $this->text;
 	}
 
-
 	/**
 	 * Append current text with given text
 	 * 
 	 * @param string $text
 	 * @throws \InvalidArgumentException
-	 * @return \Koldy\Plain
+	 * @return $this
 	 */
 	public function append($text) {
 		if (!is_string($text)) {
@@ -76,13 +73,12 @@ class Plain extends Response {
 		return $this;
 	}
 
-
 	/**
 	 * Prepend current text with given text
 	 * 
 	 * @param string $text
 	 * @throws \InvalidArgumentException
-	 * @return \Koldy\Plain
+	 * @return $this
 	 */
 	public function prepend($text) {
 		if (!is_string($text)) {
@@ -92,7 +88,6 @@ class Plain extends Response {
 		$this->text = "{$text}{$this->text}";
 		return $this;
 	}
-
 
 	/**
 	 * @link http://koldy.net/docs/plain#usage
@@ -115,7 +110,7 @@ class Plain extends Response {
 			@fastcgi_finish_request();
 		}
 	
-		if ($this->workAfterResponse !== null) {
+		if ($this->workAfterResponse instanceof \Closure) {
 			call_user_func($this->workAfterResponse);
 		}
 	}
