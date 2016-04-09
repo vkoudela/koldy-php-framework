@@ -1,14 +1,17 @@
 <?php namespace Koldy\Mail\Driver;
 
+use Koldy\Application;
+use Koldy\Directory;
 use Koldy\Exception;
+use Koldy\Log;
 
 /**
- * This mail driver class will use just internal mail() function to send an e-mail.
+ * This mail driver class will create nice file where all email details will be printed
  * 
- * @link http://koldy.net/docs/mail/mail
+ * @link http://koldy.net/docs/mail/file
  * @link http://php.net/manual/en/function.mail.php
  */
-class Mail extends AbstractDriver {
+class File extends AbstractDriver {
 
 	/**
 	 * The array of recipients
@@ -174,6 +177,13 @@ class Mail extends AbstractDriver {
 	 * @throws Exception
 	 */
 	public function send() {
+		$content = array();
+
+		if ($this->hasHeader('From')) {
+			$content[] = 'From: ' . $this->getHeader('From');
+			$this->removeHeader('From');
+		}
+
 		$to = $cc = $bcc = array();
 
 		if (count($this->to) == 0) {
@@ -192,15 +202,22 @@ class Mail extends AbstractDriver {
 			$bcc[] = $this->getAddressValue($address['email'], $address['name']);
 		}
 
-		$to = implode(', ', $to);
+		$content[] = 'To: ' . implode(', ', $to);
 
 		if (count($cc) > 0) {
-			$this->header('Cc', implode(', ', $cc));
+			$content[] = 'Cc: ' . implode(', ', $cc);
 		}
 
 		if (count($bcc) > 0) {
-			$this->header('Bcc', implode(', ', $bcc));
+			$content[] = 'Bcc: ' . implode(', ', $bcc);
 		}
+
+		if ($this->hasHeader('Reply-To')) {
+			$content[] = 'Reply-To: ' . $this->getHeader('Reply-To');
+			$this->removeHeader('Reply-To');
+		}
+
+		$content[] = 'Subject: ' . $this->subject;
 
 		$this->header('X-Mailer', 'PHP/' . phpversion());
 
@@ -212,11 +229,39 @@ class Mail extends AbstractDriver {
 
 		$this->header('Content-type', $contentType);
 
-		if (mail($to, $this->subject, $this->body, implode("\r\n", $this->getHeadersList()))) {
-			return true;
-		} else {
-			return false;
+		$content = implode("\n", $content) . "\n" . str_repeat('=', 80) . "\n";
+
+		$content .= $this->body;
+
+		if ($this->alternativeText != null) {
+			$content .= "\n" . str_repeat('=', 80) . "\n";
+			$content .= $this->alternativeText;
 		}
+
+		$now = \DateTime::createFromFormat('U.u', microtime(true));
+		$time = $now->format('Y-m-d H-i-s.u');
+
+		if (!isset($this->config['location'])) {
+			$file = Application::getStoragePath('email' . DS . "{$time}.txt");
+		} else {
+			$location = $this->config['location'];
+
+			if (substr($location, 0, 8) == 'storage:') {
+				$file = Application::getStoragePath(substr($location, 8) . DS . "{$time}.txt");
+			} else {
+				$file = $location . DS . "{$time}.txt";
+				$file = str_replace(DS.DS, DS, $file);
+			}
+		}
+
+		$directory = dirname($file);
+		if (!is_dir($directory)) {
+			if (!Directory::mkdir($directory, 0755)) {
+				throw new Exception('Sending email failed, can not create directory: ' . $directory);
+			}
+		}
+
+		return file_put_contents($file, $content) !== false;
 	}
 
 }

@@ -3,26 +3,24 @@
 use Koldy\Exception;
 
 /**
- * This is only driver class that uses PHPMailer. You need to set the include
- * path the way that PHP can include it. We recommend that you set that path
- * in config/application.php under additional_include_path. Path defined there
- * must be the path where class.phpmailer.php is located.
- * 
+ * This is only driver class that uses PHPMailer. You need to set the include path the way that PHP can include it. We recommend that you set that path
+ * in config/application.php under additional_include_path. Path defined there must be the path where class.phpmailer.php is located.
+ *
  * @link http://koldy.net/docs/mail/phpmailer
  */
 class PHPMailer extends AbstractDriver {
-
 
 	/**
 	 * @var \PHPMailer
 	 */
 	private $mailer = null;
 
-
 	/**
 	 * Construct the object
-	 * 
+	 *
 	 * @param array $config
+	 *
+	 * @throws Exception
 	 */
 	public function __construct(array $config) {
 		parent::__construct($config);
@@ -42,6 +40,7 @@ class PHPMailer extends AbstractDriver {
 			}
 		}
 
+		/** @var \PHPMailer mailer */
 		$this->mailer = new \PHPMailer(true);
 		$this->mailer->CharSet = isset($config['charset']) ? $config['charset'] : 'UTF-8';
 		$this->mailer->Host = $config['host'];
@@ -58,7 +57,7 @@ class PHPMailer extends AbstractDriver {
 		switch($config['type']) {
 			default:
 			case 'smtp':
-				$this->mailer->IsSMTP();
+				$this->mailer->isSMTP();
 
 				if (isset($config['username']) && $config['username'] !== null && isset($config['password']) && $config['password'] !== null) {
 					$this->mailer->SMTPAuth = true;
@@ -75,52 +74,101 @@ class PHPMailer extends AbstractDriver {
 				break;
 
 			case 'mail':
-				$this->mailer->IsMail();
+				$this->mailer->isMail();
 				break;
 		}
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::from()
+	 * Set email's "from"
+	 *
+	 * @param string $email
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function from($email, $name = null) {
-		$this->mailer->SetFrom($email, $name);
+		$this->mailer->setFrom($email, $name === null ? '' : $name);
 		return $this;
 	}
 
+	/**
+	 * Set email's "Reply To" option
+	 *
+	 * @param string $email
+	 * @param string $name [optional]
+	 *
+	 * @return $this
+	 */
+	public function replyTo($email, $name = null) {
+		return $this->mailer->addReplyTo($email, $name === null ? '' : $name);
+	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::to()
+	 * Set email's "to"
+	 *
+	 * @param string $email
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function to($email, $name = null) {
-		$this->mailer->AddAddress($email, $name === null ? '' : $name);
+		$this->mailer->addAddress($email, $name === null ? '' : $name);
 		return $this;
 	}
 
+	/**
+	 * Send mail carbon copy
+	 *
+	 * @param string $email
+	 * @param string $name [optional]
+	 *
+	 * @return $this
+	 * @link http://koldy.net/docs/mail#example
+	 */
+	public function cc($email, $name = null) {
+		$this->mailer->addCC($email, $name === null ? '' : $name);
+		return $this;
+	}
 
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::subject()
+	 * Send mail blind carbon copy
+	 *
+	 * @param string $email
+	 * @param string $name [optional]
+	 *
+	 * @return $this
+	 * @link http://koldy.net/docs/mail#example
+	 */
+	public function bcc($email, $name = null) {
+		$this->mailer->addBCC($email, $name === null ? '' : $name);
+		return $this;
+	}
+
+	/**
+	 * Set email's subject
+	 *
+	 * @param string $subject
+	 *
+	 * @return $this
 	 */
 	public function subject($subject) {
 		$this->mailer->Subject = $subject;
 		return $this;
 	}
 
-
 	/**
-	 * Sets the e-mail's body in HTML format. If you want to send plain text only, please use plain() method.
-	 * 
 	 * @param string $body
+	 * @param bool $isHTML
+	 * @param string $alternativeText
+	 *
+	 * @return $this
 	 */
 	public function body($body, $isHTML = false, $alternativeText = null) {
 		$this->mailer->Body = $body;
 
 		if ($isHTML) {
-			$this->mailer->IsHTML();
+			$this->mailer->isHTML();
 		}
 
 		if ($alternativeText !== null) {
@@ -130,58 +178,46 @@ class PHPMailer extends AbstractDriver {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::attachFile()
+	 * @param string $filePath
+	 * @param string $name
+	 *
+	 * @return $this
 	 */
 	public function attachFile($filePath, $name = null) {
-		$this->mailer->AddAttachment($filePath, ($name === null ? '' : $name));
+		$this->mailer->addAttachment($filePath, ($name === null ? '' : $name));
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::header()
-	 */
-	public function header($name, $value) {
-		$this->mailer->AddCustomHeader($name, $value);
-		return $this;
-	}
-
-
-	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Mail\Driver\AbstractDriver::send()
+	 * @return bool
+	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function send() {
 		try {
 
-			if (!$this->mailer->Send()) {
+			if (!$this->mailer->send()) {
 				$this->setErrorMessage($this->mailer->ErrorInfo);
-				return false;
+				throw new Exception($this->mailer->ErrorInfo);
 			}
 
 			return true;
 
 		} catch (phpmailerException $e) {
-			$this->setErrorMessage($e->getMessage());
 			$this->setErrorException($e);
+			throw new Exception($e->getMessage());
 
 		} catch (\Exception $e) {
-			$this->setErrorMessage($e->getMessage());
 			$this->setErrorException($e);
+			throw $e;
 
 		}
-
-		return false;
 	}
-
 
 	/**
 	 * Get the PHP mailer instance for fine tuning
-	 * 
+	 *
 	 * @return \PHPMailer
 	 */
 	public function getPHPMailer() {
