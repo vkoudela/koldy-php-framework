@@ -6,7 +6,6 @@
  */
 class Download extends Response {
 
-
 	/**
 	 * This variable will not be null if you want to download some content
 	 * (text, binary or anything else)
@@ -15,14 +14,12 @@ class Download extends Response {
 	 */
 	protected $content = null;
 
-
 	/**
 	 * This variable will contain path to file you want to download
 	 * 
 	 * @var string
 	 */
 	protected $file = null;
-
 
 	/**
 	 * Download as name (file name that user will get)
@@ -31,14 +28,12 @@ class Download extends Response {
 	 */
 	protected $asName = null;
 
-
 	/**
 	 * The content type of download
 	 * 
 	 * @var string
 	 */
 	protected $contentType = null;
-
 
 	/**
 	 * The file size - it will be automatically calculated, but if you
@@ -47,7 +42,6 @@ class Download extends Response {
 	 * @var int in bytes
 	 */
 	protected $fileSize = null;
-
 
 	/**
 	 * Return download of dynamic content
@@ -71,7 +65,6 @@ class Download extends Response {
 		return $self;
 	}
 
-
 	/**
 	 * Return file download
 	 * 
@@ -94,7 +87,6 @@ class Download extends Response {
 		return $self;
 	}
 
-
 	/**
 	 * Set the file size manually
 	 * 
@@ -107,10 +99,8 @@ class Download extends Response {
 		return $this;
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::flush()
+	 * @throws Exception
 	 */
 	public function flush() {
 		$this

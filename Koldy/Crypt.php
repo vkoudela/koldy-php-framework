@@ -40,10 +40,11 @@ class Crypt {
 	 * @param string $key
 	 *
 	 * @return string
+	 * @throws Exception
 	 */
 	public static function encrypt($plaintext, $key) {
 		if (!function_exists('mcrypt_module_open')) {
-			throw new \Exception('mcrypt module not loaded! Check your PHP configuration');
+			throw new Exception('mcrypt module not loaded! Check your PHP configuration');
 		}
 
 		$td = mcrypt_module_open(self::CYPHER, '', self::MODE, '');
@@ -62,12 +63,14 @@ class Crypt {
 
 	/**
 	 * Decrypt the given hashed string. Validate string you get back!
+	 * TODO: Implement integrity check!
 	 *
 	 * @param string $crypttext
 	 * @param string $key
 	 *
 	 * @return string
-	 * TODO: Implement integrity check!
+	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public static function decrypt($crypttext, $key) {
 		if (!function_exists('mcrypt_module_open')) {

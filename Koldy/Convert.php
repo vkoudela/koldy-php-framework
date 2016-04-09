@@ -7,14 +7,12 @@
  */
 class Convert {
 
-
 	/**
 	 * Measures for bytes
 	 * 
 	 * @var array
 	 */
 	private static $measure = array('B', 'KB', 'MB', 'GB', 'TB', 'PT');
-
 
 	/**
 	 * Get file's measure
@@ -32,7 +30,6 @@ class Convert {
 		}
 	}
 
-
 	/**
 	 * Get bytes size as string
 	 * 
@@ -45,13 +42,14 @@ class Convert {
 		return self::getMeasure($bytes, 0, $round);
 	}
 
-
 	/**
 	 * Get the number of bytes from string
-	 * 
+	 *
 	 * @param string $string
+	 *
 	 * @return number
-	 * @example 1M will return 1048576 
+	 * @throws Exception
+	 * @example 1M will return 1048576
 	 */
 	public static function stringToBytes($string) {
 		$original = trim($string);
@@ -82,11 +80,12 @@ class Convert {
 					return $number * 1024 * 1024 * 1024 * 1024 * 1024;
 					break;
 
-				// TODO: Implement next with mbstrings
+				// TODO: Implement next with mb strings
 			}
 		}
-	}
 
+		throw new Exception('Trying to convert invalid $string, value probably too big: ' . $string);
+	}
 
 	/**
 	 * Convert kilogram (kg) to pounds (lb)
@@ -98,7 +97,6 @@ class Convert {
 		return $kilograms * 2.20462262;
 	}
 
-
 	/**
 	 * Convert pounds (lb) to kilograms (kg)
 	 * 
@@ -109,50 +107,45 @@ class Convert {
 		return $pounds / 2.20462262;
 	}
 
-
 	/**
-	 * Convert meter (m) to feets (ft)
+	 * Convert meter (m) to foot (ft)
 	 * 
 	 * @param float $meters
 	 * @return float
 	 */
-	public static function meterToFeet($meters) {
+	public static function meterToFoot($meters) {
 		return $meters * 3.2808399;
 	}
-
 
 	/**
 	 * Convert foot (ft) to meters (m)
 	 * 
-	 * @param float $feets
+	 * @param float $feet
 	 * @return float
 	 */
-	public static function footToMeters($feets) {
-		return $feets / 3.2808399;
+	public static function footToMeters($feet) {
+		return $feet / 3.2808399;
 	}
 
-
 	/**
-	 * Convert centimeters (cm) to inchs (in)
+	 * Convert centimeters (cm) to inches (in)
 	 * 
 	 * @param float $centimeters
 	 * @return float
 	 */
-	public static function centimeterToInchs($centimeters) {
+	public static function centimeterToInches($centimeters) {
 		return $centimeters * 0.393700787;
 	}
 
-
 	/**
-	 * Convert inchs (in) to centimeters (cm)
+	 * Convert inches (in) to centimeters (cm)
 	 * 
-	 * @param float $inchs
+	 * @param float $inches
 	 * @return float
 	 */
-	public static function inchToCentimeters($inchs) {
-		return $inchs / 0.393700787;
+	public static function inchToCentimeters($inches) {
+		return $inches / 0.393700787;
 	}
-
 
 	/**
 	 * Convert given string into proper UTF-8 string

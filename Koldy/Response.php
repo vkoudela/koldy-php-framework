@@ -6,7 +6,6 @@
  */
 abstract class Response {
 
-
 	/**
 	 * The function that should be called when script finishes output
 	 * 
@@ -14,14 +13,12 @@ abstract class Response {
 	 */
 	protected $workAfterResponse = null;
 
-
 	/**
 	 * The array of headers that will be printed before outputting anything
 	 * 
 	 * @var array
 	 */
 	private $headers = array();
-
 
 	/**
 	 * The HTTP response headers - it can be only one code response
@@ -33,19 +30,17 @@ abstract class Response {
 		'override' => null
 	);
 
-
 	/**
 	 * Flush the content to output buffer
 	 */
 	abstract public function flush();
-
 
 	/**
 	 * Set response header
 	 * 
 	 * @param string $name
 	 * @param string $value [optional]
-	 * @return \Koldy\Response
+	 * @return $this
 	 */
 	public function header($name, $value = null) {
 		if (!is_string($name)) {
@@ -65,14 +60,13 @@ abstract class Response {
 		return $this;
 	}
 
-
 	/**
 	 * Set the HTTP response header with status code
 	 * 
 	 * @param int $httpCode
 	 * @param string $httpStatus
 	 * @param boolean $override override the already set HTTP code
-	 * @return \Koldy\Response
+	 * @return $this
 	 */
 	public function httpHeader($httpCode, $httpStatus, $override = true) {
 		if ($httpCode < 100 || $httpCode > 999) {
@@ -92,7 +86,6 @@ abstract class Response {
 		return $this;
 	}
 
-
 	/**
 	 * Get the HTTP response code that will be used when object is flushed.
 	 * 
@@ -101,7 +94,6 @@ abstract class Response {
 	public function getHttpCode() {
 		return $this->httpHeader['code'];
 	}
-
 
 	/**
 	 * Is header already set
@@ -119,12 +111,11 @@ abstract class Response {
 		return false;
 	}
 
-
 	/**
 	 * Remove the header by name
 	 * 
 	 * @param string $name
-	 * @return \Koldy\Response
+	 * @return $this
 	 */
 	public function removeHeader($name) {
 		foreach ($this->headers as $index => $header) {
@@ -137,17 +128,15 @@ abstract class Response {
 		return $this;
 	}
 
-
 	/**
 	 * Remove all headers
 	 * 
-	 * @return \Koldy\Response
+	 * @return $this
 	 */
 	public function removeHeaders() {
 		$this->headers = array();
 		return $this;
 	}
-
 
 	/**
 	 * Flush the headers
@@ -167,7 +156,6 @@ abstract class Response {
 			Log::error('Can\'t flushHeaders because headers are already sent');
 		}
 	}
-
 
 	/**
 	 * Get the array of all headers (one item is one header)
@@ -191,7 +179,6 @@ abstract class Response {
 		return $headers;
 	}
 
-
 	/**
 	 * Set the function for after work
 	 *
@@ -202,7 +189,7 @@ abstract class Response {
 	 */
 	public function after($function) {
 		if (!is_object($function) || !($function instanceof \Closure)) {
-			throw new Exception('You must pass the function to after method in ' . get_class($this) . ' class');
+			throw new Exception('You must pass the Closure instance to after method in ' . get_class($this) . ' class');
 		}
 
 		$this->workAfterResponse = $function;

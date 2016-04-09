@@ -17,7 +17,6 @@
  */
 class Redirect extends Response {
 
-
 	/**
 	 * Permanent redirect (301) to the given URL
 	 * 
@@ -26,6 +25,7 @@ class Redirect extends Response {
 	 * @link http://koldy.net/docs/redirect#methods
 	 */
 	public static function permanent($where) {
+		/** @var \Koldy\Redirect $self */
 		$self = new static();
 		$self
 			->parentHeader('Location', $where)
@@ -37,7 +37,6 @@ class Redirect extends Response {
 		return $self;
 	}
 
-
 	/**
 	 * Temporary redirect (302) to the given URL
 	 * 
@@ -46,6 +45,7 @@ class Redirect extends Response {
 	 * @link http://koldy.net/docs/redirect#methods
 	 */
 	public static function temporary($where) {
+		/** @var \Koldy\Redirect $self */
 		$self = new static();
 		$self
 			->parentHeader('Location', $where)
@@ -56,7 +56,6 @@ class Redirect extends Response {
 
 		return $self;
 	}
-
 
 	/**
 	 * Alias to temporary() method
@@ -70,7 +69,6 @@ class Redirect extends Response {
 		return static::temporary($where);
 	}
 
-
 	/**
 	 * Redirect user to home page
 	 * 
@@ -80,7 +78,6 @@ class Redirect extends Response {
 	public static function home() {
 		return static::href();
 	}
-
 
 	/**
 	 * Redirect user to the URL generated with Url::href
@@ -96,7 +93,6 @@ class Redirect extends Response {
 		return static::temporary(Application::route()->href($controller, $action, $params));
 	}
 
-
 	/**
 	 * Redirect user the the given link under the same domain.
 	 * 
@@ -109,10 +105,12 @@ class Redirect extends Response {
 		return self::temporary(Application::route()->link($path));
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::header($name, $value)
+	 * @param string $name
+	 * @param string $value
+	 *
+	 * @return $this
+	 * @throws Exception
 	 */
 	public function header($name, $value = null) {
 		if ($name == 'Location') {
@@ -127,17 +125,12 @@ class Redirect extends Response {
 	 * 
 	 * @param string $name
 	 * @param string $value
-	 * @return \Koldy\Response
+	 * @return $this
 	 */
 	private function parentHeader($name, $value = null) {
 		return parent::header($name, $value);
 	}
 
-
-	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Response::flush()
-	 */
 	public function flush() {
 		$this->flushHeaders();
 		flush();
@@ -146,7 +139,7 @@ class Redirect extends Response {
 			@fastcgi_finish_request();
 		}
 
-		if ($this->workAfterResponse !== null) {
+		if ($this->workAfterResponse instanceof \Closure) {
 			call_user_func($this->workAfterResponse);
 		}
 	}

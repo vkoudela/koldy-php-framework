@@ -12,7 +12,6 @@ use Koldy\Application\Route\AbstractRoute;
  */
 class Url {
 
-
 	/**
 	 * Get the variable from request. This depends about the route you're using.
 	 *
@@ -25,7 +24,6 @@ class Url {
 		return Application::route()->getVar($whatVar, $default);
 	}
 
-
 	/**
 	 * Get the controller name in the exact format as its being used in URL
 	 *
@@ -34,7 +32,6 @@ class Url {
 	public static function controller() {
 		return Application::route()->getControllerUrl();
 	}
-
 
 	/**
 	 * Is given controller the current working controller?
@@ -46,7 +43,6 @@ class Url {
 		return ($controller == Application::route()->getControllerUrl());
 	}
 
-
 	/**
 	 * Get the current action in the exact format as it is being used in URL
 	 *
@@ -55,7 +51,6 @@ class Url {
 	public static function action() {
 		return Application::route()->getActionUrl();
 	}
-
 
 	/**
 	 * Is given action the current working action?
@@ -67,7 +62,6 @@ class Url {
 		return ($action == Application::route()->getActionUrl());
 	}
 
-
 	/**
 	 * Are given controller and action current working controller and action?
 	 * 
@@ -78,7 +72,6 @@ class Url {
 	public static function is($controller, $action) {
 		return ($controller == Application::route()->getControllerUrl() && $action == Application::route()->getActionUrl());
 	}
-
 
 	/**
 	 * Is this the matching module, controller and action?
@@ -110,7 +103,6 @@ class Url {
 		}
 	}
 
-
 	/**
 	 * Get the complete current URL with domain and protocol and request URI
 	 * 
@@ -123,7 +115,6 @@ class Url {
 
 		return Application::getConfig('application', 'site_url') . $_SERVER['REQUEST_URI'];
 	}
-
 
 	/**
 	 * Generate the link suitable for <a> tags. Generating links depends about the routing class you're using.
@@ -138,10 +129,10 @@ class Url {
 		return Application::route()->href($controller, $action, $params);
 	}
 
-
 	/**
 	 * Generate the link suitable for <a> tags. Generating links depends about the routing class you're using.
 	 *
+	 * @param string $site
 	 * @param string $controller
 	 * @param string $action
 	 * @param array $params
@@ -152,7 +143,6 @@ class Url {
 		return Application::route()->siteHref($site, $controller, $action, $params);
 	}
 
-
 	/**
 	 * Generate the link to home page
 	 * 
@@ -161,7 +151,6 @@ class Url {
 	public static function home() {
 		return static::href();
 	}
-
 
 	/**
 	 * Generate the link to static asset on the same host where application is. This method is using link() method in
@@ -193,7 +182,6 @@ class Url {
 	public static function __callStatic($name, $args) {
 		return static::asset($args[0], $name);
 	}
-
 
 	/**
 	 * This method returns string prepared to be used in URLs as slugs

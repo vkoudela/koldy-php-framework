@@ -2,27 +2,24 @@
 
 /**
  * The cache class.
- * 
+ *
  * @link http://koldy.net/docs/cache
  */
 class Cache {
 
-
 	/**
 	 * The initialized drivers
-	 * 
+	 *
 	 * @var array
 	 */
 	protected static $drivers = null;
 
-
 	/**
 	 * The default driver key (the first key from cache array)
-	 * 
+	 *
 	 * @var string
 	 */
 	protected static $defaultDriver = null;
-
 
 	/**
 	 * Initialize the cache mechanizm
@@ -48,11 +45,11 @@ class Cache {
 		}
 	}
 
-
 	/**
 	 * Get the cache driver
-	 * 
+	 *
 	 * @param string $driver [optional]
+	 *
 	 * @return \Koldy\Cache\Driver\AbstractCacheDriver
 	 * @throws \Koldy\Exception
 	 */
@@ -96,11 +93,11 @@ class Cache {
 		return static::$drivers[$driver];
 	}
 
-
 	/**
 	 * Get the key from default cache driver
-	 * 
+	 *
 	 * @param string $key
+	 *
 	 * @return mixed
 	 * @link http://koldy.net/docs/cache#get
 	 */
@@ -108,13 +105,13 @@ class Cache {
 		return static::getDriver()->get($key);
 	}
 
-
 	/**
 	 * Set the value to default cache no matter does this key already exists or not
-	 * 
+	 *
 	 * @param string $key
 	 * @param mixed $value
 	 * @param int $seconds
+	 *
 	 * @return true if set
 	 * @link http://koldy.net/docs/cache#set
 	 */
@@ -122,13 +119,13 @@ class Cache {
 		return static::getDriver()->set($key, $value, $seconds);
 	}
 
-
 	/**
 	 * Add the key to the cache only if that key doesn't already exists
-	 * 
+	 *
 	 * @param string $key
 	 * @param mixed $value
 	 * @param int $seconds
+	 *
 	 * @return true if set, false otherwise
 	 * @link http://koldy.net/docs/cache#add
 	 */
@@ -136,11 +133,11 @@ class Cache {
 		return static::getDriver()->add($key, $value, $seconds);
 	}
 
-
 	/**
 	 * Is there a key under default cache
-	 * 
+	 *
 	 * @param string $key
+	 *
 	 * @return boolean
 	 * @link http://koldy.net/docs/cache#has
 	 */
@@ -148,11 +145,11 @@ class Cache {
 		return static::getDriver()->has($key);
 	}
 
-
 	/**
 	 * Delete the key from cache
-	 * 
+	 *
 	 * @param string $key
+	 *
 	 * @return boolean
 	 * @link http://koldy.net/docs/cache#delete
 	 */
@@ -160,25 +157,26 @@ class Cache {
 		return static::getDriver()->delete($key);
 	}
 
-
 	/**
 	 * Get or set the key's value
-	 * 
+	 *
 	 * @param string $key
-	 * @param function $functionOnSet
+	 * @param \Closure $functionOnSet
 	 * @param int $seconds
+	 *
 	 * @link http://koldy.net/docs/cache#get-or-set
+	 * @return mixed
 	 */
 	public static function getOrSet($key, \Closure $functionOnSet, $seconds = null) {
 		return static::getDriver()->getOrSet($key, $functionOnSet, $seconds);
 	}
 
-
 	/**
 	 * Increment value in cache
-	 * 
+	 *
 	 * @param string $key
 	 * @param int $howMuch
+	 *
 	 * @return bool was it incremented or not
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
@@ -186,12 +184,12 @@ class Cache {
 		return static::getDriver()->increment($key, $howMuch);
 	}
 
-
 	/**
 	 * Decrement value in cache
-	 * 
+	 *
 	 * @param string $key
-	 * @param number $howMuch
+	 * @param int $howMuch
+	 *
 	 * @return bool was it decremented or not
 	 * @link http://koldy.net/docs/cache#increment-decrement
 	 */
@@ -199,11 +197,11 @@ class Cache {
 		return static::getDriver()->decrement($key, $howMuch);
 	}
 
-
 	/**
 	 * Get the cache driver that isn't default
-	 * 
+	 *
 	 * @param string $driver
+	 *
 	 * @return \Koldy\Cache\Driver\AbstractCacheDriver
 	 * @link http://koldy.net/docs/cache#engines
 	 */
@@ -211,11 +209,11 @@ class Cache {
 		return static::getDriver($driver);
 	}
 
-
 	/**
 	 * Does given driver exists (this will also return true if driver is disabled)
-	 * 
+	 *
 	 * @param string $driver
+	 *
 	 * @return boolean
 	 * @link http://koldy.net/docs/cache#engines
 	 */
@@ -223,12 +221,12 @@ class Cache {
 		return (Application::getConfig('cache', $driver) !== null);
 	}
 
-
 	/**
 	 * Is given cache driver enabled or not? If driver is instance of
 	 * DevNull, it will also return false so be careful about that
-	 * 
+	 *
 	 * @param string $driver
+	 *
 	 * @return boolean
 	 */
 	public static function isEnabled($driver = null) {

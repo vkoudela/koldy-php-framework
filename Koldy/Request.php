@@ -2,7 +2,7 @@
 
 /**
  * This is some kind of "wrapper" for $_SERVER. You can fetch some useful
- * informations with this class. And it is more robust.
+ * information with this class. And it is more robust.
  * 
  * We really recommend that you use this class instead of $_SERVER variables directly.
  *
@@ -11,14 +11,12 @@
  */
 class Request {
 
-
 	/**
 	 * Cache the detected real IP so we don't iterate everything on each call
 	 * 
 	 * @var string
 	 */
 	private static $realIp = null;
-
 
 	/**
 	 * Get the real ip address of remote user
@@ -64,7 +62,6 @@ class Request {
 		return static::$realIp;
 	}
 
-
 	/**
 	 * Is current IP address of incoming request IPv6?
 	 * 
@@ -74,7 +71,6 @@ class Request {
 		$ip = static::ip();
 		return strpos($ip, ':') !== false;
 	}
-
 
 	/**
 	 * Get the ip address of server
@@ -87,7 +83,6 @@ class Request {
 			: '127.0.0.1';
 	}
 
-
 	/**
 	 * Get the host name of request or null
 	 * 
@@ -97,7 +92,6 @@ class Request {
 		$siteUrl = Application::getConfig('application', 'site_url');
 		return substr($siteUrl, strpos($siteUrl, '//') +2);
 	}
-
 
 	/**
 	 * If your running your site on some.something.domain.com, then this will return only "domain.com".
@@ -125,7 +119,6 @@ class Request {
 		}
 	}
 
-
 	/**
 	 * Get the host name of remote user. This will use gethostbyaddr function
 	 * 
@@ -137,7 +130,6 @@ class Request {
 		return ($host == '') ? null : $host;
 	}
 
-
 	/**
 	 * Are there proxy headers detected?
 	 * 
@@ -146,7 +138,6 @@ class Request {
 	public static function hasProxy() {
 		return (isset($_SERVER['HTTP_VIA']) || isset($_SERVER['HTTP_X_FORWARDED_FOR']));
 	}
-
 
 	/**
 	 * Get proxy signature
@@ -162,7 +153,6 @@ class Request {
 		return null;
 	}
 
-
 	/**
 	 * Get the IP address of proxy server if exists
 	 * 
@@ -176,7 +166,6 @@ class Request {
 
 		return null;
 	}
-
 
 	/**
 	 * Get remote IP address with additional IP sent over proxy if exists
@@ -194,7 +183,6 @@ class Request {
 		return $ip;
 	}
 
-
 	/**
 	 * Get HTTP VIA header
 	 * 
@@ -206,7 +194,6 @@ class Request {
 			? $_SERVER['HTTP_VIA']
 			: null;
 	}
-
 
 	/**
 	 * Get HTTP_X_FORWARDED_FOR header
@@ -220,7 +207,6 @@ class Request {
 			: null;
 	}
 
-
 	/**
 	 * Get the user agent
 	 * 
@@ -231,7 +217,6 @@ class Request {
 			? $_SERVER['HTTP_USER_AGENT']
 			: null;
 	}
-
 
 	/**
 	 * Get request URI string
@@ -244,7 +229,6 @@ class Request {
 			: null;
 	}
 
-
 	/**
 	 * Get HTTP referer if set
 	 * 
@@ -256,7 +240,6 @@ class Request {
 			: null;
 	}
 
-
 	/**
 	 * Is POST request?
 	 * 
@@ -265,7 +248,6 @@ class Request {
 	public static function isPost() {
 		return isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'POST';
 	}
-
 
 	/**
 	 * Is GET request?
@@ -276,7 +258,6 @@ class Request {
 		return isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET';
 	}
 
-
 	/**
 	 * Is PUT request?
 	 * 
@@ -286,7 +267,6 @@ class Request {
 		return isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'PUT';
 	}
 
-
 	/**
 	 * Is DELETE request?
 	 * 
@@ -295,7 +275,6 @@ class Request {
 	public static function isDelete() {
 		return isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'DELETE';
 	}
-
 
 	/**
 	 * Is this "request" being executed as script in CLI environment?
@@ -313,6 +292,54 @@ class Request {
 	 */
 	public static function isSSL() {
 		return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on';
+	}
+
+	/**
+	 * Get the request "signature" in this moment with all useful debug data
+	 *
+	 * @param bool $includeIncludedFiles
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	public static function signature($includeIncludedFiles = null) {
+		if ($includeIncludedFiles == null) {
+			$includeIncludedFiles = false;
+		}
+
+		$signature = sprintf("server: %s (%s)\n", static::serverIp(), static::hostName());
+
+		if (PHP_SAPI != 'cli') {
+			$signature .= 'URI: ' . $_SERVER['REQUEST_METHOD'] . '=' . Application::getConfig('application', 'site_url') . Application::getUri() . "\n";
+			$signature .= sprintf("User IP: %s (%s)%s", static::ip(), static::host(), (static::hasProxy() ? sprintf(" via %s for %s\n", static::proxySignature(), static::httpXForwardedFor()) : "\n"));
+			$signature .= sprintf("UAS: %s\n", (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'no user agent set'));
+		} else {
+			$signature .= 'CLI Name: ' . Application::getCliName() . "\n";
+			$signature .= 'CLI Script: ' . Application::getCliScript() . "\n";
+
+			$params = Cli::getParameters();
+			if (count($params) > 0) {
+				$signature .= 'CLI Params: ' . print_r($params, true) . "\n";
+			}
+		}
+
+		$signature .= sprintf("Server load: %s\n", Server::getServerLoad());
+
+		$peak = memory_get_peak_usage(true);
+		$memoryLimit = ini_get('memory_limit');
+
+		$signature .= sprintf("Memory: %s; peak: %s; limit: %s; spent: %s%%\n",
+			Convert::bytesToString(memory_get_usage(true)),
+			Convert::bytesToString($peak),
+			$memoryLimit,
+			($memoryLimit !== false && $memoryLimit > 0 ? round($peak * 100 / Convert::stringToBytes($memoryLimit), 2) : 'null')
+		);
+
+		if ($includeIncludedFiles) {
+			$signature .= sprintf("included files: %s\n", print_r(get_included_files(), true));
+		}
+
+		return $signature;
 	}
 
 }
