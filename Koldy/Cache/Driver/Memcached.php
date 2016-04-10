@@ -2,6 +2,7 @@
 
 use Koldy\Application;
 use Koldy\Exception;
+use Koldy\Log;
 
 /**
  * The Memcached driver defined in Koldy is using Memcached and not Memcache class. Notice the difference with "d" letter.
@@ -152,8 +153,9 @@ class Memcached extends AbstractCacheDriver {
 	 * @param int $olderThen [optional] if not set, then default duration is used
 	 */
 	public function deleteOld($olderThen = null) {
-		// won't be implemented - you might potentially have a lot of keys stored and you really don't want to
+		// Note1: won't be implemented - you might potentially have a lot of keys stored and you really don't want to
 		// accidentally iterate through it
+		// Note2: Memcache automatically invalidates old keys, so you don't have to do it manually
 	}
 
 	/**

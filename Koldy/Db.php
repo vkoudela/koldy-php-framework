@@ -79,6 +79,7 @@ class Db {
 		}
 
 		if (!isset(static::$adapter[$adapter])) {
+			// TODO: Implement "string" pointers
 			$config = static::$config[$adapter];
 			static::$adapter[$adapter] = new Adapter($config, $adapter);
 		}

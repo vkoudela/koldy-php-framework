@@ -1,8 +1,7 @@
 <?php namespace Koldy\Cache\Driver;
 
 /**
- * This cache driver holds cached data only in request's scope. As soon as
- * request ends, everything will disappear
+ * This cache driver holds cached data only in request's scope (memory). As soon as request ends, everything will disappear.
  *
  * @link http://koldy.net/docs/cache/request
  */

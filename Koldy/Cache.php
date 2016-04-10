@@ -22,7 +22,7 @@ class Cache {
 	protected static $defaultDriver = null;
 
 	/**
-	 * Initialize the cache mechanizm
+	 * Initialize the cache mechanism
 	 */
 	protected static function init() {
 		if (static::$drivers === null) {
@@ -70,13 +70,29 @@ class Cache {
 		$config = Application::getConfig('cache');
 		if (!isset(static::$drivers[$driver])) {
 			if (!isset($config[$driver])) {
-				throw new Exception("Cache driver '{$driver}' is not defined in config");
+				throw new Exception("Cache driver '{$driver}' is not defined in cache config");
 			}
 
 			if (!$config[$driver]['enabled']) {
 				static::$drivers[$driver] = new Cache\Driver\DevNull(array());
 			} else {
-				$constructor = (isset($config[$driver]['options'])) ? $config[$driver]['options'] : array();
+				$constructor = array();
+				$configOptions = $config[$driver];
+
+				if (is_string($configOptions)) {
+					$otherConfigKey = $configOptions;
+
+					if (!isset($config[$otherConfigKey])) {
+						throw new Exception("Cache driver '{$driver}'->'{$otherConfigKey}' is not defined in cache config");
+					}
+
+					$constructor = $config[$otherConfigKey];
+				} else {
+					if (isset($configOptions['options'])) {
+						$constructor = $configOptions['options'];
+					}
+				}
+
 				$className = $config[$driver]['driver_class'];
 
 				if (!class_exists($className, true)) {

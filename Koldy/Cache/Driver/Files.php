@@ -6,8 +6,7 @@ use Koldy\Exception;
 use Koldy\Log;
 
 /**
- * This cache driver will store all of your data into files somewhere on the server's filesystem. Every key you store
- * represents one file on filesystem.
+ * This cache driver will store all of your data into files somewhere on the server's filesystem. Every stored key represents one file on filesystem.
  *
  * @link http://koldy.net/docs/cache/files
  */
@@ -77,7 +76,7 @@ class Files extends AbstractCacheDriver {
 	 * Load the data from the file and store it in this request's memory
 	 * 
 	 * @param string $key
-	 * @return stdClass or false if cache doesn't exists
+	 * @return \stdClass or false if cache doesn't exists
 	 */
 	protected function load($key) {
 		$this->checkKey($key);
@@ -129,7 +128,7 @@ class Files extends AbstractCacheDriver {
 	/**
 	 * @param string $key
 	 * @param mixed $value
-	 * @param int $seconds
+	 * @param int $seconds [optional]
 	 *
 	 * @return bool
 	 */
@@ -161,7 +160,7 @@ class Files extends AbstractCacheDriver {
 	/**
 	 * @param string $key
 	 * @param mixed $value
-	 * @param int $seconds
+	 * @param int $seconds [optional]
 	 *
 	 * @return bool
 	 */
