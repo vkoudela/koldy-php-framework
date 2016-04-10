@@ -67,33 +67,17 @@ class Cache {
 			return static::$drivers[$driver];
 		}
 
-		$config = Application::getConfig('cache');
-		if (!isset(static::$drivers[$driver])) {
-			if (!isset($config[$driver])) {
-				throw new Exception("Cache driver '{$driver}' is not defined in cache config");
-			}
+		$config = Application::getAdapterConfig('cache', $driver);
 
-			if (!$config[$driver]['enabled']) {
+		if (!is_array($config)) {
+			Log::warning("Cache driver '{$driver}' doesn't exist");
+			static::$drivers[$driver] = new Cache\Driver\DevNull(array());
+		} else {
+			if (!$config['enabled']) {
 				static::$drivers[$driver] = new Cache\Driver\DevNull(array());
 			} else {
-				$constructor = array();
-				$configOptions = $config[$driver];
-
-				if (is_string($configOptions)) {
-					$otherConfigKey = $configOptions;
-
-					if (!isset($config[$otherConfigKey])) {
-						throw new Exception("Cache driver '{$driver}'->'{$otherConfigKey}' is not defined in cache config");
-					}
-
-					$constructor = $config[$otherConfigKey];
-				} else {
-					if (isset($configOptions['options'])) {
-						$constructor = $configOptions['options'];
-					}
-				}
-
-				$className = $config[$driver]['driver_class'];
+				$constructor = $config['options'];
+				$className = $config['driver_class'];
 
 				if (!class_exists($className, true)) {
 					throw new Exception("Unknown cache class={$className} under key={$driver}");
@@ -101,9 +85,6 @@ class Cache {
 
 				static::$drivers[$driver] = new $className($constructor);
 			}
-
-		} else if (!$config[$driver]['enabled']) {
-			static::$drivers[$driver] = new Cache\Driver\DevNull(array());
 		}
 
 		return static::$drivers[$driver];

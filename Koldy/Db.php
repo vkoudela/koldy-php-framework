@@ -24,14 +24,6 @@ class Db {
 	private static $adapter = array();
 
 	/**
-	 * The array of adapters that will be tried to use. If connection parameters
-	 * doesn't exists, the next one will be tried
-	 *
-	 * @var array
-	 */
-	private static $defaultKeys = null;
-
-	/**
 	 * The default adapter key (automatically detected)
 	 *
 	 * @var string
@@ -43,8 +35,9 @@ class Db {
 	 */
 	public static function init() {
 		if (static::$config === null) {
-			static::$config = Application::getConfig('database');
-			$keys = array_keys(static::$config);
+			static::$config = true;
+			$config = Application::getConfig('database');
+			$keys = array_keys($config);
 			static::$defaultKey = $keys[0];
 		}
 	}
@@ -54,33 +47,21 @@ class Db {
 	 *
 	 * @param string $whatAdapter [optional]
 	 *
-	 * @return \Koldy\Db\Adapter
+	 * @return Adapter
+	 * @throws Exception
 	 */
 	public static function getAdapter($whatAdapter = null) {
 		static::init();
 
-		if ($whatAdapter === null) {
-			if (static::$defaultKeys === null) {
-				$adapter = static::$defaultKey;
-			} else {
-				$adapter = null;
-				foreach (static::$defaultKeys as $adapterName) {
-					if ($adapter === null && isset(static::$config[$adapterName])) {
-						$adapter = $adapterName;
-					}
-				}
-
-				if ($adapter === null) {
-					$adapter = static::$defaultKey;
-				}
-			}
-		} else {
-			$adapter = $whatAdapter;
-		}
+		$adapter = ($whatAdapter === null) ? static::$defaultKey : $whatAdapter;
 
 		if (!isset(static::$adapter[$adapter])) {
-			// TODO: Implement "string" pointers
-			$config = static::$config[$adapter];
+			$config = Application::getAdapterConfig('database', $adapter);
+
+			if ($config === false) {
+				throw new Exception("Unable to use database adapter {$adapter}; probably not defined in configs/database.php");
+			}
+
 			static::$adapter[$adapter] = new Adapter($config, $adapter);
 		}
 

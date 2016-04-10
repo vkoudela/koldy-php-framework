@@ -382,6 +382,47 @@ class Application {
 	}
 
 	/**
+	 * Helper method for loading adapter configs (for cache, db and mail or your own)
+	 * 
+	 * @param string $file
+	 * @param string $adapter
+	 *
+	 * @return array|boolean
+	 * @throws Exception
+	 */
+	public static function getAdapterConfig($file, $adapter) {
+		$config = static::getConfig($file);
+
+		if ($config == null) {
+			// config not found
+			return false;
+		}
+
+		if (!isset($config[$adapter])) {
+			//throw new Exception("Can not find adapter config for file: {$file}");
+			return false;
+		}
+
+		$adapterConfig = $config[$adapter];
+
+		if (is_string($adapterConfig)) {
+			$otherConfigKey = $config[$adapter];
+
+			if (!isset($config[$otherConfigKey])) {
+				throw new Exception("Unable to find adapter config '{$adapter}'->'{$otherConfigKey}' in config file: {$file}");
+			}
+
+			$adapter = $otherConfigKey;
+		}
+
+		if (!is_array($config[$adapter])) {
+			throw new Exception("Config '{$adapter}' in {$file} needs to be array");
+		}
+
+		return $config[$adapter];
+	}
+
+	/**
 	 * Clear all configs that are already loaded. Actually, this will only
 	 * clear the cache and config file will be reloaded on next call.
 	 */

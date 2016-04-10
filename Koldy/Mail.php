@@ -76,22 +76,20 @@ class Mail {
 			$driver = self::$defaultDriver;
 		}
 
-		$config = Application::getConfig('mail');
+		$config = Application::getAdapterConfig('mail', $driver);
 
-		if (!isset($config[$driver])) {
+		if ($config === false) {
 			Log::error("Mail driver '{$driver}' is not defined in config");
 			Application::error(500, "Mail driver '{$driver}' is not defined in config");
 			return null;
 		}
 
-		// TODO: Implement "string" pointers
-
-		$constructor = isset($config[$driver]['options']) ? $config[$driver]['options'] : array();
-		$className = $config[$driver]['driver_class'];
+		$className = $config['driver_class'];
 		if (!class_exists($className, true)) {
 			throw new Exception("Can not use mail driver class={$className} under key={$driver}");
 		}
 
+		$constructor = isset($config['options']) ? $config['options'] : array();
 		return new $className($constructor);
 	}
 
@@ -108,14 +106,15 @@ class Mail {
 			$driver = self::$defaultDriver;
 		}
 
-		$config = Application::getConfig('mail');
+		$config = Application::getAdapterConfig('mail', $driver);
 
-		if (!isset($config[$driver])) {
+		if ($config === false) {
 			Log::error("Mail driver '{$driver}' is not defined in config");
 			Application::error(500, "Mail driver '{$driver}' is not defined in config");
+			return null;
 		}
 
-		return $config[$driver]['enabled'];
+		return $config['enabled'];
 	}
 
 }
