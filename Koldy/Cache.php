@@ -76,7 +76,23 @@ class Cache {
 			if (!$config['enabled']) {
 				static::$drivers[$driver] = new Cache\Driver\DevNull(array());
 			} else {
-				$constructor = $config['options'];
+				$constructor = array();
+				$configOptions = $config;
+
+				if (is_string($configOptions)) {
+					$otherConfigKey = $configOptions;
+
+					if (!isset($config[$otherConfigKey])) {
+						throw new Exception("Cache driver '{$driver}'->'{$otherConfigKey}' is not defined in cache config");
+					}
+
+					$constructor = $config[$otherConfigKey];
+				} else {
+					if (isset($configOptions['options'])) {
+						$constructor = $configOptions['options'];
+					}
+				}
+
 				$className = $config['driver_class'];
 
 				if (!class_exists($className, true)) {
@@ -91,7 +107,7 @@ class Cache {
 	}
 
 	/**
-	 * Get the key from default cache driver
+	 * Get the key from default cache engine
 	 *
 	 * @param string $key
 	 *
@@ -103,13 +119,25 @@ class Cache {
 	}
 
 	/**
-	 * Set the value to default cache no matter does this key already exists or not
+	 * Get multiple keys from default cache engine
+	 *
+	 * @param array $keys
+	 *
+	 * @return mixed[]
+	 * @link http://koldy.net/docs/cache#get-multi
+	 */
+	public static function getMulti(array $keys) {
+		return static::getDriver()->getMulti($keys);
+	}
+
+	/**
+	 * Set the value to default cache engine and overwrite if keys already exists
 	 *
 	 * @param string $key
 	 * @param mixed $value
-	 * @param int $seconds
+	 * @param int $seconds [optional]
 	 *
-	 * @return true if set
+	 * @return boolean true if set
 	 * @link http://koldy.net/docs/cache#set
 	 */
 	public static function set($key, $value, $seconds = null) {
@@ -117,7 +145,20 @@ class Cache {
 	}
 
 	/**
-	 * Add the key to the cache only if that key doesn't already exists
+	 * Set multiple values to default cache engine and overwrite if keys already exists
+	 *
+	 * @param array $keyValuePairs
+	 * @param int $seconds [optional]
+	 *
+	 * @return boolean true if set
+	 * @link http://koldy.net/docs/cache#set-multi
+	 */
+	public static function setMulti(array $keyValuePairs, $seconds = null) {
+		return static::getDriver()->setMulti($keyValuePairs, $seconds);
+	}
+
+	/**
+	 * Add the key to the cache engine only if that key doesn't already exists
 	 *
 	 * @param string $key
 	 * @param mixed $value
@@ -152,6 +193,18 @@ class Cache {
 	 */
 	public static function delete($key) {
 		return static::getDriver()->delete($key);
+	}
+
+	/**
+	 * Delete multiple keys from cache
+	 *
+	 * @param array $keys
+	 *
+	 * @return boolean
+	 * @link http://koldy.net/docs/cache#delete-multi
+	 */
+	public static function deleteMulti(array $keys) {
+		return static::getDriver()->deleteMulti($keys);
 	}
 
 	/**

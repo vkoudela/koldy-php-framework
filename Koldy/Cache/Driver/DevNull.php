@@ -20,6 +20,22 @@ class DevNull extends AbstractCacheDriver {
 	}
 
 	/**
+	 * Get the array of values from cache by given keys
+	 *
+	 * @param array $keys
+	 *
+	 * @return mixed[]
+	 * @link http://koldy.net/docs/cache#get-multi
+	 */
+	public function getMulti(array $keys) {
+		foreach (array_values($keys) as $key) {
+			$this->checkKey($key);
+		}
+
+		return array();
+	}
+
+	/**
 	 * @param string $key
 	 * @param mixed $value
 	 * @param int $seconds
@@ -28,6 +44,23 @@ class DevNull extends AbstractCacheDriver {
 	 */
 	public function set($key, $value, $seconds = null) {
 		$this->checkKey($key);
+		return true;
+	}
+
+	/**
+	 * Set multiple values to default cache engine and overwrite if keys already exists
+	 *
+	 * @param array $keyValuePairs
+	 * @param string $seconds [optional] if not set, default is used
+	 *
+	 * @return boolean True if set
+	 * @link http://koldy.net/docs/cache#set-multi
+	 */
+	public function setMulti(array $keyValuePairs, $seconds = null) {
+		foreach (array_keys($keyValuePairs) as $key) {
+			$this->checkKey($key);
+		}
+
 		return true;
 	}
 
@@ -61,6 +94,22 @@ class DevNull extends AbstractCacheDriver {
 	public function delete($key) {
 		$this->checkKey($key);
 		return null;
+	}
+
+	/**
+	 * Delete multiple items from cache engine
+	 *
+	 * @param array $keys
+	 *
+	 * @return boolean True if all item removal requests were returned success, false otherwise
+	 * @link http://koldy.net/docs/cache#delete-multi
+	 */
+	public function deleteMulti(array $keys) {
+		foreach (array_values($keys) as $key) {
+			$this->checkKey($key);
+		}
+
+		return true;
 	}
 
 	/**

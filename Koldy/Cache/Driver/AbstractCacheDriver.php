@@ -71,15 +71,34 @@ abstract class AbstractCacheDriver {
 	abstract public function get($key);
 
 	/**
+	 * Get the array of values from cache by given keys
+	 *
+	 * @param array $keys
+	 * @return mixed value or null if key doesn't exists or cache is disabled
+	 * @link http://koldy.net/docs/cache#get-multi
+	 */
+	abstract public function getMulti(array $keys);
+
+	/**
 	 * Set the value to cache identified by key
 	 *
 	 * @param string $key
 	 * @param mixed $value
 	 * @param string $seconds [optional] if not set, default is used
-	 * @return boolean True if set, null if cache is disabled
+	 * @return boolean True if set
 	 * @link http://koldy.net/docs/cache#set
 	 */
 	abstract public function set($key, $value, $seconds = null);
+
+	/**
+	 * Set multiple values to default cache engine and overwrite if keys already exists
+	 *
+	 * @param array $keyValuePairs
+	 * @param string $seconds [optional] if not set, default is used
+	 * @return boolean True if set
+	 * @link http://koldy.net/docs/cache#set-multi
+	 */
+	abstract public function setMulti(array $keyValuePairs, $seconds = null);
 
 	/**
 	 * Set the value under key and remember it forever! Okay, "forever" has its
@@ -87,7 +106,7 @@ abstract class AbstractCacheDriver {
 	 *
 	 * @param string $key
 	 * @param mixed $value
-	 * @return boolean True if set, null if cache is disabled
+	 * @return boolean True if set
 	 */
 	public function setForever($key, $value) {
 		$this->checkKey($key);
@@ -100,7 +119,7 @@ abstract class AbstractCacheDriver {
 	 *
 	 * @param string $key
 	 * @param mixed $value
-	 * @param string $seconds
+	 * @param string $seconds [optional]
 	 * @return boolean True if set, false if it exists and null if cache is not enabled
 	 * @link http://koldy.net/docs/cache#add
 	 */
@@ -124,13 +143,22 @@ abstract class AbstractCacheDriver {
 	abstract public function has($key);
 
 	/**
-	 * Delete the item from cache
+	 * Deletes the item from cache engine
 	 *
 	 * @param string $key
-	 * @return boolean True if file is deleted, False if not, null if there is nothing to delete
+	 * @return boolean True if item was deleted from cache, False otherwise
 	 * @link http://koldy.net/docs/cache#delete
 	 */
 	abstract public function delete($key);
+
+	/**
+	 * Delete multiple items from cache engine
+	 *
+	 * @param array $keys
+	 * @return boolean True if all item removal requests were returned success, false otherwise
+	 * @link http://koldy.net/docs/cache#delete-multi
+	 */
+	abstract public function deleteMulti(array $keys);
 
 	/**
 	 * Delete all cached items

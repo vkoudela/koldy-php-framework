@@ -126,6 +126,24 @@ class Files extends AbstractCacheDriver {
 	}
 
 	/**
+	 * Get the array of values from cache by given keys
+	 *
+	 * @param array $keys
+	 *
+	 * @return mixed[]
+	 * @link http://koldy.net/docs/cache#get-multi
+	 */
+	public function getMulti(array $keys) {
+		$result = array();
+
+		foreach (array_values($keys) as $key) {
+			$result[$key] = $this->get($key);
+		}
+
+		return $result;
+	}
+
+	/**
 	 * @param string $key
 	 * @param mixed $value
 	 * @param int $seconds [optional]
@@ -155,6 +173,27 @@ class Files extends AbstractCacheDriver {
 
 		$this->initShutdown();
 		return true;
+	}
+
+	/**
+	 * Set multiple values to default cache engine and overwrite if keys already exists
+	 *
+	 * @param array $keyValuePairs
+	 * @param string $seconds [optional] if not set, default is used
+	 *
+	 * @return boolean True if all keys were successfully stored
+	 * @link http://koldy.net/docs/cache#set-multi
+	 */
+	public function setMulti(array $keyValuePairs, $seconds = null) {
+		$allOk = true;
+		
+		foreach ($keyValuePairs as $key => $value) {
+			if (!$this->set($key, $value, $seconds)) {
+				$allOk = false;
+			}
+		}
+		
+		return $allOk;
 	}
 
 	/**
@@ -201,9 +240,11 @@ class Files extends AbstractCacheDriver {
 	}
 
 	/**
-	 * @param string $key
+	 * Deletes the item from cache engine
 	 *
-	 * @return bool|null
+	 * @param string $key
+	 * @return boolean True if item was deleted from cache, False otherwise
+	 * @link http://koldy.net/docs/cache#delete
 	 */
 	public function delete($key) {
 		$this->checkKey($key);
@@ -220,6 +261,25 @@ class Files extends AbstractCacheDriver {
 		} else {
 			return @unlink($this->getPath($key));
 		}
+	}
+
+	/**
+	 * Delete multiple items from cache engine
+	 *
+	 * @param array $keys
+	 * @return boolean True if all item removal requests were returned success, false otherwise
+	 * @link http://koldy.net/docs/cache#delete-multi
+	 */
+	public function deleteMulti(array $keys) {
+		$allOk = true;
+
+		foreach (array_values($keys) as $key) {
+			if (!$this->delete($key)) {
+				$allOk = false;
+			}
+		}
+
+		return $allOk;
 	}
 
 	/**

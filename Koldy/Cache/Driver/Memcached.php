@@ -2,7 +2,6 @@
 
 use Koldy\Application;
 use Koldy\Exception;
-use Koldy\Log;
 
 /**
  * The Memcached driver defined in Koldy is using Memcached and not Memcache class. Notice the difference with "d" letter.
@@ -100,6 +99,33 @@ class Memcached extends AbstractCacheDriver {
 	}
 
 	/**
+	 * Get the array of values from cache by given keys
+	 *
+	 * @param array $keys
+	 *
+	 * @return mixed value or null if key doesn't exists or cache is disabled
+	 * @link http://koldy.net/docs/cache#get-multi
+	 */
+	public function getMulti(array $keys) {
+		$keys = array_values($keys);
+		$result = array();
+
+		$serverKeys = array();
+		foreach ($keys as $key) {
+			$serverKeys[] = $this->getKeyName($key);
+		}
+
+		$serverValues = $this->getInstance()->getMulti($serverKeys);
+
+		foreach ($keys as $key) {
+			$serverKey = $this->getKeyName($key);
+			$result[$key] = isset($serverValues[$serverKey]) ? $serverValues[$serverKey] : null;
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Set the value to cache identified by key
 	 *
 	 * @param string $key
@@ -112,6 +138,25 @@ class Memcached extends AbstractCacheDriver {
 	public function set($key, $value, $seconds = null) {
 		$key = $this->getKeyName($key);
 		return $this->getInstance()->set($key, $value, ($seconds === null ? $this->defaultDuration : $seconds));
+	}
+
+	/**
+	 * Set multiple values to default cache engine and overwrite if keys already exists
+	 *
+	 * @param array $keyValuePairs
+	 * @param string $seconds [optional] if not set, default is used
+	 *
+	 * @return boolean True if set
+	 * @link http://koldy.net/docs/cache#set-multi
+	 */
+	public function setMulti(array $keyValuePairs, $seconds = null) {
+		$serverKeyValuePairs = array();
+
+		foreach ($keyValuePairs as $key => $value) {
+			$serverKeyValuePairs[$this->getKeyName($key)] = $value;
+		}
+
+		return $this->getInstance()->setMulti($serverKeyValuePairs, ($seconds === null ? $this->defaultDuration : $seconds)) === true;
 	}
 
 	/**
@@ -138,6 +183,23 @@ class Memcached extends AbstractCacheDriver {
 	public function delete($key) {
 		$key = $this->getKeyName($key);
 		return $this->getInstance()->delete($key);
+	}
+
+	/**
+	 * Delete multiple items from cache engine
+	 *
+	 * @param array $keys
+	 *
+	 * @return boolean True if all item removal requests were returned success, false otherwise
+	 * @link http://koldy.net/docs/cache#delete-multi
+	 */
+	public function deleteMulti(array $keys) {
+		$serverKeys = array();
+		foreach ($keys as $key) {
+			$serverKeys[] = $this->getKeyName($key);
+		}
+
+		return $this->getInstance()->deleteMulti($serverKeys) === true;
 	}
 
 	/**
