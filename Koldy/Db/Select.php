@@ -62,13 +62,13 @@ class Select extends Where {
 	/**
 	 * Join two tables
 	 * @param string $table
-	 * @param string $firstTableField
+	 * @param string|array $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
 	 * @example innerJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
-	public function innerJoin($table, $firstTableField, $operator, $secondTableField) {
+	public function innerJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
 		$this->joins[] = array(
 			'type' => 'INNER JOIN',
 			'table' => $table,
@@ -82,7 +82,7 @@ class Select extends Where {
 	/**
 	 * Join two tables
 	 * @param string $table
-	 * @param string $firstTableField
+	 * @param string|array $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
@@ -106,13 +106,13 @@ class Select extends Where {
 	/**
 	 * Join two tables
 	 * @param string $table
-	 * @param string $firstTableField
+	 * @param string|array $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
 	 * @return \Koldy\Db\Select
 	 * @example rightJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
-	public function rightJoin($table, $firstTableField, $operator, $secondTableField) {
+	public function rightJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
 		$this->joins[] = array(
 			'type' => 'RIGHT JOIN',
 			'table' => $table,

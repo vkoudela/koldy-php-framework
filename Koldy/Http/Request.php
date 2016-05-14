@@ -96,7 +96,7 @@ class Request {
 	
 	/**
 	 * Set the request type
-	 * @param const $type
+	 * @param int $type constant
 	 * @return \Koldy\Http\Request
 	 * @example $request->type(\Koldy\Http\Request::POST);
 	 */

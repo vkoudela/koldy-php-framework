@@ -160,7 +160,7 @@ abstract class AbstractRoute {
 		// returned without any kind of building or parsing
 
 		$pos = strpos($path, '://');
-		if ($pos !== false && $pos < 10) {
+		if (($pos !== false && $pos < 10) || substr($path, 0, 2) == '//') {
 			return $path;
 		}
 
@@ -172,6 +172,13 @@ abstract class AbstractRoute {
 
 		if ($server === null) {
 			$url = $config['site_url'];
+
+			if (count($config['assets']) > 0) {
+				// take the first one
+				$values = array_values($config['assets']);
+				$firstValue = array_shift($values);
+				$url .= $firstValue;
+			}
 
 			if (isset($this->config['url_namespace'])) {
 				$path = $this->config['url_namespace'] . $path;

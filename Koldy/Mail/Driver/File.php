@@ -3,7 +3,6 @@
 use Koldy\Application;
 use Koldy\Directory;
 use Koldy\Exception;
-use Koldy\Log;
 
 /**
  * This mail driver class will create nice file where all email details will be printed

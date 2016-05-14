@@ -6,7 +6,6 @@
  */
 class Mime {
 
-
 	/**
 	 * Get all known mime types
 	 * 
@@ -1013,7 +1012,6 @@ class Mime {
 			'zmm' => 'application/vnd.handheld-entertainment+xml'
 		);
 	}
-
 
 	/**
 	 * Get the MIME type by extension
