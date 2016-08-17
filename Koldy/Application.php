@@ -20,6 +20,14 @@ class Application {
 	protected static $configs = array();
 
 	/**
+	 * All loaded module configs are in one place so feel free to call
+	 * Application::getModuleConfig() as many times as you want
+	 *
+	 * @var array
+	 */
+	protected static $moduleConfigs = array();
+
+	/**
 	 * The registered class aliases. This is for FW internal use only!
 	 *
 	 * @var array
@@ -340,7 +348,7 @@ class Application {
 	 * @param string $segment [optional] the key from config's array
 	 *
 	 * @return array
-	 * @example if you give 'cache' as parameter, you'll get the array from public/config/cache.php file
+	 * @example if you pass 'cache' as parameter, you'll get the array from public/config/cache.php file
 	 * @throws \Koldy\Exception
 	 */
 	public static function getConfig($file = null, $segment = null) {
@@ -378,6 +386,58 @@ class Application {
 			}
 		} else {
 			return static::$configs[$file];
+		}
+	}
+
+	/**
+	 * Append new settings in currently loaded config
+	 *
+	 * @param string $file
+	 * @param string $segment
+	 * @param mixed $value
+	 */
+	public static function appendConfig($file, $segment, $value) {
+		$config = static::getConfig($file);
+		$config[$segment] = $value;
+		static::$configs[$file] = $config;
+	}
+
+	/**
+	 * Get the configs from any config file within the module. Firt parameter is file name without extension.
+	 * Second param is segment - it is the key name in configuration array. If you define it, then
+	 * you'll get only the value under that key, but if you don't define it,
+	 * then the whole config from that file will be returned.
+	 *
+	 * @param string $module
+	 * @param string $file
+	 * @param string $segment [optional] the key from config's array
+	 *
+	 * @return array
+	 * @example if you pass 'koldy-mail-queue' and 'database' as second parameter, you'll get the array from /application/modules/koldy-mail-queue/configs/database.php
+	 * @throws \Koldy\Exception
+	 */
+	public static function getModuleConfig($module, $file, $segment = null) {
+		if (!isset(static::$moduleConfigs[$module])) {
+			static::$moduleConfigs[$module] = array();
+		}
+
+		if (!isset(static::$moduleConfigs[$module][$file])) {
+			$path = static::getModulePath($module) . 'configs' . DS . $file . '.php';
+			if (!file_exists($path)) {
+				throw new Exception('Config file \'' . $file . '\' not found in module \'' . $module . '\':' . $path);
+			} else {
+				static::$moduleConfigs[$module][$file] = require $path;
+			}
+		}
+
+		if ($segment !== null) {
+			if (array_key_exists($segment, static::$moduleConfigs[$module][$file])) {
+				return static::$moduleConfigs[$module][$file][$segment];
+			} else {
+				return null;
+			}
+		} else {
+			return static::$moduleConfigs[$module][$file];
 		}
 	}
 
@@ -522,6 +582,11 @@ class Application {
 			));
 
 			static::$registeredModules[$name] = true;
+
+			$initPath = $modulePath . 'init.php';
+			if (is_file($initPath)) {
+				include $initPath;
+			}
 		}
 	}
 

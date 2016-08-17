@@ -93,6 +93,24 @@ class Cache {
 					}
 				}
 
+				if (isset($config['module'])) {
+					$module = $config['module'];
+
+					if (is_array($module)) {
+						foreach ($module as $moduleName) {
+							if (is_string($moduleName) && strlen($moduleName) >= 1) {
+								Application::registerModule($moduleName);
+							} else {
+								throw new Exception('Invalid module name in cache driver=' . $driver . ' modules; expected array of strings, got one item with the type of ' . gettype($moduleName));
+							}
+						}
+					} else if (is_string($module) && strlen($module) >= 1) {
+						Application::registerModule($module);
+					} else {
+						throw new Exception('Invalid module name in cache driver=' . $driver . '; expected string or array, got ' . gettype($module));
+					}
+				}
+
 				$className = $config['driver_class'];
 
 				if (!class_exists($className, true)) {

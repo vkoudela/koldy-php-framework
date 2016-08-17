@@ -330,7 +330,7 @@ class Where extends Query {
 						} else {
 							$key = $this->getBindFieldName($field, static::getKeyIndex());
 							$query .= ":{$key}";
-							$this->bindings[$key] = $value[0];
+							$this->bindings[':' . $key] = $value[0];
 						}
 
 						$query .= ' AND ';
@@ -340,7 +340,7 @@ class Where extends Query {
 						} else {
 							$key = $this->getBindFieldName($field, static::getKeyIndex());
 							$query .= ":{$key}";
-							$this->bindings[$key] = $value[1];
+							$this->bindings[':' . $key] = $value[1];
 						}
 
 						$query .= ")\n";
@@ -353,7 +353,7 @@ class Where extends Query {
 						foreach ($value as $val) {
 							$key = $this->getBindFieldName($field, static::getKeyIndex());
 							$query .= ":{$key},";
-							$this->bindings[$key] = $val;
+							$this->bindings[':' . $key] = $val;
 						}
 
 						$query = substr($query, 0, -1);
@@ -366,7 +366,7 @@ class Where extends Query {
 			} else {
 				$key = $this->getBindFieldName($field, static::getKeyIndex());
 				$query .= " ({$field} {$where['operator']} :{$key})\n";
-				$this->bindings[$key] = $where['value'];
+				$this->bindings[':' . $key] = $where['value'];
 
 			}
 			

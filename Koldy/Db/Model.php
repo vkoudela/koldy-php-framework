@@ -200,6 +200,14 @@ abstract class Model {
 		return static::$connection;
 	}
 
+	/**
+	 * Manually set the connection
+	 * @param string $connection
+	 */
+	public static function setConnection($connection) {
+		static::$connection = $connection;
+	}
+
 
 	/**
 	 * Get the table name for database for this model. If your model class is
