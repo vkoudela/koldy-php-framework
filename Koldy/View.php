@@ -179,9 +179,28 @@ class View extends Response {
 	 *
 	 * @return string
 	 * @throws Exception
+	 *
+	 * @deprecated in favour of renderViewIf
 	 */
 	public function renderIf($view, array $with = null) {
 		if ($this->has($view)) {
+			return $this->render($view, $with);
+		} else {
+			return '';
+		}
+	}
+
+	/**
+	 * Render view if exists on filesystem - if it doesn't exists, it won't throw any error
+	 *
+	 * @param string $view
+	 * @param array $with
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	public function renderViewIf($view, array $with = null) {
+		if ($this->exists($view)) {
 			return $this->render($view, $with);
 		} else {
 			return '';
