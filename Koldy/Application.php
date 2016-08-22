@@ -205,7 +205,7 @@ class Application {
 		}
 
 		if (!isset($config['public_path'])) {
-			$config['public_path'] = dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR;
+			$config['public_path'] = (PHP_SAPI != 'cli' ? dirname($_SERVER['SCRIPT_FILENAME']) : getcwd()) . DIRECTORY_SEPARATOR;
 		}
 
 		if (!isset($config['storage_path'])) {

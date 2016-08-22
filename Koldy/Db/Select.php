@@ -506,7 +506,7 @@ class Select extends Where {
 
 	/**
 	 * Fetch only first record as object
-	 * @return stdClass|bool false if database didn't return anything
+	 * @return \stdClass|bool false if database didn't return anything
 	 */
 	public function fetchFirstObj() {
 		return $this->fetchFirst(\PDO::FETCH_OBJ);
