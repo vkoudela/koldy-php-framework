@@ -29,6 +29,20 @@ class Validator {
 	protected $valids = array();
 
 	/**
+	 * The pretaken input variables
+	 *
+	 * @var array
+	 */
+	private $input = null;
+
+	/**
+	 * The array of fields that should throw HTTP bad request
+	 *
+	 * @var array
+	 */
+	private $badRequest = array();
+
+	/**
 	 * The array of error messages by error code
 	 *
 	 * @var array
@@ -67,31 +81,13 @@ class Validator {
 	);
 
 	/**
-	 * The pretaken input variables
-	 *
-	 * @var array
-	 */
-	private $input = null;
-
-	/**
-	 * The array of fields that should throw HTTP bad request
-	 *
-	 * @var array
-	 */
-	private $badRequest = array();
-
-	/**
 	 * Construct the object
 	 *
 	 * @param array $params array of parameter definitions
 	 * @param array $data
 	 */
 	public function __construct(array $params, array $data = null) {
-		if ($data === null) {
-			$this->input = ($_SERVER['REQUEST_METHOD'] == 'POST') ? $_POST : $_GET;
-		} else {
-			$this->input = $data;
-		}
+		$this->input = ($data === null) ? Input::all() : $data;
 
 		// TODO: Prepare parameters before inspection, detect if they need to be taken from request or from $_FILES
 
@@ -140,11 +136,6 @@ class Validator {
 				}
 			}
 		}
-
-		if (count($this->badRequest) > 0) {
-			Log::warning('Missing parameters: ' . implode(', ', $this->badRequest));
-			Application::error(400, 'Bad request. Missing parameters');
-		}
 	}
 
 	/**
@@ -157,6 +148,37 @@ class Validator {
 	 */
 	public static function create(array $params, array $data = null) {
 		return new static($params, $data);
+	}
+
+	/**
+	 * Create Validator class and require exactly the parameters provided in $params, throw exception otherwise.
+	 * So, if you require parameters 'first_name' and 'last_name' only, and someone sends 'first_name', 'last_name' and 'email', it'll throw an Exception.
+	 * This is highly recommended way of checking input parameters.
+	 *
+	 * @param array $params
+	 * @param array|null $data
+	 *
+	 * @return Validator
+	 * @throws Exception
+	 */
+	public static function only(array $params, array $data = null) {
+		$data = ($data === null) ? Input::all() : $data;
+
+		foreach (array_keys($data) as $receivedParameter) {
+			if (!array_key_exists($receivedParameter, $params)) {
+				throw new Exception("Detected unwanted parameter {$receivedParameter} in your request; expected only: " . implode(', ', array_keys($params)));
+			}
+		}
+
+		$static = new static($params, $data);
+		$missingParams = $static->getMissingParameters();
+		$missingParamsCount = count($missingParams);
+
+		if ($missingParamsCount > 0) {
+			throw new Exception("Invalid parameters count; there are {$missingParamsCount} missing parameter(s): " . implode(', ', $missingParams));
+		}
+
+		return $static;
 	}
 
 	/**
@@ -254,6 +276,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'number' => 'min:10'
 	 */
 	protected function validateMin($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -274,6 +297,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'field' => 'minLength:10'
 	 */
 	protected function validateMinLength($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -294,6 +318,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'number' => 'max:10000' // will fail if given number is greater then 10000
 	 */
 	protected function validateMax($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -314,6 +339,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'field' => 'maxLength:255'
 	 */
 	protected function validateMaxLength($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -334,6 +360,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'field' => 'length:5' // will fail if string doesn't have exactly 5 characters
 	 */
 	protected function validateLength($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -354,6 +381,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'number' => 'integer'
 	 */
 	protected function validateInteger($param, $settings = null) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -373,7 +401,7 @@ class Validator {
 	 *
 	 * @throws Exception
 	 * @return true|string
-	 * @example decimal:2 - allows numbers with two decimal points
+	 * @example 'number' => 'decimal:2' // - allows numbers with two decimal points
 	 */
 	protected function validateDecimal($param, $settings = null) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -413,7 +441,7 @@ class Validator {
 	}
 
 	/**
-	 * Throw error if input is not the array of fields. This will only check the array not, not the values in array.
+	 * Throw error if input is not the array of fields. This will only check if parameter is array, not the values in array.
 	 *
 	 * @param string $param
 	 * @param string $settings
@@ -436,9 +464,19 @@ class Validator {
 	 * @param string $IPv4
 	 *
 	 * @return boolean
+	 * @deprecated Use isIPv4() instead
 	 */
 	public static function isIp($IPv4) {
 		return (bool)preg_match('/^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|[0-9])$/', $IPv4);
+	}
+
+	/**
+	 * @param string $IPv4
+	 *
+	 * @return boolean
+	 */
+	public static function isIPv4($IPv4) {
+		return static::isIp($IPv4);
 	}
 
 	/**
@@ -506,18 +544,7 @@ class Validator {
 	}
 
 	/**
-	 * Is given string valid hexadecimal number
-	 *
-	 * @param string $string
-	 *
-	 * @return bool
-	 */
-	public static function isHex($string) {
-		return ctype_xdigit($string);
-	}
-
-	/**
-	 * Validate the email address
+	 * Validate the URL "slug"
 	 *
 	 * @param string $param
 	 * @param string $settings
@@ -534,12 +561,24 @@ class Validator {
 	}
 
 	/**
+	 * Is given string valid hexadecimal number
+	 *
+	 * @param string $string
+	 *
+	 * @return bool
+	 */
+	public static function isHex($string) {
+		return ctype_xdigit($string);
+	}
+
+	/**
 	 * Validate the hexadecimal number
 	 *
 	 * @param string $param
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'number' => 'hex'
 	 */
 	protected function validateHex($param, $settings = null) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -558,8 +597,8 @@ class Validator {
 	 *
 	 * @throws Exception
 	 * @return true|string
-	 * @example \Db\User,email,my@email.com
-	 * @example \Db\User,email,field:id,id
+	 * @example 'email' => 'email|unique:\Db\User,email,my@email.com'
+	 * @example 'id' => 'required|integer|min:1', 'email' => 'email|unique:\Db\User,email,field:id,id' // check if email exists in \Db\User model, but exclude ID with value from param 'id'
 	 */
 	protected function validateUnique($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -573,6 +612,7 @@ class Validator {
 				throw new Exception('Bad parameters count in Validator::validateUnique method; expected at least 2, got ' . $settingsCount);
 			}
 
+			/** @var \Koldy\Db\Model $class */
 			$class = $settings[0];
 			$field = $settings[1];
 			$exceptionValue = isset($settings[2]) ? $settings[2] : null;
@@ -601,6 +641,7 @@ class Validator {
 	 *
 	 * @throws Exception
 	 * @return true|string
+	 * @example 'user_id' => 'required|integer|exists:\Db\User,id' // e.g. user_id = 5, so this will check if there is record in \Db\User model under id=5
 	 */
 	protected function validateExists($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -610,6 +651,7 @@ class Validator {
 				throw new Exception('Bad parameters in Validator::validateExists method');
 			}
 
+			/** @var \Koldy\Db\Model $class */
 			$class = $settings[0];
 			$value = $this->input[$param];
 			$field = isset($settings[1]) ? $settings[1] : null;
@@ -635,6 +677,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'field1' => 'required', 'field2' => 'same:field1'
 	 */
 	protected function validateSame($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -663,7 +706,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
-	 * @example 'fieldName' => 'not_same:otherField'
+	 * @example 'fieldName' => 'not_same:otherFieldName'
 	 */
 	protected function validateNotSame($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -693,6 +736,7 @@ class Validator {
 	 *
 	 * @throws Exception
 	 * @return true|string
+	 * @example 'password' => 'required|minLength:8', 'password' => 'identical:password'
 	 */
 	protected function validateIdentical($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param])) {
@@ -726,7 +770,7 @@ class Validator {
 	 *
 	 * @return true|string
 	 *
-	 * @example 'extensions:gif,jpg,jpeg,txt,csv'
+	 * @example 'file' => 'extensions:gif,jpg,jpeg,txt,csv'
 	 */
 	protected function validateExtensions($param, $settings) {
 		if (isset($this->input[$param])) {
@@ -761,8 +805,8 @@ class Validator {
 	 *
 	 * @return true|string
 	 *
-	 * @example 'fileSize:1024,2048'
-	 * @example 'fileSize:,2048' or 'fileSize:0,2048'
+	 * @example 'file' => 'fileSize:1024,2048'
+	 * @example 'file' => 'fileSize:,2048' or 'fileSize:0,2048'
 	 */
 	protected function validateFileSize($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -813,7 +857,7 @@ class Validator {
 	 *
 	 * @return true|string
 	 *
-	 * @example 'image'
+	 * @example 'image' => 'image'
 	 */
 	protected function validateImage($param, $settings) {
 		$input = $_FILES;
@@ -845,9 +889,9 @@ class Validator {
 	 *
 	 * @return true|string
 	 *
-	 * @example pattern is: 'imageSize:minWidth,minHeight,maxWidth,maxHeight'
+	 * @example 'image' => 'imageSize:minWidth,minHeight,maxWidth,maxHeight'
 	 * @example to set just maxWidth: 'imageSize:0,0,800' or 'imageSize:,,800'
-	 * @example 'imageSize:200,100,2500,2200'
+	 * @example 'image' => 'imageSize:200,100,2500,2200'
 	 */
 	protected function validateImageSize($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -905,7 +949,7 @@ class Validator {
 	 *
 	 * @return true|string
 	 *
-	 * @example pattern is: 'imageSquare'
+	 * @example 'image' => 'imageSquare'
 	 */
 	protected function validateImageSquare($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -940,6 +984,7 @@ class Validator {
 	 * @param string $settings
 	 *
 	 * @return true|string
+	 * @example 'field' => 'is:yes' // will fail if parameter field doesn't have value "yes"
 	 */
 	protected function validateIs($param, $settings) {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
@@ -1023,6 +1068,15 @@ class Validator {
 	 */
 	public function getMessage($field) {
 		return isset($this->invalids[$field]) ? $this->invalids[$field] : null;
+	}
+
+	/**
+	 * Get the array of missing parameters
+	 *
+	 * @return array
+	 */
+	public function getMissingParameters() {
+		return $this->badRequest;
 	}
 
 }
