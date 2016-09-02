@@ -14,7 +14,6 @@ use Koldy\Log;
  */
 abstract class Model {
 
-
 	/**
 	 * The connection string on which the queries will be executed. The
 	 * connection string must be previously defined as connection in
@@ -24,7 +23,6 @@ abstract class Model {
 	 */
 	protected static $connection = null;
 
-
 	/**
 	 * If you don't define the table name, the framework will assume the table
 	 * name by the called class name.
@@ -32,7 +30,6 @@ abstract class Model {
 	 * @var string
 	 */
 	protected static $table = null;
-
 
 	/**
 	 * While working with tables in database, framework will always assume that
@@ -43,7 +40,6 @@ abstract class Model {
 	 * @var string
 	 */
 	protected static $primaryKey = 'id';
-
 
 	/**
 	 * Assume that this table has auto increment field and that field is primary field.
@@ -60,14 +56,12 @@ abstract class Model {
 	 */
 	protected static $neverUpdate = array();
 
-
 	/**
 	 * The data holder in this object
 	 * 
 	 * @var array
 	 */
 	private $data = null;
-
 
 	/**
 	 * This is the array that holds informations loaded from database. When
@@ -79,7 +73,6 @@ abstract class Model {
 	 * @var array
 	 */
 	private $originalData = null;
-
 
 	/**
 	 * Construct the instance with or without starting data
@@ -105,18 +98,15 @@ abstract class Model {
 		}
 	}
 
-
 	final public function __get($property) {
 		return (isset($this->data[$property]))
 			? $this->data[$property]
 			: null;
 	}
 
-
 	final public function __set($property, $value) {
 		$this->data[$property] = $value;
 	}
-
 
 	/**
 	 * Set the array of values
@@ -132,7 +122,6 @@ abstract class Model {
 		return $this;
 	}
 
-
 	/**
 	 * Gets all data that this object currently has
 	 * 
@@ -141,7 +130,6 @@ abstract class Model {
 	final public function getData() {
 		return $this->data;
 	}
-
 
 	/**
 	 * Does this object has a field?
@@ -153,7 +141,6 @@ abstract class Model {
 		return array_key_exists($field, $this->data);
 	}
 
-
 	/**
 	 * Get the adapter for this model
 	 * 
@@ -163,7 +150,6 @@ abstract class Model {
 		return \Koldy\Db::getAdapter(static::$connection);
 	}
 
-
 	/**
 	 * Begin transaction using this model's DB adapter
 	 * @return bool
@@ -171,7 +157,6 @@ abstract class Model {
 	public static function beginTransaction() {
 		return static::getAdapter()->beginTransaction();
 	}
-
 
 	/**
 	 * Commit current transaction using this model's DB adapter
@@ -181,7 +166,6 @@ abstract class Model {
 		return static::getAdapter()->commit();
 	}
 
-
 	/**
 	 * Rollback current transaction on this model's DB adapter
 	 * @return bool
@@ -189,7 +173,6 @@ abstract class Model {
 	public static function rollBack() {
 		return static::getAdapter()->rollBack();
 	}
-
 
 	/**
 	 * Get the connection string defined in this model
@@ -208,7 +191,6 @@ abstract class Model {
 		static::$connection = $connection;
 	}
 
-
 	/**
 	 * Get the table name for database for this model. If your model class is
 	 * User\Login\History, then the database table name will be user_login_history
@@ -222,7 +204,6 @@ abstract class Model {
 
 		return static::$table;
 	}
-
 
 	/**
 	 * Insert the record in database with given array of data
@@ -240,12 +221,16 @@ abstract class Model {
 		$ok = $insert->exec(static::$connection);
 
 		if (static::$autoIncrement) {
-			$data[static::$primaryKey] = static::getLastInsertId();
+			// ID should be fetched if $data contains ID, so, let's check
+			if (is_string(static::$primaryKey) && isset($data[static::$primaryKey])) {
+				// there there, we already have it, let's do nothing
+			} else {
+				$data[static::$primaryKey] = static::getLastInsertId();
+			}
 		}
 
 		return new static($data);
 	}
-
 
 	/**
 	 * If you statically created new record in database to the table with auto
@@ -259,15 +244,20 @@ abstract class Model {
 	 *   		echo User::getLastInsertId();
 	 *   	}
 	 */
-	public static function getLastInsertId() {
+	public static function getLastInsertId($keyName = null) {
 		if (static::$autoIncrement) {
-			return static::getAdapter(static::$connection)->getLastInsertId();
+			if (is_string(static::$autoIncrement)) {
+				$keyName = static::$autoIncrement;
+			} else if (is_string(static::$primaryKey)) {
+				$keyName = static::getTableName() . '_' . static::$primaryKey . '_seq';
+			}
+
+			return static::getAdapter(static::$connection)->getLastInsertId($keyName);
 		} else {
 			Log::warning('Can not get last insert ID when model ' . get_called_class() . ' doesn\'t have auto_increment field');
 			return null;
 		}
 	}
-
 
 	/**
 	 * Update the table with given array of data. Be aware that if you don't
@@ -306,7 +296,6 @@ abstract class Model {
 
 		return $update->exec(static::$connection);
 	}
-
 
 	/**
 	 * Save this initialized object into database.
@@ -379,7 +368,6 @@ abstract class Model {
 		return true;
 	}
 
-
 	/**
 	 * Increment one numeric field in table on the row identified by primary key.
 	 * You can use this only if your primary key is just one field.
@@ -408,7 +396,6 @@ abstract class Model {
 
 		return $update->exec(static::$connection);
 	}
-
 
 	/**
 	 * Delete one or more records from the table defined in this model. If you
@@ -441,7 +428,6 @@ abstract class Model {
 		return $delete->exec(static::$connection);
 	}
 
-
 	/**
 	 * The same as static::delete(), only this will work if object is populated with data
 	 *
@@ -469,7 +455,6 @@ abstract class Model {
 			return static::delete($this->data[$pk]);
 		}
 	}
-
 
 	/**
 	 * Fetch one record from database. You can pass one or two parameters.
@@ -525,7 +510,6 @@ abstract class Model {
 		}
 	}
 
-
 	/**
 	 * Fetch the array of records from database
 	 * 
@@ -567,7 +551,6 @@ abstract class Model {
 		return $data;
 	}
 
-
 	/**
 	 * Fetch all records from database
 	 * 
@@ -579,7 +562,6 @@ abstract class Model {
 		$select = static::query();
 		return $select->fetchAll($fetchMode);
 	}
-
 
 	/**
 	 * Fetch key value pairs from database table
@@ -622,7 +604,6 @@ abstract class Model {
 
 		return $data;
 	}
-
 
 	/**
 	 * Fetch numeric array of values from one column in database
@@ -670,7 +651,6 @@ abstract class Model {
 		return $data;
 	}
 
-
 	/**
 	 * Fetch only one record and return value from given column
 	 *
@@ -707,7 +687,6 @@ abstract class Model {
 
 		return false;
 	}
-
 
 	/**
 	 * Check if some value exists in database or not. This is useful if you
@@ -754,7 +733,6 @@ abstract class Model {
 		return null;
 	}
 
-
 	/**
 	 * Count the records in table according to the parameters
 	 * 
@@ -800,7 +778,6 @@ abstract class Model {
 		}
 	}
 
-
 	/**
 	 * Get the ResultSet object of this model
 	 * 
@@ -812,7 +789,6 @@ abstract class Model {
 		return $rs;
 	}
 
-
 	/**
 	 * Get the initialized Select object with populated FROM part
 	 * 
@@ -823,7 +799,6 @@ abstract class Model {
 		$select->setConnection(static::$connection);
 		return $select;
 	}
-
 
 	public function __toString() {
 		return Json::encode($this->getData());

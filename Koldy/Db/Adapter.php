@@ -8,6 +8,9 @@ use Koldy\Log;
 
 class Adapter {
 
+	const TYPE_MYSQL = 'mysql';
+	const TYPE_POSTGRES = 'postgres';
+	const TYPE_SQLITE = 'sqlite';
 
 	/**
 	 * The config array used for this connection
@@ -16,7 +19,6 @@ class Adapter {
 	 */
 	private $config = null;
 
-
 	/**
 	 * Which config key is used?
 	 * 
@@ -24,12 +26,10 @@ class Adapter {
 	 */
 	private $configKey = null;
 
-
 	/**
 	 * @var PDO
 	 */
 	public $pdo = null;
-
 
 	/**
 	 * The last executed query
@@ -38,14 +38,12 @@ class Adapter {
 	 */
 	private $lastQuery = null;
 
-
 	/**
 	 * Array of last values that were binded to the last query
 	 * 
 	 * @var array
 	 */
 	private $lastBindings = null;
-
 
 	/**
 	 * The last error
@@ -54,14 +52,12 @@ class Adapter {
 	 */
 	private $lastError = null;
 
-
 	/**
 	 * The last execption
 	 * 
 	 * @var \PDOException
 	 */
 	private $lastException = null;
-
 
 	/**
 	 * Construct the adapter with config
@@ -74,7 +70,6 @@ class Adapter {
 		$this->configKey = $configKey;
 	}
 
-
 	/**
 	 * Try to connect to database with given config block
 	 * 
@@ -84,7 +79,7 @@ class Adapter {
 	 */
 	private function tryConnect(array $config) {
 		switch($config['type']) {
-			case 'mysql':
+			case self::TYPE_MYSQL:
 				
 				$pdoConfig = array (
 					PDO::ATTR_EMULATE_PREPARES => false,
@@ -126,7 +121,7 @@ class Adapter {
 				
 				break;
 
-			case 'postgres':
+			case self::TYPE_POSTGRES:
 				$pdoConfig = array (
 					//PDO::ATTR_EMULATE_PREPARES => false,
 					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -165,7 +160,7 @@ class Adapter {
 				}
 				break;
 
-			case 'sqlite':
+			case self::TYPE_SQLITE:
 				if (!isset($config['path'])) {
 					throw new Exception('SQLite configuration must have defined path to the storage file');
 				}
@@ -199,7 +194,6 @@ class Adapter {
 					break;
 		}
 	}
-
 
 	/**
 	 * The PDO will be initialized only if needed, not on adapter initialization
@@ -254,7 +248,6 @@ class Adapter {
 		return $this->pdo;
 	}
 
-
 	/**
 	 * Execute the query
 	 * 
@@ -300,6 +293,10 @@ class Adapter {
 
 			$logSql = true;
 		} catch (PDOException $e) {
+			if (LOG) {
+				Log::sql($this->__toString());
+			}
+
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
 
@@ -329,7 +326,6 @@ class Adapter {
 		return $return;
 	}
 
-
 	/**
 	 * Get the last executed query with filled parameters in case you used
 	 * bindings array. This is useful for debugging. Otherwise, don't use this.
@@ -348,7 +344,7 @@ class Adapter {
 				if (!(is_numeric($value) && $value[0] != '0')) {
 					$value = sprintf('\'%s\'', addslashes($value));
 				}
-				$query = str_replace($key, $value, $query);
+				$query = str_replace(':' . $key, $value, $query);
 			}
 		} else {
 			foreach ($this->lastBindings as $value) {
@@ -362,17 +358,15 @@ class Adapter {
 		return $query;
 	}
 
-
 	/**
 	 * If your last query was INSERT on table where you have auto incrementing
 	 * field, then you can use this method to fetch the incremented ID
 	 * 
 	 * @return integer
 	 */
-	public function getLastInsertId() {
-		return $this->getAdapter()->lastInsertId();
+	public function getLastInsertId($keyName = null) {
+		return $this->getAdapter()->lastInsertId($keyName);
 	}
-
 
 	/**
 	 * Get the last error
@@ -383,7 +377,6 @@ class Adapter {
 		return $this->lastError;
 	}
 
-
 	/**
 	 * Get last exception
 	 * 
@@ -392,7 +385,6 @@ class Adapter {
 	public function getLastException() {
 		return $this->lastException;
 	}
-
 
 	/**
 	 * Close connection
@@ -404,7 +396,6 @@ class Adapter {
 		return $this;
 	}
 
-
 	/**
 	 * Reconnect to server
 	 */
@@ -414,7 +405,6 @@ class Adapter {
 			->prepare('SELECT 1')
 			->execute();
 	}
-
 
 	/**
 	 * Begin transaction
@@ -426,7 +416,6 @@ class Adapter {
 		return (($pdo instanceof \PDO) && $pdo->beginTransaction());
 	}
 
-
 	/**
 	 * Commit transaction
 	 * 
@@ -437,7 +426,6 @@ class Adapter {
 		return (($pdo instanceof \PDO) && $pdo->commit());
 	}
 
-
 	/**
 	 * Rollback transaction
 	 * 
@@ -447,7 +435,6 @@ class Adapter {
 		$pdo = $this->getAdapter();
 		return (($pdo instanceof \PDO) && $pdo->rollBack());
 	}
-
 
 	/**
 	 * If you try to print the adapter object as string, you'll get the last
