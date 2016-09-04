@@ -165,7 +165,7 @@ class PHPMailer extends AbstractDriver {
 	 * @return $this
 	 */
 	public function body($body, $isHTML = false, $alternativeText = null) {
-		$this->mailer->Body = $body;
+		$this->mailer->Body = is_object($body) && method_exists($body, '__toString') ? $body->__toString() : $body;
 
 		if ($isHTML) {
 			$this->mailer->isHTML();

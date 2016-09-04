@@ -149,7 +149,7 @@ class File extends AbstractDriver {
 	 * @return $this
 	 */
 	public function body($body, $isHTML = false, $alternativeText = null) {
-		$this->body = $body;
+		$this->body = is_object($body) && method_exists($body, '__toString') ? $body->__toString() : $body;
 		$this->isHTML = $isHTML;
 		$this->alternativeText = $alternativeText;
 

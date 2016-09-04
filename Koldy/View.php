@@ -312,10 +312,17 @@ class View extends Response {
 	/**
 	 * @param string $name
 	 *
-	 * @return null
+	 * @return null|mixed
 	 */
 	public function __get($name) {
 		return isset($this->data[$name]) ? $this->data[$name] : null;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function __toString() {
+		return $this->getOutput();
 	}
 
 }
