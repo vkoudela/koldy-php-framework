@@ -33,14 +33,14 @@ class Validator {
 	 *
 	 * @var array
 	 */
-	private $input = null;
+	protected $input = null;
 
 	/**
 	 * The array of fields that should throw HTTP bad request
 	 *
 	 * @var array
 	 */
-	private $badRequest = array();
+	protected $badRequest = array();
 
 	/**
 	 * The array of error messages by error code
@@ -164,9 +164,17 @@ class Validator {
 	public static function only(array $params, array $data = null) {
 		$data = ($data === null) ? Input::all() : $data;
 
+		$countParams = count($params);
+		$countData = count($data);
+		if ($countParams != $countData) {
+			Log::debug("Wrong parameter count, expected {$countData} parameter(s), got {$countParams} parameter(s)");
+			Application::error(400);
+		}
+
 		foreach (array_keys($data) as $receivedParameter) {
 			if (!array_key_exists($receivedParameter, $params)) {
-				throw new Exception("Detected unwanted parameter {$receivedParameter} in your request; expected only: " . implode(', ', array_keys($params)));
+				Log::debug("Detected unwanted parameter {$receivedParameter} in your request; expected only: " . implode(', ', array_keys($params)));
+				Application::error(400);
 			}
 		}
 
@@ -175,7 +183,8 @@ class Validator {
 		$missingParamsCount = count($missingParams);
 
 		if ($missingParamsCount > 0) {
-			throw new Exception("Invalid parameters count; there are {$missingParamsCount} missing parameter(s): " . implode(', ', $missingParams));
+			Log::debug("Invalid parameters count; there are {$missingParamsCount} missing parameter(s): " . implode(', ', $missingParams));
+			Application::error(400);
 		}
 
 		return $static;
