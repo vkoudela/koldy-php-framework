@@ -68,13 +68,9 @@ abstract class Response {
 	 * @param boolean $override override the already set HTTP code
 	 * @return $this
 	 */
-	public function httpHeader($httpCode, $httpStatus, $override = true) {
+	public function httpHeader($httpCode, $httpStatus = null, $override = true) {
 		if ($httpCode < 100 || $httpCode > 999) {
 			throw new \InvalidArgumentException('Invalid HTTP code while setting HTTP header');
-		}
-
-		if (!is_string($httpStatus)) {
-			throw new \InvalidArgumentException('Invalid HTTP status while setting HTTP header');
 		}
 
 		$this->httpHeader = array(
@@ -146,7 +142,8 @@ abstract class Response {
 			// first flush the HTTP header first, if any
 
 			if ($this->httpHeader['code'] !== null) {
-				header($this->httpHeader['status'], $this->httpHeader['override'], $this->httpHeader['code']);
+				//header($this->httpHeader['status'], $this->httpHeader['override'], $this->httpHeader['code']); // prior to PHP 5.4, deprecated
+				http_response_code($this->httpHeader['code']);
 			}
 
 			foreach ($this->headers as $header) {

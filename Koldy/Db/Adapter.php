@@ -344,7 +344,12 @@ class Adapter {
 				if (!(is_numeric($value) && $value[0] != '0')) {
 					$value = sprintf('\'%s\'', addslashes($value));
 				}
-				$query = str_replace(':' . $key, $value, $query);
+
+				if (substr($key, 0, 1) != ':') {
+					$key = ':' . $key;
+				}
+
+				$query = str_replace($key, $value, $query);
 			}
 		} else {
 			foreach ($this->lastBindings as $value) {
