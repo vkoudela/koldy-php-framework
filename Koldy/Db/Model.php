@@ -305,7 +305,7 @@ abstract class Model {
 	 */
 	public function save() {
 		$data = $this->getData();
-		$originalData = $this->originalData;
+		$originalData = (array) $this->originalData;
 		$toUpdate = array();
 
 		foreach ($data as $field => $value) {
@@ -359,8 +359,33 @@ abstract class Model {
 					$this->originalData = $this->data;
 				}
 			} else {
-				// TODO: Implementirati multiple key
-				throw new Exception('Multiple primary key not implemented');
+				$update = new Update(static::getTableName());
+
+				foreach (static::$primaryKey as $field) {
+					if (!$this->has($field)) {
+						throw new Exception('Can not execute save() method when primary key fields are not present in ' . get_class($this));
+					}
+
+					$update->where($field, $this->$field);
+
+					if (array_key_exists($field, $toUpdate)) {
+						unset($toUpdate[$field]);
+					}
+				}
+
+				$update->setValues($toUpdate);
+
+				try {
+					$result = $update->exec(static::$connection);
+				} catch (Exception $e) {
+					$result = false;
+				}
+
+				if ($result !== false) {
+					$this->originalData = $this->data;
+				}
+
+				return $result;
 			}
 
 		}
