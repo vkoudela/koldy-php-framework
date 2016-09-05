@@ -15,25 +15,6 @@
 class Cookie {
 
 	/**
-	 * Unique key from application config for hashing
-	 *
-	 * @var string
-	 */
-	private static $key = null;
-
-	/**
-	 * Get the key for hashing
-	 *
-	 * @return string
-	 */
-	private static function getKey() {
-		if (static::$key === null) {
-			static::$key = Application::getConfig('application', 'key');
-		}
-		return static::$key;
-	}
-
-	/**
 	 * Get the cookie value
 	 *
 	 * @param string $key
@@ -41,10 +22,10 @@ class Cookie {
 	 * @return string or null if cookie value doesn't exist
 	 */
 	public static function get($key) {
-		if (!isset($_COOKIE[$key])) {
+		if (isset($_COOKIE) && array_key_exists($key, $_COOKIE)) {
 			return null;
 		}
-		return Crypt::decrypt($_COOKIE[$key], static::getKey());
+		return Crypt::decrypt($_COOKIE[$key]);
 	}
 
 	/**
@@ -60,10 +41,12 @@ class Cookie {
 	 *
 	 * @link http://koldy.net/docs/cookies#set
 	 * @example Cookie::set('last_visited', date('r'));
+	 * @return string
 	 */
 	public static function set($name, $value, $expire = 0, $path = '/', $domain = null, $secure = false, $httpOnly = false) {
-		$value = Crypt::encrypt($value, static::getKey());
-		setcookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
+		$encryptedValue = Crypt::encrypt($value);
+		setcookie($name, $encryptedValue, $expire, $path, $domain, $secure, $httpOnly);
+		return $encryptedValue;
 	}
 
 	/**
@@ -100,7 +83,7 @@ class Cookie {
 	 * @link http://koldy.net/docs/cookies#has
 	 */
 	public static function has($name) {
-		return isset($_COOKIE[$name]);
+		return isset($_COOKIE) && array_key_exists($name, $_COOKIE);
 	}
 
 	/**

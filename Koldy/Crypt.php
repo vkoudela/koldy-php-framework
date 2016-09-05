@@ -37,17 +37,21 @@ class Crypt {
 	 * Encrypt the given string
 	 *
 	 * @param string $plaintext
-	 * @param string $key
+	 * @param string|null $key If not set, application key from configs/application.php will be used instead
 	 *
 	 * @return string
 	 * @throws Exception
 	 */
-	public static function encrypt($plaintext, $key) {
+	public static function encrypt($plaintext, $key = null) {
 		if (!function_exists('mcrypt_module_open')) {
 			throw new Exception('mcrypt module not loaded! Check your PHP configuration');
 		}
 
 		$td = mcrypt_module_open(self::CYPHER, '', self::MODE, '');
+
+		if ($key == null) {
+			$key = Application::getConfig(null, 'key');
+		}
 
 		$maxKeyLength = mcrypt_enc_get_key_size($td);
 		if (strlen($key) > $maxKeyLength) {
@@ -66,13 +70,13 @@ class Crypt {
 	 * TODO: Implement integrity check!
 	 *
 	 * @param string $crypttext
-	 * @param string $key
+	 * @param string $key If not set, application key from configs/application.php will be used instead
 	 *
 	 * @return string
 	 * @throws Exception
 	 * @throws \Exception
 	 */
-	public static function decrypt($crypttext, $key) {
+	public static function decrypt($crypttext, $key = null) {
 		if (!function_exists('mcrypt_module_open')) {
 			throw new \Exception('mcrypt module not loaded! Check your PHP configuration');
 		}
@@ -80,6 +84,10 @@ class Crypt {
 		$crypttext = base64_decode($crypttext);
 		$plaintext = '';
 		$td = mcrypt_module_open(self::CYPHER, '', self::MODE, '');
+
+		if ($key == null) {
+			$key = Application::getConfig(null, 'key');
+		}
 
 		$maxKeyLength = mcrypt_enc_get_key_size($td);
 

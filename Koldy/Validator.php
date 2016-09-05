@@ -77,7 +77,8 @@ class Validator {
 		26 => 'Uploaded image is too small', // {minWidth}, {minHeight}
 		27 => 'Uploaded image is too big',
 		28 => 'Uploaded image is doesn\'t have square dimensions',
-		29 => 'File is required'
+		29 => 'File is required',
+		30 => 'CSRF token is not valid'
 	);
 
 	/**
@@ -1004,6 +1005,37 @@ class Validator {
 					'field' => $param,
 					'value' => $is
 				));
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Throw error if this field value doesn't have valid CSRF token. This will throw exception if token is not set previously!
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 *
+	 * @return true|string
+	 * @example 'field' => 'csrf' // will fail if sent CSRF token doesn't match the generated token on server
+	 */
+	protected function validateCsrf($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			$value = $this->input[$param];
+
+			$csrf = Security::getCsrfToken();
+
+			if ($csrf == null) {
+				throw new Exception('CSRF token wasn\'t set on server!');
+			}
+
+			// the value we got is URL encoded csrf value, so first, let's urldecode and then:
+			// the value we got is encrypted cookie value, so first, let's decrypt it it so we can compare it with the value in session
+			$value = Crypt::decrypt(urldecode($value));
+
+			if ($value !== $csrf) {
+				return static::getErrorMessage(30);
 			}
 		}
 
