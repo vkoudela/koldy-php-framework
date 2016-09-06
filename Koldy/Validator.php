@@ -168,7 +168,7 @@ class Validator {
 		$countParams = count($params);
 		$countData = count($data);
 		if ($countParams != $countData) {
-			Log::debug("Wrong parameter count, expected {$countData} parameter(s), got {$countParams} parameter(s)");
+			Log::debug("Wrong parameter count, expected {$countParams} parameter(s), got {$countData} parameter(s)");
 			Application::error(400);
 		}
 

@@ -240,7 +240,7 @@ class Adapter {
 				}
 
 				if ($this->pdo === null) {
-					throw new Exception('Error connecting to database');
+					throw $e;
 				}
 			}
 		}
