@@ -78,7 +78,14 @@ class Validator {
 		27 => 'Uploaded image is too big',
 		28 => 'Uploaded image is doesn\'t have square dimensions',
 		29 => 'File is required',
-		30 => 'CSRF token is not valid'
+		30 => 'CSRF token is not valid',
+
+		/**
+		 * {allowedValues} - comma separated allowed values
+		 * {value} - value that was passed
+		 * {field} - the name of parameter
+		 */
+		31 => 'This value is not allowed'
 	);
 
 	/**
@@ -1004,6 +1011,37 @@ class Validator {
 				return static::getErrorMessage(18, array(
 					'field' => $param,
 					'value' => $is
+				));
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Throw error if this field's value doesn't have any of given values
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 *
+	 * @return true|string
+	 * @example 'field' => 'anyOf:yes,no,maybe' // will fail if parameter field doesn't have value "yes"
+	 * @example 'field' => 'anyOf:yes%2Cno,maybe' // will validate against "yes,no" and "maybe"
+	 */
+	protected function validateAnyOf($param, $settings) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param]) && trim($this->input[$param]) != '') {
+			$anyOf = explode(',', $settings);
+			$value = $this->input[$param];
+
+			foreach ($anyOf as $key => $value) {
+				$anyOf[$key] = urldecode($value);
+			}
+
+			if (!in_array($value, $anyOf)) {
+				return static::getErrorMessage(31, array(
+					'allowedValues' => implode(', ', $anyOf),
+					'field' => $param,
+					'value' => $value
 				));
 			}
 		}
