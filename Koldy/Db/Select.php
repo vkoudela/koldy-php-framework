@@ -38,7 +38,7 @@ class Select extends Where {
 	 * @param string $table
 	 * @param string $alias
 	 * @param mixed $field one field as string or more fields as array or just '*'
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function from($table, $alias = null, $field = null) {
 		$this->from[] = array(
@@ -65,7 +65,7 @@ class Select extends Where {
 	 * @param string|array $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 * @example innerJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function innerJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
@@ -85,7 +85,7 @@ class Select extends Where {
 	 * @param string|array $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 * @example leftJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 * @example leftJoin('user u', array(
 	 *   array('u.id', '=', 'r.user_role_id'),
@@ -109,7 +109,7 @@ class Select extends Where {
 	 * @param string|array $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 * @example rightJoin('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function rightJoin($table, $firstTableField, $operator = null, $secondTableField = null) {
@@ -129,7 +129,7 @@ class Select extends Where {
 	 * @param string $firstTableField
 	 * @param string $operator
 	 * @param string $secondTableField
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 * @example join('user u', 'u.id', '=', 'r.user_role_id')
 	 */
 	public function join($table, $firstTableField, $operator, $secondTableField) {
@@ -140,7 +140,7 @@ class Select extends Where {
 	 * Add one field that will be fetched
 	 * @param string $field
 	 * @param string $as
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function field($field, $as = null) {
 		$this->fields[] = array(
@@ -154,14 +154,17 @@ class Select extends Where {
 	/**
 	 * Add fields to fetch by passing array of fields
 	 * @param array $fields
-	 * @return \Koldy\Db\Select
+	 * @param null|string $alias
+	 * @return $this
 	 */
-	public function fields(array $fields) {
+	public function fields(array $fields, $alias = null) {
+		$alias = ($alias === null) ? '' : "{$alias}.";
+
 		foreach ($fields as $field => $as) {
 			if (is_numeric($field)) {
-				$this->field($as);
+				$this->field($alias . $as);
 			} else {
-				$this->field($field, $as);
+				$this->field($alias . $field, $as);
 			}
 		}
 		return $this;
@@ -169,7 +172,7 @@ class Select extends Where {
 
 	/**
 	 * Reset all fields that will be fetched
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function resetFields() {
 		$this->fields = array();
@@ -187,7 +190,7 @@ class Select extends Where {
 	/**
 	 * Add field to GROUP BY
 	 * @param string $field
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function groupBy($field) {
 		$this->groupBy[] = array(
@@ -198,7 +201,7 @@ class Select extends Where {
 
 	/**
 	 * Reset GROUP BY (remove GROUP BY)
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function resetGroupBy() {
 		$this->groupBy = array();
@@ -210,7 +213,7 @@ class Select extends Where {
 	 * @param string $field
 	 * @param string $operator
 	 * @param mixed $value
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function having($field, $operator = null, $value = null) {
 		$this->having[] = array(
@@ -227,7 +230,7 @@ class Select extends Where {
 	 * @param string $field
 	 * @param string $operator
 	 * @param mixed $value
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function orHaving($field, $operator = null, $value = null) {
 		$this->having[] = array(
@@ -241,7 +244,7 @@ class Select extends Where {
 
 	/**
 	 * Reset HAVING statement
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function resetHaving() {
 		$this->having = array();
@@ -255,7 +258,7 @@ class Select extends Where {
 	 * @param string $direction
 	 *
 	 * @throws Exception
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function orderBy($field, $direction = null) {
 		if ($direction === null) {
@@ -277,7 +280,7 @@ class Select extends Where {
 
 	/**
 	 * Reset ORDER BY (remove ORDER BY)
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function resetOrderBy() {
 		$this->orderBy = array();
@@ -288,7 +291,7 @@ class Select extends Where {
 	 * Set the LIMIT on query results
 	 * @param int $start
 	 * @param int $howMuch
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function limit($start, $howMuch) {
 		$this->limit = new \stdClass;
@@ -301,7 +304,7 @@ class Select extends Where {
 	 * Limit the results by "page"
 	 * @param int $number
 	 * @param int $limitPerPage
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function page($number, $limitPerPage) {
 		return $this->limit(($number -1) * $limitPerPage, $limitPerPage);
@@ -309,7 +312,7 @@ class Select extends Where {
 
 	/**
 	 * Reset LIMIT (remove the LIMIT)
-	 * @return \Koldy\Db\Select
+	 * @return $this
 	 */
 	public function resetLimit() {
 		$this->limit = null;
