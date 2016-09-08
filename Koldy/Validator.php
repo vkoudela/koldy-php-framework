@@ -85,7 +85,13 @@ class Validator {
 		 * {value} - value that was passed
 		 * {field} - the name of parameter
 		 */
-		31 => 'This value is not allowed'
+		31 => 'This value is not allowed',
+
+		/**
+		 * {value} - value that was passed
+		 * {field} - the name of parameter
+		 */
+		32 => 'This value should contain numbers separated by comma'
 	);
 
 	/**
@@ -469,6 +475,38 @@ class Validator {
 		if (isset($this->input[$param]) && !isset($this->invalids[$param])) {
 			if ($this->input[$param] != '' && !is_array($this->input[$param])) {
 				return static::getErrorMessage(12);
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Throw error if input is not the array of fields. This will only check if parameter is array, not the values in array.
+	 *
+	 * @param string $param
+	 * @param string $settings
+	 *
+	 * @return true|string
+	 */
+	protected function validateCommaSeparatedInts($param, $settings = null) {
+		if (isset($this->input[$param]) && !isset($this->invalids[$param])) {
+			$value = $this->input[$param];
+			if ($value != '') {
+				$ints = explode(',', $value);
+
+				foreach ($ints as $int) {
+					if ($int[0] == '-') {
+						$int = substr($int, 1);
+					}
+
+					if (!ctype_digit($int)) {
+						return static::getErrorMessage(32, array(
+							'value' => $value,
+							'field' => $param
+						));
+					}
+				}
 			}
 		}
 
