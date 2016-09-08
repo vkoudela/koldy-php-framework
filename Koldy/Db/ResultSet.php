@@ -125,14 +125,24 @@ class ResultSet extends Select {
 			// but, there might be already some where statements in the query, so we'll create
 			// new Where instance and we'll add that Where block with AND operator
 
+			$useILike = $this->getAdapter()->isPostgreSQL();
+
 			$where = Where::init();
 			if ($this->searchFields !== null) {
 				foreach ($this->searchFields as $field) {
-					$where->orWhereLike($field, "%{$this->searchTerm}%");
+					if ($useILike) {
+						$where->orWhere($field, 'ILIKE', "%{$this->searchTerm}%");
+					} else {
+						$where->orWhereLike($field, "%{$this->searchTerm}%");
+					}
 				}
 			} else {
 				foreach ($this->getFields() as $field) {
-					$where->orWhereLike($field['name'], "%{$this->searchTerm}%");
+					if ($useILike) {
+						$where->orWhereLike($field['name'], "%{$this->searchTerm}%");
+					} else {
+						$where->orWhere($field['name'], 'ILIKE', "%{$this->searchTerm}%");
+					}
 				}
 			}
 			$this->where($where);

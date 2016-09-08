@@ -442,6 +442,42 @@ class Adapter {
 	}
 
 	/**
+	 * Get the key under which is defined config for this adapter in configs/database.php
+	 *
+	 * @return string
+	 */
+	public function getConfigKey() {
+		return $this->configKey;
+	}
+
+	/**
+	 * Is this adapter connecting to MySQL?
+	 *
+	 * @return bool
+	 */
+	public function isMySQL() {
+		return $this->config['type'] == self::TYPE_MYSQL;
+	}
+
+	/**
+	 * Is this adapter connecting to Postgres?
+	 *
+	 * @return bool
+	 */
+	public function isPostgreSQL() {
+		return $this->config['type'] == self::TYPE_POSTGRES;
+	}
+
+	/**
+	 * Is this adapter connecting on SQLite DB?
+	 *
+	 * @return bool
+	 */
+	public function isSQLite() {
+		return $this->config['type'] == self::TYPE_SQLITE;
+	}
+
+	/**
 	 * If you try to print the adapter object as string, you'll get the last
 	 * executed query. Be careful to not to expose the queries to your users in
 	 * production mode.
