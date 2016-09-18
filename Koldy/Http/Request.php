@@ -2,6 +2,8 @@
 
 use Koldy\Exception;
 use Koldy\Directory;
+use Koldy\Json;
+use Koldy\Log;
 
 /**
  * Make HTTP request to any given URL.
@@ -10,28 +12,26 @@ use Koldy\Directory;
  *
  */
 class Request {
-	
+
 	const GET = 'GET';
 	const POST = 'POST';
-
+	const PUT = 'PUT';
+	const DELETE = 'DELETE';
 
 	/**
 	 * @var string
 	 */
 	protected $url = null;
 
-
 	/**
 	 * @var array
 	 */
 	protected $params = array();
 
-
 	/**
 	 * @var string
 	 */
-	protected $type = 'GET';
-
+	protected $method = 'GET';
 
 	/**
 	 * The CURL options
@@ -40,49 +40,34 @@ class Request {
 	 */
 	protected $options = array();
 
+	/**
+	 * @var array
+	 */
+	private $appliedOptions = array();
 
 	/**
-	 * Last response instance of the request after executing
-	 *
-	 * @var Response
+	 * Request headers
+	 * 
+	 * @var array
 	 */
-	protected $lastResponse = null;
-
+	protected $headers = array();
 
 	/**
-	 * Construct Request
-	 *
-	 * @param string $url
-	 *
-	 * @throws Exception
+	 * @var bool
 	 */
-	public function __construct($url) {
-		if ($url === null) {
-			throw new Exception('Can not make HTTP request when URL is NULL');
-		}
-		
-		if (!function_exists('curl_init')) {
-			throw new Exception('CURL is not installed');
-		}
-		
-		$this->url = $url;
-		
-		// default options
-		$this->option(CURLOPT_RETURNTRANSFER, true);
-	}
-
+	private $prepared = false;
 
 	/**
 	 * Update the request's target URL
 	 *
 	 * @param string $url
-	 * @return \Koldy\Http\Request
+	 *
+	 * @return $this
 	 */
 	public function url($url) {
 		$this->url = $url;
 		return $this;
 	}
-
 
 	/**
 	 * Get the URL on which the request will be fired
@@ -93,28 +78,45 @@ class Request {
 		return $this->url;
 	}
 
-	
 	/**
 	 * Set the request type
+	 *
 	 * @param int $type constant
-	 * @return \Koldy\Http\Request
-	 * @example $request->type(\Koldy\Http\Request::POST);
+	 *
+	 * @return $this
+	 * @example $request->method(\Koldy\Http\Request::POST);
+	 * @deprecated use method() instead
 	 */
 	public function type($type) {
-		$this->type = $type;
-		return $this;
+		return $this->method($type);
 	}
-
 
 	/**
 	 * Get the request's type (method)
 	 *
 	 * @return string GET or POST (for now)
+	 * @deprecated use getMethod() instead
 	 */
 	public function getType() {
-		return $this->type;
+		return $this->getMethod();
 	}
 
+	/**
+	 * @param $method
+	 *
+	 * @return $this
+	 */
+	public function method($method) {
+		$this->method = $method;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getMethod() {
+		return $this->method;
+	}
 
 	/**
 	 * Set the request parameter
@@ -122,24 +124,25 @@ class Request {
 	 * @param string $key
 	 * @param mixed $value
 	 *
-	 * @return \Koldy\Http\Request
+	 * @return $this
 	 */
 	public function param($key, $value) {
 		$this->params[$key] = $value;
 		return $this;
 	}
 
-	
 	/**
 	 * Set the parameters that will be sent. Any previously set parameters will be overriden.
+	 *
 	 * @param array $params
-	 * @return \Koldy\Http\Request
+	 *
+	 * @return $this
 	 */
 	public function params(array $params) {
 		$this->params = $params;
 		return $this;
 	}
-	
+
 	/**
 	 * Get parameters that were set
 	 * @return array
@@ -147,146 +150,354 @@ class Request {
 	public function getParams() {
 		return $this->params;
 	}
-	
+
 	/**
 	 * Check if URL parameter is set
+	 *
 	 * @param string $key
+	 *
 	 * @return boolean
 	 */
 	public function hasParam($key) {
 		return array_key_exists($key, $this->params);
 	}
-	
+
+	/**
+	 * @param string $key
+	 *
+	 * @return mixed|null
+	 */
+	public function getParam($key) {
+		return $this->hasParam($key) ? $this->params[$key] : null;
+	}
+
+	/**
+	 * Set the request header
+	 *
+	 * @header string $key
+	 * @header mixed $value
+	 *
+	 * @return $this
+	 */
+	public function header($key, $value) {
+		$this->headers[$key] = $value;
+		return $this;
+	}
+
+	/**
+	 * Set the headers that will be sent. Any previously set headers will be overriden.
+	 *
+	 * @header array $headers
+	 *
+	 * @return $this
+	 */
+	public function headers(array $headers) {
+		$this->headers = $headers;
+		return $this;
+	}
+
+	/**
+	 * Get headereters that were set
+	 * @return array
+	 */
+	public function getHeaders() {
+		return $this->headers;
+	}
+
+	/**
+	 * @param string $header
+	 *
+	 * @return mixed|null
+	 */
+	public function getHeader($header) {
+		return $this->hasHeader($header) ? $this->headers[$header] : null;
+	}
+
+	/**
+	 * Check if URL headereter is set
+	 *
+	 * @header string $key
+	 *
+	 * @return boolean
+	 */
+	public function hasHeader($key) {
+		return array_key_exists($key, $this->headers);
+	}
+
 	/**
 	 * Set the array of options. Array must be valid array with CURL constants as keys
+	 *
 	 * @param array $curlOptions
-	 * @return \Koldy\Http\Request
+	 *
+	 * @return $this
 	 * @link http://php.net/manual/en/function.curl-setopt.php
 	 */
 	public function options(array $curlOptions) {
 		$this->options = $curlOptions;
 		return $this;
 	}
-	
+
 	/**
 	 * Set the CURL option
+	 *
 	 * @param string $key
 	 * @param mixed $value
-	 * @return \Koldy\Http\Request
+	 *
+	 * @return $this
 	 * @link http://php.net/manual/en/function.curl-setopt.php
 	 */
 	public function option($key, $value) {
 		$this->options[$key] = $value;
 		return $this;
 	}
-	
+
 	/**
 	 * Check if CURL option is set (exists in options array)
+	 *
 	 * @param string $key
+	 *
 	 * @return boolean
 	 */
 	public function hasOption($key) {
 		return isset($this->options[$key]);
 	}
-	
+
+	/**
+	 * Get all CURL options
+	 *
+	 * @return array
+	 */
+	public function getOptions() {
+		return $this->options;
+	}
+
+	/**
+	 * @param int $option
+	 *
+	 * @return mixed|null
+	 */
+	public function getOption($option) {
+		return $this->hasOption($option) ? $this->options[$option] : null;
+	}
+
+	/**
+	 * @return array
+	 */
+	private function prepareHeaders() {
+		if (count($this->headers) > 0) {
+			$headers = array();
+
+			foreach ($this->headers as $key => $value) {
+				$headers[] = "{$key}: {$value}";
+			}
+
+			return $headers;
+		}
+
+		return array();
+	}
+
+	/**
+	 * Prepare standard HTTP request. Override this method if needed
+	 */
+	protected function prepareStandard() {
+		$this->option(CURLOPT_CUSTOMREQUEST, $this->getMethod());
+		$this->option(CURLOPT_URL, $this->getUrl());
+		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+		$this->option(CURLOPT_RETURNTRANSFER, true);
+		$this->option(CURLOPT_HEADER, true);
+
+		$this->option(CURLOPT_HEADER, true);
+		if (count($this->headers) > 0) {
+			$this->option(CURLOPT_HTTPHEADER, $this->prepareHeaders());
+		}
+	}
+
+	protected function prepareGet() {
+		$this->prepareStandard();
+	}
+
+	protected function preparePost() {
+		$this->prepareStandard();
+
+		if ($this->hasHeader('Content-Type') && $this->getHeader('Content-Type') == 'application/json') {
+			$this->option(CURLOPT_POSTFIELDS, Json::encode($this->params));
+		}
+	}
+
+	protected function preparePut() {
+		$this->prepareStandard();
+	}
+
+	protected function prepareDelete() {
+		$this->prepareStandard();
+	}
+
+	/**
+	 * Prepare all CURL options
+	 */
+	public function prepare() {
+		if (!$this->prepared) {
+			switch ($this->getMethod()) {
+				case self::GET:
+					$this->prepareGet();
+					break;
+
+				case self::POST:
+					$this->preparePost();
+					break;
+
+				case self::PUT:
+					$this->preparePut();
+					break;
+
+				case self::DELETE:
+					$this->prepareDelete();
+					break;
+			}
+
+			$this->prepared = true;
+		}
+	}
+
 	/**
 	 * Execute request
 	 * @throws Exception
 	 * @return \Koldy\Http\Response
 	 */
 	public function exec() {
-		$ch = curl_init();
-		
-		if ($this->type === static::POST) {
-			curl_setopt($ch, CURLOPT_URL, $this->url);
-			curl_setopt($ch, CURLOPT_POST, true); 
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $this->params);
-		} else if ($this->type === static::GET && count($this->params) > 0) {
-			$url = $this->url;
-			if (strpos($url, '?') === false) {
-				$url .= '?';
-			} else {
-				$url .= '&';
-			}
-			
-			foreach ($this->params as $key => $value) {
-				$url .= "{$key}=" . urlencode($value) . '&';
-			}
-			
-			$url = substr($url, 0, -1);
-			curl_setopt($ch, CURLOPT_URL, $url);
-		} else {
-			curl_setopt($ch, CURLOPT_URL, $this->url);
+		if (!function_exists('curl_init')) {
+			throw new Exception('CURL is not installed');
 		}
-		
+
+		$this->prepare();
+
+		$ch = curl_init();
+		$this->appliedOptions = $this->options;
 		curl_setopt_array($ch, $this->options);
 		$body = curl_exec($ch);
-		
+
 		if (curl_errno($ch)) {
 			throw new Exception(curl_error($ch));
-		} else {
-			$info = curl_getinfo($ch);
+		//} else {
+			//$info = curl_getinfo($ch);
 		}
-		
-		curl_close($ch);
-		$this->lastResponse = new Response($info, $body);
-		return $this->lastResponse;
+
+		return new Response($ch, $body);
 	}
-
-
-	/**
-	 * Get the last response object instance after executing the HTTP request
-	 *
-	 * @return Response
-	 */
-	public function getResponse() {
-		return $this->lastResponse;
-	}
-
 
 	/**
 	 * Make quick GET request
+	 *
 	 * @param string $url
 	 * @param array $params [optional]
-	 * @return \Koldy\Http\Response
+	 * @param array $headers [optional]
+	 *
+	 * @return \Koldy\Http\Request
 	 * @example echo \Koldy\Http\Request::get('http://www.google.com') will output body HTML of google.com
 	 */
-	public static function get($url, array $params = array()) {
-		$self = new static($url);
-		$self->params($params);
+	public static function get($url, array $params = null, $headers = null) {
+		$self = new static();
+		$self->url($url)->method(self::GET);
+		
+		if ($params != null) {
+			$self->params($params);
+		}
+		
+		if ($headers != null) {
+			$self->headers($headers);
+		}
 
-		return $self->exec();
+		return $self;
 	}
-
 
 	/**
 	 * Make quick POST request
-	 * 
+	 *
 	 * @param string $url
 	 * @param array $params [optional]
-	 * @return \Koldy\Http\Response
+	 * @param array $headers [optional]
+	 *
+	 * @return \Koldy\Http\Request
 	 * @example echo \Koldy\Http\Request::post('http://www.google.com') will output body HTML of google.com
 	 */
-	public static function post($url, array $params = array()) {
-		$self = new static($url);
-		$self->type(static::POST);
-		$self->params($params);
+	public static function post($url, array $params = null, $headers = null) {
+		$self = new static();
+		$self->url($url)->method(self::POST);
 
-		return $self->exec();
+		if ($params != null) {
+			$self->params($params);
+		}
+		
+		if ($headers != null) {
+			$self->headers($headers);
+		}
+
+		return $self;
 	}
 
+	/**
+	 * Make quick PUT request
+	 *
+	 * @param string $url
+	 * @param array $params [optional]
+	 * @param array $headers [optional]
+	 *
+	 * @return \Koldy\Http\Request
+	 * @example echo \Koldy\Http\Request::put('http://www.google.com') will output body HTML of google.com
+	 */
+	public static function put($url, array $params = null, $headers = null) {
+		$self = new static();
+		$self->url($url)->method(self::PUT);
+		
+		if ($params != null) {
+			$self->params($params);
+		}
+		
+		if ($headers != null) {
+			$self->headers($headers);
+		}
+
+		return $self;
+	}
+
+	/**
+	 * Make quick DELETE request
+	 *
+	 * @param string $url
+	 * @param array $params [optional]
+	 * @param array $headers [optional]
+	 *
+	 * @return \Koldy\Http\Request
+	 * @example echo \Koldy\Http\Request::delete('http://www.google.com') will output body HTML of google.com
+	 */
+	public static function delete($url, array $params = null, $headers = null) {
+		$self = new static();
+		$self->url($url)->method(self::DELETE);
+		
+		if ($params != null) {
+			$self->params($params);
+		}
+		
+		if ($headers != null) {
+			$self->headers($headers);
+		}
+
+		return $self;
+	}
 
 	/**
 	 * Get (download) file from remote URL and save it on local path
-	 * 
+	 *
 	 * @param string $remoteUrl
 	 * @param string $localPath
+	 *
 	 * @return \Koldy\Http\Response
 	 * @example Request::getFile('http://remote.com/path/to.gif', '/var/www/local/my.gif');
 	 */
 	public static function getFile($remoteUrl, $localPath) {
 		Directory::mkdir(dirname($localPath), 0755);
-		
+
 		$fp = @fopen($localPath, 'wb');
 		if (!$fp) {
 			throw new Exception("Can not open file for writing: {$localPath}");
@@ -302,7 +513,49 @@ class Request {
 
 		fclose($fp);
 
-		return new Response($info, null);
+		return new Response($ch, null);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function __toString() {
+		$msg = "HTTP REQUEST {$this->getOption(CURLOPT_CUSTOMREQUEST)}={$this->getOption(CURLOPT_URL)}\n";
+
+		if (count($this->headers) > 0) {
+			$msg .= "Request Headers:\n";
+			foreach ($this->headers as $key => $value) {
+				$msg .= "\n{$key}: {$value}\n";
+			}
+		}
+
+		$parameters = $this->getOption(CURLOPT_POSTFIELDS);
+		if (is_string($parameters)) {
+			$msg .= 'Parameters: ' . (strlen($parameters) > 0 ? $parameters : '[no parameters]') . "\n";
+		} else if (is_array($parameters)) {
+			$msg .= 'Parameters: ' . print_r($parameters, true) . "\n";
+		}
+
+		$constants = get_defined_constants(true);
+		$flipped = array_flip($constants['curl']);
+		$curlOpts = preg_grep('/^CURLOPT_/', $flipped);
+		$curlInfos = preg_grep('/^CURLINFO_/', $flipped);
+
+		$options = array();
+		foreach ($this->options as $const => $value) {
+			if (isset($curlOpts[$const])) {
+				$options[$curlOpts[$const]] = $value;
+			} else if (isset($curlInfos[$const])) {
+				$options[$curlInfos[$const]] = $value;
+			} else {
+				$options[$const] = $value;
+			}
+		}
+
+		$msg .= 'CURL options: ' . print_r($options, true) . "\n";
+		$msg .= '----------';
+
+		return $msg;
 	}
 
 }

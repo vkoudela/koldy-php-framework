@@ -5,15 +5,10 @@
  */
 class Response {
 
-
 	/**
-	 * The info from CURL
-	 * 
-	 * @var array
-	 * @link http://www.php.net/manual/en/function.curl-getinfo.php#refsect1-function.curl-getinfo-returnvalues
+	 * @var resource
 	 */
-	protected $info = null;
-
+	protected $ch = null;
 
 	/**
 	 * The response body from request
@@ -22,12 +17,33 @@ class Response {
 	 */
 	protected $body = null;
 
+	/**
+	 * @var null
+	 */
+	protected $headersText = null;
 
-	public function __construct(array $curlInfo, $responseBody) {
-		$this->info = $curlInfo;
-		$this->body = $responseBody;
+	/**
+	 * Response constructor.
+	 *
+	 * @param $ch
+	 * @param $body
+	 */
+	public function __construct($ch, $body) {
+		$this->ch = $ch;
+
+		$headerSize = $this->headerSize();
+
+		if ($headerSize == 0) {
+			$this->body = $body;
+		} else {
+			$this->headersText = trim(substr($body, 0, $headerSize));
+			$this->body = substr($body, $headerSize);
+		}
 	}
 
+	public function __destruct() {
+		curl_close($this->ch);
+	}
 
 	/**
 	 * What was the request URL?
@@ -35,9 +51,8 @@ class Response {
 	 * @return string
 	 */
 	public function url() {
-		return $this->info['url'];
+		return curl_getinfo($this->ch, CURLINFO_EFFECTIVE_URL);
 	}
-
 
 	/**
 	 * Get the response body
@@ -48,16 +63,14 @@ class Response {
 		return $this->body;
 	}
 
-
 	/**
 	 * What is the response HTTP code?
 	 * 
 	 * @return int
 	 */
 	public function httpCode() {
-		return (int) $this->info['http_code'];
+		return (int) curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 	}
-
 
 	/**
 	 * Is response OK? (is HTTP response code 200)
@@ -68,16 +81,14 @@ class Response {
 		return $this->httpCode() == 200;
 	}
 
-
 	/**
 	 * Get the content type of response
 	 * 
 	 * @return string
 	 */
 	public function contentType() {
-		return $this->info['content_type'];
+		return curl_getinfo($this->ch, CURLINFO_CONTENT_TYPE);
 	}
-
 
 	/**
 	 * Get the request's connect time in seconds
@@ -85,9 +96,8 @@ class Response {
 	 * @return float
 	 */
 	public function connectTime() {
-		return $this->info['connect_time'];
+		return curl_getinfo($this->ch, CURLINFO_CONNECT_TIME);
 	}
-
 
 	/**
 	 * Get the request's connect time in miliseconds
@@ -95,9 +105,8 @@ class Response {
 	 * @return int
 	 */
 	public function connectTimeMs() {
-		return round($this->info['connect_time'] * 1000);
+		return round($this->connectTime() * 1000);
 	}
-
 
 	/**
 	 * Get the request total time in seconds
@@ -105,9 +114,8 @@ class Response {
 	 * @return float
 	 */
 	public function totalTime() {
-		return $this->info['total_time'];
+		return curl_getinfo($this->ch, CURLINFO_TOTAL_TIME);
 	}
-
 
 	/**
 	 * Get the request total time in miliseconds
@@ -115,9 +123,15 @@ class Response {
 	 * @return int
 	 */
 	public function totalTimeMs() {
-		return round($this->info['total_time'] * 1000);
+		return round($this->totalTime() * 1000);
 	}
 
+	/**
+	 * @return int
+	 */
+	public function headerSize() {
+		return curl_getinfo($this->ch, CURLINFO_HEADER_SIZE);
+	}
 
 	/**
 	 * If you try to print the response object, you'll get response body
@@ -125,7 +139,24 @@ class Response {
 	 * @return string
 	 */
 	public function __toString() {
-		return $this->body;
+		$msg = "HTTP Response {$this->httpCode()} of {$this->url()} IN {$this->totalTime()}s\n";
+
+		if ($this->headersText != null) {
+			$msg .= "Response HEADERS:\n";
+			foreach (explode("\n", $this->headersText) as $line) {
+				$msg .= "\t{$line}\n";
+			}
+		}
+
+		$body = $this->body();
+		if (strlen($body) > 120) {
+			$body .= substr($body, 0, 120) . '...';
+		}
+
+		$msg .= "RESPONSE BODY:\n{$body}\n";
+		$msg .= '----------';
+
+		return $msg;
 	}
 
 }
