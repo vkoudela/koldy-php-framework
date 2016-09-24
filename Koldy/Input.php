@@ -7,7 +7,6 @@
  */
 class Input {
 
-
 	/**
 	 * The raw data of the request
 	 * 
@@ -15,14 +14,12 @@ class Input {
 	 */
 	private static $rawData = null;
 
-
 	/**
 	 * The variables in case of PUT or DELETE request
 	 * 
 	 * @var array
 	 */
 	private static $vars = null;
-
 
 	/**
 	 * Get raw data of the request
@@ -36,7 +33,6 @@ class Input {
 
 		return static::$rawData;
 	}
-
 
 	/**
 	 * Get the input vars
@@ -53,15 +49,14 @@ class Input {
 		return static::$vars;
 	}
 
-
 	/**
 	 * Fetch the value from the resource
 	 * 
 	 * @param string $resourceName
 	 * @param string $name parameter name
-	 * @param string $default [optional] default value if parameter doesn't exists
+	 * @param string|null $default [optional] default value if parameter doesn't exists
 	 * @param array $allowed [optional] allowed values; if resource value doesn't contain one of values in this array, default is returned
-	 * @return string
+	 * @return string|null
 	 */
 	private static function fetch($resourceName, $name, $default = null, array $allowed = null) {
 		switch ($resourceName) {
@@ -98,15 +93,16 @@ class Input {
 				break;
 		}
 
-		if (isset($resource[$name])) {
+		if (array_key_exists($name, $resource)) {
+
 			if (is_array($resource[$name])) {
 				return $resource[$name];
 			}
 			
 			$value = trim($resource[$name]);
 
-			if ($value === '') {
-				return null;
+			if ($value == '') {
+				return $default;
 			}
 
 			if ($allowed !== null) {
@@ -119,7 +115,6 @@ class Input {
 		}
 	}
 
-
 	/**
 	 * Does GET parameter exists or not
 	 * 
@@ -130,7 +125,6 @@ class Input {
 	public static function hasGet($name) {
 		return isset($_GET) && isset($_GET[$name]);
 	}
-
 
 	/**
 	 * Returns the GET parameter
@@ -149,7 +143,6 @@ class Input {
 		return self::fetch('GET', $name, $default, $allowed);
 	}
 
-
 	/**
 	 * Does POST parameter exists or not
 	 * 
@@ -160,7 +153,6 @@ class Input {
 	public static function hasPost($name) {
 		return isset($_POST) && isset($_POST[$name]);
 	}
-
 
 	/**
 	 * Returns the POST parameter
@@ -179,7 +171,6 @@ class Input {
 		return self::fetch('POST', $name, $default, $allowed);
 	}
 
-
 	/**
 	 * Does PUT parameter exists or not
 	 * 
@@ -195,7 +186,6 @@ class Input {
 			return false;
 		}
 	}
-
 
 	/**
 	 * Returns the PUT parameter
@@ -214,7 +204,6 @@ class Input {
 		return self::fetch('PUT', $name, $default, $allowed);
 	}
 
-
 	/**
 	 * Does DELETE parameter exists or not
 	 * 
@@ -230,7 +219,6 @@ class Input {
 			return false;
 		}
 	}
-
 
 	/**
 	 * Returns the DELETE parameter
@@ -249,7 +237,6 @@ class Input {
 		return self::fetch('DELETE', $name, $default, $allowed);
 	}
 
-
 	/**
 	 * Returns the parameter from $_REQUEST
 	 * 
@@ -265,7 +252,6 @@ class Input {
 
 		return self::fetch('REQUEST', $name, $default, $allowed);
 	}
-
 
 	/**
 	 * Get the required parameters. Return bad request if any of them is missing.
@@ -295,7 +281,6 @@ class Input {
 			Application::error(400, 'Missing required parameter');
 		}
 	}
-
 
 	/**
 	 * Get the required parameters. Return bad request if any of them is missing.
@@ -333,7 +318,6 @@ class Input {
 		return $class;
 	}
 
-
 	/**
 	 * Get the required parameters. Return bad request if any of them is missing. This method will return array.
 	 * 
@@ -370,7 +354,6 @@ class Input {
 		return $a;
 	}
 
-
 	/**
 	 * Get all parameters according to request method
 	 * 
@@ -394,7 +377,6 @@ class Input {
 		}
 	}
 
-
 	/**
 	 * How many parameters are passed?
 	 *
@@ -403,7 +385,6 @@ class Input {
 	public static function parametersCount() {
 		return count(static::all());
 	}
-
 
 	/**
 	 * Return true if request contains only parameters from method argument. If there are more parameters then defined,
@@ -420,7 +401,6 @@ class Input {
 
 		return static::containsParams($params);
 	}
-
 
 	/**
 	 * Return true if request contains all of the parameters from method argument. If there are more parameters then
@@ -441,7 +421,6 @@ class Input {
 
 		return count($params) == 0;
 	}
-
 
 	/**
 	 * Return true only if request doesn't have any of the params from method argument.
