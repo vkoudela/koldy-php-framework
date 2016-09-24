@@ -281,6 +281,15 @@ class Request {
 	}
 
 	/**
+	 * @param int $option
+	 */
+	public function removeOption($option) {
+		if ($this->hasOption($option)) {
+			unset($this->options[$option]);
+		}
+	}
+
+	/**
 	 * @return array
 	 */
 	private function prepareHeaders() {
@@ -303,7 +312,6 @@ class Request {
 	protected function prepareStandard() {
 		$this->option(CURLOPT_CUSTOMREQUEST, $this->getMethod());
 		$this->option(CURLOPT_URL, $this->getUrl());
-		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
 		$this->option(CURLOPT_RETURNTRANSFER, true);
 		$this->option(CURLOPT_HEADER, true);
 
@@ -313,24 +321,53 @@ class Request {
 		}
 	}
 
+	/**
+	 * Prepare GET request
+	 */
 	protected function prepareGet() {
 		$this->prepareStandard();
+
+		// append parameters to GET URL if any
+		if (count($this->params)) {
+			$url = $this->getUrl();
+
+			if (strpos('?', $url) !== false && substr($url, -1) != '?') {
+				// just add with "&"
+				$url .= http_build_query($this->params);
+			} else {
+				$url .= '?' . http_build_query($this->params);
+			}
+
+			$this->option(CURLOPT_URL, $url);
+		}
 	}
 
+	/**
+	 * Prepare POST request
+	 */
 	protected function preparePost() {
 		$this->prepareStandard();
+		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
 
 		if ($this->hasHeader('Content-Type') && $this->getHeader('Content-Type') == 'application/json') {
 			$this->option(CURLOPT_POSTFIELDS, Json::encode($this->params));
 		}
 	}
 
+	/**
+	 * Prepare PUT request
+	 */
 	protected function preparePut() {
 		$this->prepareStandard();
+		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
 	}
 
+	/**
+	 * Prepare DELETE request
+	 */
 	protected function prepareDelete() {
 		$this->prepareStandard();
+		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
 	}
 
 	/**
@@ -520,21 +557,7 @@ class Request {
 	 * @return string
 	 */
 	public function __toString() {
-		$msg = "HTTP REQUEST {$this->getOption(CURLOPT_CUSTOMREQUEST)}={$this->getOption(CURLOPT_URL)}\n";
-
-		if (count($this->headers) > 0) {
-			$msg .= "Request Headers:\n";
-			foreach ($this->headers as $key => $value) {
-				$msg .= "\n{$key}: {$value}\n";
-			}
-		}
-
-		$parameters = $this->getOption(CURLOPT_POSTFIELDS);
-		if (is_string($parameters)) {
-			$msg .= 'Parameters: ' . (strlen($parameters) > 0 ? $parameters : '[no parameters]') . "\n";
-		} else if (is_array($parameters)) {
-			$msg .= 'Parameters: ' . print_r($parameters, true) . "\n";
-		}
+		$msg = "HTTP REQUEST {$this->getOption(CURLOPT_CUSTOMREQUEST)}={$this->getOption(CURLOPT_URL)} ";
 
 		$constants = get_defined_constants(true);
 		$flipped = array_flip($constants['curl']);
@@ -552,9 +575,7 @@ class Request {
 			}
 		}
 
-		$msg .= 'CURL options: ' . print_r($options, true) . "\n";
-		$msg .= '----------';
-
+		$msg .= print_r($options, true);
 		return $msg;
 	}
 

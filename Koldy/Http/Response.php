@@ -139,13 +139,15 @@ class Response {
 	 * @return string
 	 */
 	public function __toString() {
-		$msg = "HTTP Response {$this->httpCode()} of {$this->url()} IN {$this->totalTime()}s\n";
+		$msg = "HTTP Response {$this->httpCode()} of {$this->url()} IN {$this->totalTime()}s";
 
 		if ($this->headersText != null) {
-			$msg .= "Response HEADERS:\n";
+			$msg .= " with response HEADERS:\n";
 			foreach (explode("\n", $this->headersText) as $line) {
 				$msg .= "\t{$line}\n";
 			}
+		} else {
+			$msg .= "\n";
 		}
 
 		$body = $this->body();
@@ -153,8 +155,8 @@ class Response {
 			$body .= substr($body, 0, 120) . '...';
 		}
 
-		$msg .= "RESPONSE BODY:\n{$body}\n";
-		$msg .= '----------';
+		$msg .= "\nRESPONSE BODY:\n{$body}\n";
+		$msg .= '--------------------';
 
 		return $msg;
 	}
