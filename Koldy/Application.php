@@ -356,19 +356,26 @@ class Application {
 			$file = 'application';
 		}
 
+		// has config path defined?
+		if (isset(static::$configs['application']['config_path'])) {
+			$configPath = static::$configs['application']['config_path'];
+		} else {
+			$configPath = static::getApplicationPath() . 'configs/';
+		}
+
 		if (!isset(static::$configs[$file])) {
 			if (isset(static::$configs['application']['configs'])) {
 				if (is_array(static::$configs['application']['configs'])) {
 					if (isset(static::$configs['application']['configs'][$file])) {
 						$path = static::$configs['application']['configs'][$file];
 					} else {
-						$path = static::getApplicationPath("configs/{$file}.php");
+						$path = $configPath . $file . '.php';
 					}
 				} else {
-					$path = static::$configs['application']['configs'] . $file . '.php';
+					$path = $configPath . $file . '.php';
 				}
 			} else {
-				$path = static::getApplicationPath("configs/{$file}.php");
+				$path = $configPath . $file . '.php';
 			}
 
 			if (!file_exists($path)) {
