@@ -238,7 +238,12 @@ class Application {
 		}
 
 		static::$configs['application'] = $config;
-		static::$classAliases = $config['classes'];
+
+		if (isset($config['classes'])) {
+			static::$classAliases = $config['classes'];
+		} else {
+			$config['classes'] = array();
+		}
 	}
 
 	/**
@@ -356,11 +361,11 @@ class Application {
 			$file = 'application';
 		}
 
-		// has config path defined?
+		// has config path being defined?
 		if (isset(static::$configs['application']['config_path'])) {
 			$configPath = static::$configs['application']['config_path'];
 		} else {
-			$configPath = static::getApplicationPath() . 'configs/';
+			$configPath = static::$configs['application']['application_path'] . 'configs/'; // don't call getApplicationPath, it'll go in recursion
 		}
 
 		if (!isset(static::$configs[$file])) {
