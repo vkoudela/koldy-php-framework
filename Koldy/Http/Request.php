@@ -430,7 +430,7 @@ class Request {
 	 * @param array $params [optional]
 	 * @param array $headers [optional]
 	 *
-	 * @return \Koldy\Http\Request
+	 * @return $this
 	 * @example echo \Koldy\Http\Request::get('http://www.google.com') will output body HTML of google.com
 	 */
 	public static function get($url, array $params = null, $headers = null) {
@@ -455,7 +455,7 @@ class Request {
 	 * @param array $params [optional]
 	 * @param array $headers [optional]
 	 *
-	 * @return \Koldy\Http\Request
+	 * @return $this
 	 * @example echo \Koldy\Http\Request::post('http://www.google.com') will output body HTML of google.com
 	 */
 	public static function post($url, array $params = null, $headers = null) {
@@ -480,7 +480,7 @@ class Request {
 	 * @param array $params [optional]
 	 * @param array $headers [optional]
 	 *
-	 * @return \Koldy\Http\Request
+	 * @return $this
 	 * @example echo \Koldy\Http\Request::put('http://www.google.com') will output body HTML of google.com
 	 */
 	public static function put($url, array $params = null, $headers = null) {
@@ -505,7 +505,7 @@ class Request {
 	 * @param array $params [optional]
 	 * @param array $headers [optional]
 	 *
-	 * @return \Koldy\Http\Request
+	 * @return $this
 	 * @example echo \Koldy\Http\Request::delete('http://www.google.com') will output body HTML of google.com
 	 */
 	public static function delete($url, array $params = null, $headers = null) {
