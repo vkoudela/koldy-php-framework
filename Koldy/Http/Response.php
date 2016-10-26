@@ -134,31 +134,44 @@ class Response {
 	}
 
 	/**
+	 * @param bool $allDetails
+	 *
+	 * @return string
+	 */
+	public function debug($allDetails = false) {
+		$msg = "HTTP Response {$this->httpCode()} of {$this->url()} IN {$this->totalTime()}s";
+
+		if ($allDetails) {
+			if ($this->headersText != null) {
+				$msg .= " with response HEADERS:\n";
+				foreach (explode("\n", $this->headersText) as $line) {
+					$msg .= "\t{$line}\n";
+				}
+			} else {
+				$msg .= "\n";
+			}
+		}
+
+		$body = $this->body();
+		if (strlen($body) > 255) {
+			$body = substr($body, 0, 252) . '...';
+		}
+
+		$msg .= "\n";
+		$msg .= "RESPONSE BODY:--------------------\n";
+		$msg .= $body . "\n";
+		$msg .= '----------------------------------';
+
+		return $msg;
+	}
+
+	/**
 	 * If you try to print the response object, you'll get response body
 	 * 
 	 * @return string
 	 */
 	public function __toString() {
-		$msg = "HTTP Response {$this->httpCode()} of {$this->url()} IN {$this->totalTime()}s";
-
-		if ($this->headersText != null) {
-			$msg .= " with response HEADERS:\n";
-			foreach (explode("\n", $this->headersText) as $line) {
-				$msg .= "\t{$line}\n";
-			}
-		} else {
-			$msg .= "\n";
-		}
-
-		$body = $this->body();
-		if (strlen($body) > 120) {
-			$body .= substr($body, 0, 120) . '...';
-		}
-
-		$msg .= "\nRESPONSE BODY:\n{$body}\n";
-		$msg .= '--------------------';
-
-		return $msg;
+		return $this->debug();
 	}
 
 }

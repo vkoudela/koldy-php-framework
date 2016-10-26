@@ -239,11 +239,13 @@ class Application {
 
 		static::$configs['application'] = $config;
 
+		/*
 		if (isset($config['classes'])) {
 			static::$classAliases = $config['classes'];
 		} else {
 			$config['classes'] = array();
 		}
+		*/
 	}
 
 	/**
@@ -634,6 +636,7 @@ class Application {
 	 *
 	 * @param string $classAlias
 	 * @param string $className
+	 * @deprecated will be removed
 	 */
 	public static function registerClassAlias($classAlias, $className) {
 		static::$classAliases[$classAlias] = $className;
@@ -664,16 +667,15 @@ class Application {
 
 		// Register Autoload function
 		spl_autoload_register(function ($className) {
-			$classes = \Koldy\Application::$classAliases;
+//			$classes = \Koldy\Application::$classAliases;
 
-			if (isset($classes[$className])) {
-				class_alias($classes[$className], $className);
-			} else {
+//			if (isset($classes[$className])) {
+//				class_alias($classes[$className], $className);
+//			} else {
 				$classPath = str_replace('\\', DS, $className);
-				$path = "{$classPath}.php";
+				$path = $classPath . '.php';
 				include $path;
-			}
-
+//			}
 		});
 
 		// set the include path to the framework folder (to Koldy and any other
