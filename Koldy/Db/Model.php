@@ -123,6 +123,18 @@ abstract class Model {
 	}
 
 	/**
+	 * Used for internal use, such as after unserialize or such
+	 *
+	 * @param array $values
+	 *
+	 * @return $this
+	 */
+	protected function setOriginalData(array $values) {
+		$this->originalData = $values;
+		return $this;
+	}
+
+	/**
 	 * Gets all data that this object currently has
 	 * 
 	 * @return array
