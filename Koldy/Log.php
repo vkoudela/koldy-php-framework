@@ -10,9 +10,7 @@ use Koldy\Log\Writer\AbstractLogWriter;
  * parse the passing string and then inside of info() method, message will be disregarded. To avoid this, you can
  * use the following syntax:
  *
- * @example		if (LOG) Log::info("User {$fullName} has logged in");
- *
- * The LOG constant will be true only if any of log drivers are enabled, otherwise it will always be false.
+ * @example		Log::info("User {$fullName} has logged in");
  *
  * You are encouraged to use log in development, but reduce logs in production mode as much as you can. Always
  * log only important data and never log the code that will always execute successfully.
@@ -41,7 +39,7 @@ class Log {
 	/**
 	 * The array of enabled log levels, combined for all loggers
 	 *
-	 * @var array of level => true
+	 * @var array of level => true, possible levels are: emergency, alert, critical, error, warning, notice, info, debug and sql
 	 */
 	private static $enabledLevels = array();
 
@@ -65,28 +63,16 @@ class Log {
 
 			$count = 0;
 			foreach ($configs as $config) {
-				$ok = $config['enabled']
-						&& (
-							(is_array($config['options']['log']) && count($config['options']['log']) > 0)
-							|| (is_array($config['options']['email_on']) && count($config['options']['email_on']) > 0)
-						);
+				$enabled = $config['enabled'] && is_array($config['options']['log']) && count($config['options']['log']) > 0;
 
-				if ($ok) {
+				if ($enabled) {
 					// if the config is enabled, then make new instance
 					$writer = $config['writer_class'];
 					static::$writers[$count] = new $writer($config['options']);
 					static::$enabledWriters[$config['writer_class']] = true;
 
-					if (is_array($config['options']['log']) && count($config['options']['log']) > 0) {
-						foreach ($config['options']['log'] as $level) {
-							static::$enabledLevels[$level] = true;
-						}
-					}
-
-					if (is_array($config['options']['email_on']) && count($config['options']['email_on']) > 0) {
-						foreach ($config['options']['email_on'] as $level) {
-							static::$enabledLevels[$level] = true;
-						}
+					foreach ($config['options']['log'] as $level) {
+						static::$enabledLevels[$level] = true;
 					}
 
 					if (!(static::$writers[$count] instanceof AbstractLogWriter)) {
@@ -105,11 +91,6 @@ class Log {
 
 	/**
 	 * Is there any log driver enabled in this moment?
-	 * You can also check this by inspecting LOG constant. Example:
-	 *
-	 * 		if (LOG) {
-	 * 			// log is enabled
-	 * 		}
 	 *
 	 * @return boolean
 	 */
@@ -147,30 +128,97 @@ class Log {
 	}
 
 	/**
-	 * @param string|array|object $param
+	 * @param array $params
 	 *
-	 * @return mixed
+	 * @return string
 	 */
-	private static function getMessageFromParameter($param) {
-		if (is_array($param)) {
-			return print_r($param, true);
-		} else if (is_object($param) && method_exists($param, '__toString')) {
-			return $param->__toString();
-		} else {
-			return $param;
+	private static function getMessageFromParameters(array $params) {
+		$message = array();
+
+		foreach ($params as $param) {
+			if (is_array($param)) {
+				$message[] = print_r($param, true);
+
+			} else if (is_object($param) && method_exists($param, '__toString')) {
+				$message[] = $param->__toString();
+
+			} else if (is_object($param) && $param instanceof \Exception) {
+				$message[] = "Exception in {$param->getFile()}:{$param->getLine()}\n\n{$param->getMessage()}\n\n{$param->getTraceAsString()}";
+
+			} else if (is_object($param)) {
+				$message[] = print_r($param, true);
+
+			} else {
+				$message[] = $param;
+
+			}
+		}
+
+		return implode(' ', $message);
+	}
+
+	/**
+	 * Write EMERGENCY message to log
+	 *
+	 * @param array|string ...$string
+	 *
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public static function emergency(...$string) {
+		static::init();
+
+		$string = static::getMessageFromParameters($string);
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->emergency($string);
+		}
+	}
+
+	/**
+	 * Write ALERT message to log
+	 *
+	 * @param array|string ...$string
+	 *
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public static function alert(...$string) {
+		static::init();
+
+		$string = static::getMessageFromParameters($string);
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->alert($string);
+		}
+	}
+
+	/**
+	 * Write CRITICAL message to log
+	 *
+	 * @param array|string ...$string
+	 *
+	 * @link http://koldy.net/docs/log#usage
+	 */
+	public static function critical(...$string) {
+		static::init();
+
+		$string = static::getMessageFromParameters($string);
+		foreach (static::$writers as $writer) {
+			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
+			$writer->critical($string);
 		}
 	}
 
 	/**
 	 * Write DEBUG message to log
 	 *
-	 * @param string $string
+	 * @param array|string ...$string
+	 *
 	 * @link http://koldy.net/docs/log#usage
 	 */
-	public static function debug($string) {
+	public static function debug(...$string) {
 		static::init();
 
-		$string = static::getMessageFromParameter($string);
+		$string = static::getMessageFromParameters($string);
 		foreach (static::$writers as $writer) {
 			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
 			$writer->debug($string);
@@ -180,13 +228,14 @@ class Log {
 	/**
 	 * Write NOTICE message to log
 	 *
-	 * @param string $string
+	 * @param array|string ...$string
+	 *
 	 * @link http://koldy.net/docs/log#usage
 	 */
-	public static function notice($string) {
+	public static function notice(...$string) {
 		static::init();
 
-		$string = static::getMessageFromParameter($string);
+		$string = static::getMessageFromParameters($string);
 		foreach (static::$writers as $writer) {
 			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
 			$writer->notice($string);
@@ -196,13 +245,14 @@ class Log {
 	/**
 	 * Write INFO message to log
 	 *
-	 * @param string $string
+	 * @param array|string ...$string
+	 *
 	 * @link http://koldy.net/docs/log#usage
 	 */
-	public static function info($string) {
+	public static function info(...$string) {
 		static::init();
 
-		$string = static::getMessageFromParameter($string);
+		$string = static::getMessageFromParameters($string);
 		foreach (static::$writers as $writer) {
 			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
 			$writer->info($string);
@@ -212,13 +262,14 @@ class Log {
 	/**
 	 * Write WARNING message to log
 	 *
-	 * @param string $string
+	 * @param array|string ...$string
+	 *
 	 * @link http://koldy.net/docs/log#usage
 	 */
-	public static function warning($string) {
+	public static function warning(...$string) {
 		static::init();
 
-		$string = static::getMessageFromParameter($string);
+		$string = static::getMessageFromParameters($string);
 		foreach (static::$writers as $writer) {
 			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
 			$writer->warning($string);
@@ -228,13 +279,14 @@ class Log {
 	/**
 	 * Write ERROR message to log
 	 *
-	 * @param string $string
+	 * @param array|string ...$string
+	 *
 	 * @link http://koldy.net/docs/log#usage
 	 */
-	public static function error($string) {
+	public static function error(...$string) {
 		static::init();
 
-		$string = static::getMessageFromParameter($string);
+		$string = static::getMessageFromParameters($string);
 		foreach (static::$writers as $writer) {
 			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
 			$writer->error($string);
@@ -253,21 +305,6 @@ class Log {
 		foreach (static::$writers as $writer) {
 			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
 			$writer->sql($sql);
-		}
-	}
-
-	/**
-	 * Write EXCEPTION message to log
-	 *
-	 * @param \Exception $e
-	 * @link http://koldy.net/docs/log#usage
-	 */
-	public static function exception(\Exception $e) {
-		static::init();
-
-		foreach (static::$writers as $writer) {
-			/* @var $writer \Koldy\Log\Writer\AbstractLogWriter */
-			$writer->exception($e);
 		}
 	}
 

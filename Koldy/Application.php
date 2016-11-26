@@ -20,19 +20,19 @@ class Application {
 	protected static $configs = array();
 
 	/**
+	 * Array of configs that were loaded from filesystem
+	 *
+	 * @var array
+	 */
+	protected static $loadedConfigs = array();
+
+	/**
 	 * All loaded module configs are in one place so feel free to call
 	 * Application::getModuleConfig() as many times as you want
 	 *
 	 * @var array
 	 */
 	protected static $moduleConfigs = array();
-
-	/**
-	 * The registered class aliases. This is for FW internal use only!
-	 *
-	 * @var array
-	 */
-	public static $classAliases = array();
 
 	/**
 	 * The array of already registered modules, so we don't execute code if you already registered your module
@@ -54,6 +54,18 @@ class Application {
 	 * @var int
 	 */
 	protected static $mode = 1;
+
+	/**
+	 * Is this application on live server or not? So you can do combinations:
+	 *
+	 * - production/live
+	 * - production/not-live (testing production on developer machine or anywhere else)
+	 * - development/not-live (real dev mode)
+	 * - development/live - (running live, but in dev mode; e.g. you want your analytics, but serving dev not minimized versions)
+	 *
+	 * @var bool
+	 */
+	protected static $isLive = false;
 
 	/**
 	 * Thr routing class instance - this is the instance of class
@@ -85,11 +97,11 @@ class Application {
 	protected static $cliName = null;
 
 	/**
-	 * The request start time
+	 * Current domain on which we're running
 	 *
-	 * @var int
+	 * @var string
 	 */
-	private static $requestStartTime = null;
+	protected static $domain = null;
 
 	/**
 	 * Add additional include path(s) - add anything you want under include path
@@ -129,14 +141,34 @@ class Application {
 	 */
 	public static function useConfig($config) {
 		if (is_string($config)) {
-			$applicationPath = $config = stream_resolve_include_path($config);
-			if ($config === false || !is_file($config)) {
+			$applicationPath = stream_resolve_include_path($config); // this is path to /application/configs/application.php
+			if ($applicationPath === false || !is_file($applicationPath)) {
 				static::returnInternalServerError();
 				print 'Can not resolve the full path to the main application config file or file doesn\'t exists!';
 				exit(1);
 			}
 
-			$config = require $config; // will return array
+			$config = require $applicationPath; // will return array
+
+			if (!isset($config['application_path'])) {
+				// we'll make an assumption and try to guess...
+
+				$config['application_path'] = dirname(getcwd()) . '/application/';
+
+				if (!is_dir($config['application_path'])) {
+					static::returnInternalServerError();
+					print 'Can\'t continue without defined and existing application_path';
+					exit(1);
+				}
+			} else {
+				//$applicationPath = $config['application_path']; // user defined it
+
+				if (!is_dir($config['application_path'])) {
+					static::returnInternalServerError();
+					print 'Can\'t continue without application_path that exists';
+					exit(1);
+				}
+			}
 
 		} else if (!is_array($config)) {
 			static::returnInternalServerError();
@@ -144,13 +176,26 @@ class Application {
 			exit(1);
 
 		} else { // it's good, we got an array
+
 			// first check if application_path is defined .. because if it's not, then we can't continue
 			if (!isset($config['application_path'])) {
-				static::returnInternalServerError();
-				print 'Can\'t continue without defined application_path';
-				exit(1);
+				// we'll make an assumption and try to guess...
+
+				$config['application_path'] = dirname(getcwd()) . '/application/';
+
+				if (!is_dir($config['application_path'])) {
+					static::returnInternalServerError();
+					print 'Can\'t continue without defined application_path';
+					exit(1);
+				}
 			} else {
-				$applicationPath = $config['application_path'];
+				//$applicationPath = $config['application_path']; // user defined it
+
+				if (!is_dir($config['application_path'])) {
+					static::returnInternalServerError();
+					print 'Can\'t continue without application_path that exists';
+					exit(1);
+				}
 			}
 		}
 
@@ -169,9 +214,20 @@ class Application {
 				print 'Invalid config of site_url';
 				exit(1);
 			}
+
+			static::$domain = substr($config['site_url'], strpos($config['site_url'], '://') + 3);
 		} else {
 			if ($config['site_url'] === null) {
 				$config['site_url'] = "//{$_SERVER['HTTP_HOST']}";
+				static::$domain = $_SERVER['HTTP_HOST'];
+
+				// this is assumption...
+				if (!isset($_SERVER['HTTPS'])) {
+					$config['site_url'] = 'http://' . $config['site_url'];
+				} else {
+					$config['site_url'] = 'https://' . $config['site_url'];
+				}
+
 			} else if (is_array($config['site_url'])) {
 				$sizeofSiteUrls = count($config['site_url']);
 				$found = false;
@@ -181,6 +237,8 @@ class Application {
 					if ($siteUrl === $_SERVER['HTTP_HOST']) {
 						$config['site_url'] = $config['site_url'][$i];
 						$found = true;
+
+						static::$domain = substr($config['site_url'], strpos($config['site_url'], '://') + 3);
 					}
 				}
 
@@ -189,6 +247,8 @@ class Application {
 					print 'Invalid config of site_url; hostname not found';
 					exit(1);
 				}
+			} else {
+				static::$domain = substr($config['site_url'], strpos($config['site_url'], '://') + 3);
 			}
 		}
 
@@ -200,16 +260,12 @@ class Application {
 			throw new \Exception('Invalid ENV parameter in config/application.php');
 		}
 
-		if (!isset($config['application_path'])) {
-			$config['application_path'] = dirname(dirname($applicationPath)) . DIRECTORY_SEPARATOR;
-		}
-
 		if (!isset($config['public_path'])) {
 			$config['public_path'] = (PHP_SAPI != 'cli' ? dirname($_SERVER['SCRIPT_FILENAME']) : getcwd()) . DIRECTORY_SEPARATOR;
 		}
 
 		if (!isset($config['storage_path'])) {
-			$config['storage_path'] = dirname(dirname(dirname($applicationPath))) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
+			$config['storage_path'] = dirname($config['application_path']) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR;
 		}
 
 		if (!isset($config['key']) || !is_string($config['key'])) {
@@ -220,32 +276,12 @@ class Application {
 			throw new \Exception('Unique application key is too long');
 		}
 
-		// if any of the log writers are enabled, then set LOG to true
-		// TODO: Revise this
-		if (!defined('LOG')) {
-			$enabled = false;
-			foreach ($config['log'] as $logConfig) {
-				if ($logConfig['enabled']) {
-					$enabled = true;
-				}
-			}
-
-			define('LOG', $enabled);
-		}
-
 		if (!isset($config['timezone'])) {
 			throw new Exception('Timezone is not set in config/application.php');
 		}
 
 		static::$configs['application'] = $config;
 
-		/*
-		if (isset($config['classes'])) {
-			static::$classAliases = $config['classes'];
-		} else {
-			$config['classes'] = array();
-		}
-		*/
 	}
 
 	/**
@@ -254,7 +290,7 @@ class Application {
 	 * @param string $append [optional] append anything you want to application path
 	 *
 	 * @return string
-	 * @example /Users/vkoudela/Sites/your.site.com/application/
+	 * @example /var/www/your.site/com/application/
 	 */
 	public static function getApplicationPath($append = null) {
 		if ($append === null) {
@@ -270,7 +306,7 @@ class Application {
 	 * @param string $append [optional] append anything you want to application path
 	 *
 	 * @return string
-	 * @example /Users/vkoudela/Sites/your.site.com/storage/
+	 * @example /var/www/your.site/com/storage/
 	 */
 	public static function getStoragePath($append = null) {
 		if ($append === null) {
@@ -286,7 +322,7 @@ class Application {
 	 * @param string $append [optional] append anything you want to application path
 	 *
 	 * @return string
-	 * @example /Users/vkoudela/Sites/your.site.com/public/
+	 * @example /var/www/your.site/com/public/
 	 */
 	public static function getPublicPath($append = null) {
 		if ($append === null) {
@@ -355,7 +391,7 @@ class Application {
 	 * @param string $segment [optional] the key from config's array
 	 *
 	 * @return array
-	 * @example if you pass 'cache' as parameter, you'll get the array from public/config/cache.php file
+	 * @example if you pass 'cache' as parameter, you'll get the array from application/configs/cache.php file
 	 * @throws \Koldy\Exception
 	 */
 	public static function getConfig($file = null, $segment = null) {
@@ -363,14 +399,14 @@ class Application {
 			$file = 'application';
 		}
 
-		// has config path being defined?
-		if (isset(static::$configs['application']['config_path'])) {
-			$configPath = static::$configs['application']['config_path'];
-		} else {
-			$configPath = static::$configs['application']['application_path'] . 'configs/'; // don't call getApplicationPath, it'll go in recursion
-		}
-
 		if (!isset(static::$configs[$file])) {
+			// has config path being defined?
+			if (isset(static::$configs['application']['config_path'])) {
+				$configPath = static::$configs['application']['config_path'];
+			} else {
+				$configPath = static::$configs['application']['application_path'] . 'configs/'; // don't call getApplicationPath, it'll go in recursion
+			}
+
 			if (isset(static::$configs['application']['configs'])) {
 				if (is_array(static::$configs['application']['configs'])) {
 					if (isset(static::$configs['application']['configs'][$file])) {
@@ -389,6 +425,7 @@ class Application {
 				throw new Exception('Config file not found: ' . $file);
 			} else {
 				static::$configs[$file] = require $path;
+				static::$loadedConfigs[] = $file;
 			}
 		}
 
@@ -497,17 +534,19 @@ class Application {
 	}
 
 	/**
-	 * Clear all configs that are already loaded. Actually, this will only
-	 * clear the cache and config file will be reloaded on next call.
+	 * Clear all configs that are already loaded.
 	 */
 	public static function reloadConfig() {
-		static::$configs = array();
+		foreach (static::$loadedConfigs as $loadedConfig) {
+			unset(static::$configs[$loadedConfig]);
+			static::getConfig($loadedConfig);
+		}
 	}
 
 	/**
 	 * Get the application URI. Yes, use this one instead of $_SERVER['REQUEST_URI']
 	 * because you can pass this URI in index.php while calling Application::run()
-	 * or somehow different so the real request URI will be overriden.
+	 * or somehow different so the real request URI will be overridden.
 	 *
 	 * @return string
 	 */
@@ -579,6 +618,15 @@ class Application {
 	}
 
 	/**
+	 * Is app running live or not?
+	 *
+	 * @return bool
+	 */
+	public static function isLive() {
+		return static::$isLive;
+	}
+
+	/**
 	 * Register all include paths for module
 	 *
 	 * @param string $name
@@ -632,17 +680,6 @@ class Application {
 	}
 
 	/**
-	 * Dynamically register/add new class alias
-	 *
-	 * @param string $classAlias
-	 * @param string $className
-	 * @deprecated will be removed
-	 */
-	public static function registerClassAlias($classAlias, $className) {
-		static::$classAliases[$classAlias] = $className;
-	}
-
-	/**
 	 * Initialize the application :)
 	 *
 	 * @throws Exception
@@ -667,15 +704,9 @@ class Application {
 
 		// Register Autoload function
 		spl_autoload_register(function ($className) {
-//			$classes = \Koldy\Application::$classAliases;
-
-//			if (isset($classes[$className])) {
-//				class_alias($classes[$className], $className);
-//			} else {
 				$classPath = str_replace('\\', DS, $className);
 				$path = $classPath . '.php';
-				include $path;
-//			}
+				require $path;
 		});
 
 		// set the include path to the framework folder (to Koldy and any other
@@ -781,12 +812,12 @@ class Application {
 	}
 
 	/**
-	 * Get the request execution time in miliseconds
+	 * Get the request execution time in milliseconds
 	 *
 	 * @return float
 	 */
 	public static function getRequestExecutionTime() {
-		return round((microtime(true) - static::$requestStartTime) * 1000, 2);
+		return round((microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) * 1000, 2);
 	}
 
 	/**
@@ -798,8 +829,6 @@ class Application {
 	 * @throws Exception
 	 */
 	public static function run($uri = null) {
-		static::$requestStartTime = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
-
 		$config = static::getConfig();
 		$isCLI = defined('KOLDY_CLI') && (KOLDY_CLI === true);
 
@@ -862,7 +891,7 @@ class Application {
 		} else {
 
 			// and this is case when you're dealing with CLI request
-			// scripts are stored in /application/scripts, but before that, we need to determin which script is called
+			// scripts are stored in /application/scripts, but before that, we need to determine which script is called
 
 			global $argv;
 			// $argv[0] - this should be "cli.php", but we don't need this at all
@@ -882,11 +911,13 @@ class Application {
 				static::$cliName = $script;
 
 				if (preg_match('/^([a-zA-Z0-9\_\-\:]+)$/', $script)) {
+					$scriptName = $script;
 
 					if (strpos($script, ':') !== false) {
 						// script name has colon - it means that the script needs to be looked for in modules
 						$tmp = explode(':', $script);
 						static::$cliScript = static::getApplicationPath("modules/{$tmp[0]}/scripts/{$tmp[1]}.php");
+						$scriptName = $tmp[0] . ':' . $tmp[1];
 
 						if (is_dir(static::getApplicationPath("modules/{$tmp[0]}"))) {
 							static::registerModule($tmp[0]);
@@ -898,7 +929,9 @@ class Application {
 					if (!is_file(static::$cliScript)) {
 						throw new Exception('CLI script doesn\'t exist on ' . static::$cliScript);
 					} else {
+						Log::notice('Started CLI script: ' . $scriptName);
 						include static::$cliScript;
+						Log::notice('Done CLI script: ' . $scriptName);
 					}
 				} else {
 					throw new Exception("CLI script name contains invalid characters: {$script}");
@@ -908,7 +941,7 @@ class Application {
 				if (!Log::isEnabledLogger('\Koldy\Log\Writer\Out')) {
 					echo "{$e->getMessage()} in {$e->getFile()}:{$e->getLine()}\n\n{$e->getTraceAsString()}";
 				}
-				Log::exception($e);
+				Log::critical($e);
 			}
 		}
 

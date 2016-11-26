@@ -26,14 +26,12 @@ use Koldy\Db as KoldyDb;
  */
 class Db extends AbstractLogWriter {
 
-
 	/**
 	 * The flag if query is being inserted into database to prevent recursion
 	 * 
 	 * @var boolean
 	 */
 	private $inserting = false;
-
 
 	/**
 	 * Construct the DB writer
@@ -61,7 +59,6 @@ class Db extends AbstractLogWriter {
 		parent::__construct($config);
 	}
 
-
 	/**
 	 * Get array of field=>value to be inserted in log table
 	 * 
@@ -88,10 +85,9 @@ class Db extends AbstractLogWriter {
 		);
 	}
 
-
 	/**
-	 * (non-PHPdoc)
-	 * @see \Koldy\Log\Writer\AbstractLogWriter::logMessage()
+	 * @param string $level
+	 * @param mixed $message
 	 */
 	protected function logMessage($level, $message) {
 		if ($this->inserting) {
@@ -110,15 +106,13 @@ class Db extends AbstractLogWriter {
 				if ($insert->exec($this->config['connection']) === false) {
 					$adapter = KoldyDb::getAdapter($this->config['connection']);
 					// do not process this with Log::exception because it will run into recursion
-					$this->detectEmailAlert('exception');
-					$this->appendMessage(date('Y-m-d H:i:sO') . "\tERROR inserting log message into database: {$adapter->getLastError()}\n\n{$adapter->getLastException()->getTraceAsString()}\n");
+					$this->appendMessage(gmdate('Y-m-d H:i:sO') . "\tERROR inserting log message into database: {$adapter->getLastError()}\n\n{$adapter->getLastException()->getTraceAsString()}\n");
 				}
 			}
 
 			$this->inserting = false;
 
-			$this->detectEmailAlert($level);
-			$this->appendMessage(date('Y-m-d H:i:sO') . "\t" . implode("\t", array_values($data)) . "\n");
+			$this->appendMessage(gmdate('Y-m-d H:i:sO') . "\t" . implode("\t", array_values($data)) . "\n");
 		}
 	}
 

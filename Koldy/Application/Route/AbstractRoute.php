@@ -247,7 +247,7 @@ abstract class AbstractRoute {
 			}
 		}
 
-		Log::exception($e);
+		Log::critical($e);
 	}
 
 	/**

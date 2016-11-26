@@ -195,11 +195,12 @@ class DefaultRoute extends AbstractRoute {
 			}
 
 			// and now, configure the include paths according to the case
-			$includePath = array(// module stuff has greater priority then application folder itself
-
-				"{$moduleDir}{$slash}controllers", "{$moduleDir}{$slash}models", "{$moduleDir}{$slash}library",
-
-				get_include_path());
+			$includePath = array( // module stuff has greater priority then application folder itself
+				"{$moduleDir}{$slash}controllers",
+				"{$moduleDir}{$slash}models",
+				"{$moduleDir}{$slash}library",
+				get_include_path()
+			);
 
 			set_include_path(implode(PATH_SEPARATOR, $includePath));
 
@@ -372,23 +373,22 @@ class DefaultRoute extends AbstractRoute {
 			throw new \InvalidArgumentException('Slash is not allowed in action name');
 		}
 
-		$config = Application::getConfig();
+		$appConfig = Application::getConfig();
 		if ($controller === null) {
 			$controller = '';
 		}
 
-		//$url = (defined('KOLDY_CLI') && KOLDY_CLI === true) ? $config['site_url'] : '';
-
 		if ($site !== null) {
 			// we're building link to another server
-			if (isset($config['sites']) && isset($config['sites'][$site])) {
-				$url = $config['sites'][$site];
+			$otherSite = Application::getConfig('sites', $site);
+			if ($otherSite !== null) {
+				$url = $otherSite;
 			} else {
-				Log::warning('Missing sites definition key \'' . $site . '\'; please define it in your application.php under \'sites\' array');
-				$url = $config['site_url'];
+				Log::warning('Missing sites definition key \'' . $site . '\'; please define it in your sites.php');
+				$url = $appConfig['site_url'];
 			}
 		} else {
-			$url = $config['site_url'];
+			$url = $appConfig['site_url'];
 		}
 
 		if (isset($this->config['url_namespace'])) {
@@ -443,7 +443,7 @@ class DefaultRoute extends AbstractRoute {
 
 		} else {
 			// the method we need doesn't exists, so, there is nothing we can do about it any more
-			Log::notice("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath} for URI=" . Application::getUri());
+			Log::debug("Can not find method={$method} in class={$this->getControllerClass()} on path={$this->controllerPath} for URI=" . Application::getUri());
 			static::error(404);
 		}
 	}

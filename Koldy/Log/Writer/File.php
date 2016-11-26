@@ -38,7 +38,7 @@ class File extends AbstractLogWriter {
 	/**
 	 * Get message function handler
 	 *
-	 * @var function
+	 * @var \Closure
 	 */
 	protected $getMessageFunction = null;
 
@@ -47,6 +47,8 @@ class File extends AbstractLogWriter {
 	 * because all configs are strict
 	 *
 	 * @param array $config
+	 *
+	 * @throws Exception
 	 */
 	public function __construct(array $config) {
 		if (isset($config['get_message_fn'])) {
@@ -80,7 +82,7 @@ class File extends AbstractLogWriter {
 		}
 
 		$ip = Request::ip();
-		return date('Y-m-d H:i:sO') . "\t{$level}\t{$ip}\t{$message}\n";
+		return gmdate('Y-m-d H:i:sO') . "\t{$level}\t{$ip}\t{$message}\n";
 	}
 
 	/**
@@ -89,7 +91,7 @@ class File extends AbstractLogWriter {
 	 * @return string
 	 */
 	protected function getFileName() {
-		return date('Y-m-d') . '.log';
+		return gmdate('Y-m-d') . '.log';
 	}
 
 	/**
@@ -152,7 +154,6 @@ class File extends AbstractLogWriter {
 				} else {
 
 					// so, writing was ok, but what if showdown was already called?
-					// then we'll close the file, but additional email alerts won't
 					// be sent any more - sorry
 
 					if ($this->closed) {
@@ -164,7 +165,6 @@ class File extends AbstractLogWriter {
 			}
 
 			$this->appendMessage($logMessage);
-			$this->detectEmailAlert($level);
 		}
 	}
 
@@ -173,7 +173,6 @@ class File extends AbstractLogWriter {
 	 */
 	public function shutdown() {
 		$this->processExtendedReports();
-		$this->sendEmailReport();
 
 		if ($this->fp !== null) {
 			@fclose($this->fp);

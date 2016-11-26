@@ -337,6 +337,12 @@ class Request {
 
 		if ($includeIncludedFiles) {
 			$signature .= sprintf("included files: %s\n", print_r(get_included_files(), true));
+
+			$rootPath = dirname(Application::getApplicationPath());
+			$signature = str_replace($rootPath, '.', $signature);
+
+			$libPath = dirname(dirname(__FILE__));
+			$signature = str_replace($libPath, '', $signature);
 		}
 
 		return $signature;

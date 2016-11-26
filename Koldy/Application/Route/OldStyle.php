@@ -4,7 +4,7 @@ use Koldy\Application;
 use Koldy\Exception;
 
 /**
- * TODO: Finish this! Not tested! damn
+ * @deprecated Due to, as named, it's old!
  */
 class OldStyle extends AbstractRoute {
 

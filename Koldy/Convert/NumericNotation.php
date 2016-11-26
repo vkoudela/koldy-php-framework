@@ -13,7 +13,6 @@
  */
 class NumericNotation {
 
-
 	/**
 	 * Get the numbers/alphabet for number<->string conversions
 	 *
@@ -34,18 +33,16 @@ class NumericNotation {
 		);
 	}
 
-
 	/**
 	 * Convert decimal number into your numeric system
 	 *
 	 * @param string $number
+	 *
 	 * @return string
 	 */
 	public static function dec2big($number) {
 		$alphabet = static::getAvailableNumbers();
-
 		$number = trim((string) $number);
-		$decimals = strlen($number);
 
 		if (strlen($number) == 0) {
 			return 0;
@@ -66,11 +63,11 @@ class NumericNotation {
 		return $s;
 	}
 
-
 	/**
 	 * The reverse procedure, convert number from your numeric system into decimal number
 	 *
 	 * @param string $alpha
+	 *
 	 * @return string because real number can reach the MAX_INT
 	 */
 	public static function big2dec($alpha) {

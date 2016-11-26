@@ -1,6 +1,7 @@
 <?php namespace Koldy\Log\Writer;
 
 use Koldy\Application;
+use Koldy\Exception;
 
 /**
  * This log writer will print all messages to console. This writer is made to
@@ -14,7 +15,7 @@ class Out extends AbstractLogWriter {
 	/**
 	 * Get message function handler
 	 *
-	 * @var function
+	 * @var \Closure
 	 */
 	protected $getMessageFunction = null;
 
@@ -23,22 +24,12 @@ class Out extends AbstractLogWriter {
 	 * because all configs are strict
 	 *
 	 * @param array $config
+	 *
+	 * @throws Exception
 	 */
 	public function __construct(array $config) {
 		if (!isset($config['log']) || !is_array($config['log'])) {
 			throw new Exception('You must define \'log\' levels in file log driver config options at least with empty array');
-		}
-
-		if (isset($config['email_on']) && !is_array($config['email_on'])) {
-			throw new Exception('If \'email_on\' is defined, then it has to be an array');
-		}
-
-		if (!isset($config['email_on'])) {
-			$config['email_on'] = array();
-		}
-
-		if (!array_key_exists('email', $config)) {
-			$config['email'] = null;
 		}
 
 		if (!isset($config['dump'])) {
@@ -99,7 +90,6 @@ class Out extends AbstractLogWriter {
 				print $logMessage;
 			}
 
-			$this->detectEmailAlert($level);
 			$this->appendMessage($logMessage);
 		}
 	}
@@ -109,11 +99,10 @@ class Out extends AbstractLogWriter {
 	 */
 	public function shutdown() {
 		$this->processExtendedReports();
-		$this->sendEmailReport();
 	}
 
 	/**
-	 * Process reports that needs to be sent by email
+	 * Process extended reports
 	 */
 	protected function processExtendedReports() {
 		if (!isset($this->config['dump'])) {

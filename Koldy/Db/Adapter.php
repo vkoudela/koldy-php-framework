@@ -152,9 +152,7 @@ class Adapter {
 					$schemaSql = 'SET search_path TO ' . $config['schema'];
 					$this->pdo->exec($schemaSql);
 
-					if (LOG) {
-						Log::sql($schemaSql);
-					}
+					Log::sql($schemaSql);
 
 					unset($schemaSql);
 				}
@@ -217,7 +215,7 @@ class Adapter {
 						$config = $this->config['backup_connections'][$i];
 						if (isset($config['log_error']) && $config['log_error'] === true) {
 							Log::error("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
-							Log::exception($e); // log exception and continue
+							Log::critical($e); // log exception and continue
 						} else {
 							Log::notice("Error connecting to primary database connection on key={$this->configKey}, will now try backup_connection #{$i} {$config['username']}@{$config['host']}");
 						}
@@ -254,7 +252,7 @@ class Adapter {
 	 * @param string $query
 	 * @param array $bindings OPTIONAL, but very recommended
 	 * @param integer $fetchMode pass only PDO::FETCH_* constants
-	 * @return boolean|int False if query failes; number of affected rows if query passed
+	 * @return boolean|int False if query fails; number of affected rows if query passed
 	 * 
 	 * @link http://koldy.net/docs/database/basics#query
 	 * @link http://www.php.net/manual/en/pdo.constants.php
@@ -271,9 +269,7 @@ class Adapter {
 		} catch (PDOException $e) {
 			// the SQL syntax might fail here
 
-			if (LOG) {
-				Log::sql($this->__toString());
-			}
+			Log::sql($this->__toString());
 
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
@@ -293,9 +289,7 @@ class Adapter {
 
 			$logSql = true;
 		} catch (PDOException $e) {
-			if (LOG) {
-				Log::sql($this->__toString());
-			}
+			Log::sql($this->__toString());
 
 			$this->lastException = $e;
 			$this->lastError = $e->getMessage();
@@ -315,7 +309,7 @@ class Adapter {
 			$return = false;
 		}
 
-		if (LOG && $logSql) {
+		if ($logSql) {
 			if ($this->configKey === null) {
 				Log::sql($this->__toString());
 			} else {
@@ -366,8 +360,10 @@ class Adapter {
 	/**
 	 * If your last query was INSERT on table where you have auto incrementing
 	 * field, then you can use this method to fetch the incremented ID
-	 * 
-	 * @return integer
+	 *
+	 * @param null|string $keyName
+	 *
+	 * @return int
 	 */
 	public function getLastInsertId($keyName = null) {
 		return $this->getAdapter()->lastInsertId($keyName);

@@ -347,7 +347,10 @@ class Request {
 	 */
 	protected function preparePost() {
 		$this->prepareStandard();
-		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+
+		if (!$this->hasOption(CURLOPT_POSTFIELDS)) {
+			$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+		}
 
 		if ($this->hasHeader('Content-Type') && $this->getHeader('Content-Type') == 'application/json') {
 			$this->option(CURLOPT_POSTFIELDS, Json::encode($this->params));
@@ -359,7 +362,10 @@ class Request {
 	 */
 	protected function preparePut() {
 		$this->prepareStandard();
-		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+
+		if (!$this->hasOption(CURLOPT_POSTFIELDS)) {
+			$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+		}
 	}
 
 	/**
@@ -367,7 +373,10 @@ class Request {
 	 */
 	protected function prepareDelete() {
 		$this->prepareStandard();
-		$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+
+		if (!$this->hasOption(CURLOPT_POSTFIELDS)) {
+			$this->option(CURLOPT_POSTFIELDS, count($this->params) > 0 ? http_build_query($this->params) : '');
+		}
 	}
 
 	/**
