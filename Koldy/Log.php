@@ -44,6 +44,11 @@ class Log {
 	private static $enabledLevels = array();
 
 	/**
+	 * @var string
+	 */
+	private static $who = null;
+
+	/**
 	 * The array of enabled classes, stored as class name string
 	 *
 	 * @var array of className => true
@@ -58,6 +63,12 @@ class Log {
 	 */
 	private static function init() {
 		if (static::$writers === null) {
+			if (Application::isCli()) {
+				static::$who = Application::getCliName() . '-' . time();
+			} else {
+				static::$who = Request::ip() . '-' . rand(100000, 999999);
+			}
+
 			static::$writers = array();
 			$configs = Application::getConfig('application', 'log');
 
@@ -155,6 +166,23 @@ class Log {
 		}
 
 		return implode(' ', $message);
+	}
+
+	/**
+	 * Get or set the "who" - it'll be visible in logs as "who did that".
+	 *
+	 * If you pass string, you'll set the "who"
+	 *
+	 * @param null|string $who
+	 *
+	 * @return string
+	 */
+	public static function who($who = null) {
+		if ($who == null) {
+			return static::$who;
+		} else {
+			static::$who = $who;
+		}
 	}
 
 	/**

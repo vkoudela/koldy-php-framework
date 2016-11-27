@@ -3,6 +3,7 @@
 use Koldy\Exception;
 use Koldy\Db\Insert;
 use Koldy\Db as KoldyDb;
+use Koldy\Log;
 
 /**
  * This log writer will insert your log messages into database.
@@ -81,6 +82,7 @@ class Db extends AbstractLogWriter {
 		return array(
 			'time' => time(),
 			'level' => $level,
+			'who' => Log::who(),
 			'message' => $message
 		);
 	}
@@ -101,18 +103,12 @@ class Db extends AbstractLogWriter {
 				$this->inserting = true;
 
 				$insert = new Insert($this->config['table']);
-				$insert->add($data);
-
-				if ($insert->exec($this->config['connection']) === false) {
-					$adapter = KoldyDb::getAdapter($this->config['connection']);
-					// do not process this with Log::exception because it will run into recursion
-					$this->appendMessage(gmdate('Y-m-d H:i:sO') . "\tERROR inserting log message into database: {$adapter->getLastError()}\n\n{$adapter->getLastException()->getTraceAsString()}\n");
-				}
+				$insert
+					->add($data)
+					->exec($this->config['connection']);
 			}
 
 			$this->inserting = false;
-
-			$this->appendMessage(gmdate('Y-m-d H:i:sO') . "\t" . implode("\t", array_values($data)) . "\n");
 		}
 	}
 

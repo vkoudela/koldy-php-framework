@@ -16,13 +16,6 @@ abstract class AbstractLogWriter {
 	protected $config = null;
 
 	/**
-	 * The array of last X messages (by default, the last 100 messages)
-	 * 
-	 * @var array
-	 */
-	protected $messages = array();
-
-	/**
 	 * Constructor
 	 * 
 	 * @param array $config
@@ -130,27 +123,9 @@ abstract class AbstractLogWriter {
 	}
 
 	/**
-	 * Append log message to the request's scope
-	 * 
-	 * @param string $message
-	 */
-	protected function appendMessage($message) {
-		$this->messages[] = $message;
-
-		if (sizeof($this->messages) > 100) {
-			array_shift($this->messages);
-		}
-	}
-
-	/**
 	 * Override this method if you have anything you need to do on
 	 * request shutdown except of just sending e-mail alerts
 	 */
 	public function shutdown() {}
-
-	/**
-	 * Process extended reports
-	 */
-	protected function processExtendedReports() {}
 
 }

@@ -2,6 +2,7 @@
 
 use Koldy\Application;
 use Koldy\Exception;
+use Koldy\Log;
 
 /**
  * This log writer will print all messages to console. This writer is made to
@@ -68,7 +69,8 @@ class Out extends AbstractLogWriter {
 			return call_user_func($this->getMessageFunction, $level, $message);
 		}
 
-		return date('Y-m-d H:i:sO') . "\t{$level}\t{$message}\n";
+		$who = Log::who();
+		return date('Y-m-d H:i:sO') . "\t{$level}\t{$who}\t{$message}\n";
 	}
 
 	/**
@@ -79,18 +81,12 @@ class Out extends AbstractLogWriter {
 	 * @throws \Koldy\Exception
 	 */
 	protected function logMessage($level, $message) {
-		if (is_object($message)) {
-			$message = $message->__toString();
-		}
-
 		$logMessage = $this->getMessage($level, $message);
 
 		if ($logMessage !== false) {
 			if (in_array($level, $this->config['log'])) {
 				print $logMessage;
 			}
-
-			$this->appendMessage($logMessage);
 		}
 	}
 
@@ -98,40 +94,34 @@ class Out extends AbstractLogWriter {
 	 * This method is called internally.
 	 */
 	public function shutdown() {
-		$this->processExtendedReports();
-	}
-
-	/**
-	 * Process extended reports
-	 */
-	protected function processExtendedReports() {
 		if (!isset($this->config['dump'])) {
 			return;
 		}
-	
+
 		$dump = $this->config['dump'];
-	
+
 		// 'speed', 'included_files', 'include_path', 'whitespace'
-	
+
 		if (in_array('speed', $dump)) {
 			$method = isset($_SERVER['REQUEST_METHOD'])
-			? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
-			: ('CLI=' . Application::getCliName());
-	
+				? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
+				: ('CLI=' . Application::getCliName());
+
 			$executedIn = Application::getRequestExecutionTime();
 			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . count(get_included_files()) . ' files');
 		}
-	
+
 		if (in_array('included_files', $dump)) {
 			$this->logMessage('notice', print_r(get_included_files(), true));
 		}
-	
+
 		if (in_array('include_path', $dump)) {
 			$this->logMessage('notice', print_r(explode(':', get_include_path()), true));
 		}
-	
+
 		if (in_array('whitespace', $dump)) {
 			$this->logMessage('notice', "----------\n\n\n");
 		}
 	}
+
 }

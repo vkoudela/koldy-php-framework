@@ -1,6 +1,7 @@
 <?php namespace Koldy\Log\Writer;
 
 use Koldy\Exception;
+use Koldy\Log;
 use Koldy\Mail;
 use Koldy\Request;
 
@@ -22,6 +23,13 @@ class Email extends AbstractLogWriter {
 	 * @var string
 	 */
 	private $firstMessage = null;
+
+	/**
+	 * The array of last X messages (by default, the last 100 messages)
+	 *
+	 * @var array
+	 */
+	protected $messages = array();
 
 	/**
 	 * Construct the DB writer
@@ -65,14 +73,32 @@ class Email extends AbstractLogWriter {
 				throw new Exception('Email driver config get_data_fn function must return an array; ' . gettype($data) . ' given');
 			}
 
+			if (!isset($data['message'])) {
+				throw new Exception('Email driver config get_data_fn function must return an array with \'message\' key set; ' . gettype($data) . ' given');
+			}
+
 			return $data;
 		}
 
 		return array(
 			'time' => gmdate('Y-m-d H:i:sO'),
 			'level' => $level,
+			'who' => Log::who(),
 			'message' => $message
 		);
+	}
+
+	/**
+	 * Append log message to the request's scope
+	 *
+	 * @param string $message
+	 */
+	protected function appendMessage($message) {
+		$this->messages[] = $message;
+
+		if (sizeof($this->messages) > 100) {
+			array_shift($this->messages);
+		}
 	}
 
 	/**
@@ -84,20 +110,17 @@ class Email extends AbstractLogWriter {
 			return;
 		}
 
-		$data = $this->getEmailMessage($level, $message);
+		if (in_array($level, $this->config['log'])) {
+			$data = $this->getEmailMessage($level, $message);
+			$message = implode("\t", array_values($data));
 
-		if ($data !== false) {
-			if (in_array($level, $this->config['log'])) {
-				$message = implode("\t", array_values($data));
+			if (count($this->messages) == 0) {
+				$this->firstMessage = $data['message'];
+			}
 
-				if (count($this->messages) == 0) {
-					$this->firstMessage = $data['message'];
-				}
-
-				if ($this->config['send_immediately']) {
-					$this->sendEmail($message);
-				}
-
+			if ($this->config['send_immediately']) {
+				$this->sendEmail($data);
+			} else {
 				$this->appendMessage($message);
 			}
 		}
@@ -106,15 +129,17 @@ class Email extends AbstractLogWriter {
 	/**
 	 * Send e-mail report if system detected that e-mail should be sent
 	 *
-	 * @param null|string $message
+	 * @param null|array $message
 	 *
 	 * @return bool|null true if mail was sent and null if mail shouldn't be sent
 	 */
-	protected function sendEmail($message = null) {
+	protected function sendEmail(array $message = null) {
 		if ($message === null) {
 			$body = implode('', $this->messages);
+			$title = $this->firstMessage;
 		} else {
 			$body = $message;
+			$title = $message['message'];
 		}
 
 		$body .= "\n\n----------\n";
@@ -123,7 +148,7 @@ class Email extends AbstractLogWriter {
 		$mail = Mail::create($this->config['driver']);
 		$mail
 			->from('alert@' . Request::hostName(), Request::hostName())
-			->subject(strlen($this->firstMessage) > 200 ? (substr($this->firstMessage, 0, 200) . '...') : $this->firstMessage)
+			->subject(strlen($title) > 200 ? (substr($title, 0, 200) . '...') : $title)
 			->body($body);
 
 		$to = $this->config['to'];
@@ -153,7 +178,9 @@ class Email extends AbstractLogWriter {
 	}
 
 	public function shutdown() {
-		$this->sendEmail();
+		if (count($this->messages) > 0) {
+			$this->sendEmail();
+		}
 	}
 
 }

@@ -2,6 +2,7 @@
 
 use Koldy\Application;
 use Koldy\Exception;
+use Koldy\Log;
 use Koldy\Request;
 use Koldy\Directory;
 
@@ -81,8 +82,8 @@ class File extends AbstractLogWriter {
 			return call_user_func($this->getMessageFunction, $level, $message);
 		}
 
-		$ip = Request::ip();
-		return gmdate('Y-m-d H:i:sO') . "\t{$level}\t{$ip}\t{$message}\n";
+		$who = Log::who();
+		return gmdate('Y-m-d H:i:sO') . "\t{$level}\t{$who}\t{$message}\n";
 	}
 
 	/**
@@ -102,69 +103,61 @@ class File extends AbstractLogWriter {
 	 * @throws \Koldy\Exception
 	 */
 	protected function logMessage($level, $message) {
-		// If script is running for very long time (e.g. CRON), then date might change if time passes midnight.
-		// In that case, log will continue to write messages to new file.
+		if (in_array($level, $this->config['log'])) {
+			// If script is running for very long time (e.g. CRON), then date might change if time passes midnight.
+			// In that case, log will continue to write messages to new file.
 
-		$fpFile = $this->getFileName();
-		if ($fpFile !== $this->fpFile) {
-			//date has changed? or we need to init?
-			if ($this->fp) {
-				// close pointer to old file
-				@fclose($this->fp);
-			}
-
-			if ($this->config['path'] === null) {
-				$path = Application::getStoragePath('log' . DS . $fpFile);
-			} else {
-				$path = str_replace(DS.DS, DS, $this->config['path'] . DS . $fpFile);
-			}
-
-			$this->fpFile = $fpFile;
-
-			if (!($this->fp = @fopen($path, 'a'))) {
-				// file failed to open, maybe directory doesn't exists?
-				$dir = dirname($path);
-				if (!is_dir($dir)) {
-					if (!Directory::mkdir($dir, 0755)) {
-						throw new Exception('Can not create directory on location=' . $dir);
-					}
+			$fpFile = $this->getFileName();
+			if ($fpFile !== $this->fpFile) {
+				//date has changed? or we need to init?
+				if ($this->fp) {
+					// close pointer to old file
+					@fclose($this->fp);
 				}
+
+				if ($this->config['path'] === null) {
+					$path = Application::getStoragePath('log' . DS . $fpFile);
+				} else {
+					$path = str_replace(DS.DS, DS, $this->config['path'] . DS . $fpFile);
+				}
+
+				$this->fpFile = $fpFile;
 
 				if (!($this->fp = @fopen($path, 'a'))) {
-					// now the directory should exists, so try to open file again
-					throw new Exception('Can not write to log file on path=' . $path);
-				}
-			}
-		}
+					// file failed to open, maybe directory doesn't exists?
+					$dir = dirname($path);
+					if (!is_dir($dir)) {
+						if (!Directory::mkdir($dir, 0755)) {
+							throw new Exception('Can not create directory on location=' . $dir);
+						}
+					}
 
-		if (!$this->fp || $this->fp === null) {
-			throw new Exception('Can not write to log file');
-		}
-
-		if (is_object($message)) {
-			$message = $message->__toString();
-		}
-
-		$logMessage = $this->getMessage($level, $message);
-
-		if ($logMessage !== false) {
-			if (in_array($level, $this->config['log'])) {
-				if (!@fwrite($this->fp, $logMessage)) { // actually write it in file
-					throw new Exception('Unable to write to log file');
-				} else {
-
-					// so, writing was ok, but what if showdown was already called?
-					// be sent any more - sorry
-
-					if ($this->closed) {
-						@fclose($this->fp);
-						$this->fp = null;
-						$this->fpFile = null;
+					if (!($this->fp = @fopen($path, 'a'))) {
+						// now the directory should exists, so try to open file again
+						throw new Exception('Can not write to log file on path=' . $path);
 					}
 				}
 			}
 
-			$this->appendMessage($logMessage);
+			if (!$this->fp || $this->fp === null) {
+				throw new Exception('Can not write to log file');
+			}
+
+			$logMessage = $this->getMessage($level, $message);
+
+			if (!@fwrite($this->fp, $logMessage)) { // actually write it in file
+				throw new Exception('Unable to write to log file');
+			} else {
+
+				// so, writing was ok, but what if showdown was already called?
+				// be sent any more - sorry
+
+				if ($this->closed) {
+					@fclose($this->fp);
+					$this->fp = null;
+					$this->fpFile = null;
+				}
+			}
 		}
 	}
 
@@ -172,21 +165,6 @@ class File extends AbstractLogWriter {
 	 * This method is called internally.
 	 */
 	public function shutdown() {
-		$this->processExtendedReports();
-
-		if ($this->fp !== null) {
-			@fclose($this->fp);
-
-			$this->fp = null;
-			$this->fpFile = null;
-			$this->closed = true;
-		}
-	}
-
-	/**
-	 * @throws Exception
-	 */
-	protected function processExtendedReports() {
 		if (!isset($this->config['dump'])) {
 			return;
 		}
@@ -197,8 +175,8 @@ class File extends AbstractLogWriter {
 
 		if (in_array('speed', $dump)) {
 			$method = isset($_SERVER['REQUEST_METHOD'])
-			? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
-			: ('CLI=' . Application::getCliName());
+				? ($_SERVER['REQUEST_METHOD'] . '=' . Application::getUri())
+				: ('CLI=' . Application::getCliName());
 
 			$executedIn = Application::getRequestExecutionTime();
 			$this->logMessage('notice', $method . ' LOADED IN ' . $executedIn . 'ms, ' . count(get_included_files()) . ' files');
@@ -214,6 +192,14 @@ class File extends AbstractLogWriter {
 
 		if (in_array('whitespace', $dump)) {
 			$this->logMessage('notice', "----------\n\n\n");
+		}
+
+		if ($this->fp !== null) {
+			@fclose($this->fp);
+
+			$this->fp = null;
+			$this->fpFile = null;
+			$this->closed = true;
 		}
 	}
 
