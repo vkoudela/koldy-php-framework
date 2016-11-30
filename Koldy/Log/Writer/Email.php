@@ -135,7 +135,7 @@ class Email extends AbstractLogWriter {
 	 */
 	protected function sendEmail(array $message = null) {
 		if ($message === null) {
-			$body = implode('', $this->messages);
+			$body = implode("\n", $this->messages);
 			$title = $this->firstMessage;
 		} else {
 			$body = $message;

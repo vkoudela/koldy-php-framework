@@ -152,7 +152,7 @@ class View extends Response {
 		$path = static::getViewPath($view);
 
 		if (!file_exists($path)) {
-			Log::error("Can not find view on path={$path}");
+			Log::alert("Can not find view on path={$path}");
 			throw new Exception("View ({$view}) not found");
 		}
 

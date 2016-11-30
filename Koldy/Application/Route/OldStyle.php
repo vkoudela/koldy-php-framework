@@ -2,6 +2,7 @@
 
 use Koldy\Application;
 use Koldy\Exception;
+use Koldy\Log;
 
 /**
  * @deprecated Due to, as named, it's old!
@@ -104,10 +105,8 @@ class OldStyle extends AbstractRoute {
 
 				if (!is_file($this->controllerPath)) {
 					// Even IndexController is missing. Can not resolve that.
-					if (Application::inDevelopment()) {
-						$controllersPath = $moduleDir . DS . 'controllers';
-						\Koldy\Log::debug("Can not find {$this->controllerClass} nor IndexController in {$controllersPath}");
-					}
+					$controllersPath = $moduleDir . DS . 'controllers';
+					Log::debug("Can not find {$this->controllerClass} nor IndexController in {$controllersPath}");
 					Application::error(404, 'Page not found');
 				}
 
@@ -152,10 +151,8 @@ class OldStyle extends AbstractRoute {
 
 				if (!is_file($this->controllerPath)) {
 					// Even IndexController is missing. Can not resolve that.
-					if (Application::inDevelopment()) {
-						$controllersPath = Application::getApplicationPath() . 'controllers';
-						\Koldy\Log::debug("Can not find {$this->controllerClass} nor IndexController in {$controllersPath}");
-					}
+					$controllersPath = Application::getApplicationPath() . 'controllers';
+					Log::debug("Can not find {$this->controllerClass} nor IndexController in {$controllersPath}");
 					Application::error(404, 'Page not found');
 				}
 

@@ -661,9 +661,7 @@ class Validator {
 
 			$settingsCount = count($settings);
 			if ($settingsCount < 2) {
-				if (Application::inDevelopment()) {
-					Log::debug('validateUnique got only this: ' . print_r($settings, true));
-				}
+				Log::debug('validateUnique got only this:', $settings);
 				throw new Exception('Bad parameters count in Validator::validateUnique method; expected at least 2, got ' . $settingsCount);
 			}
 

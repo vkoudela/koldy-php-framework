@@ -280,6 +280,8 @@ class Application {
 			throw new Exception('Timezone is not set in config/application.php');
 		}
 
+		static::$isLive = array_key_exists('live', $config) ? (bool) $config['live'] : false;
+
 		static::$configs['application'] = $config;
 
 	}

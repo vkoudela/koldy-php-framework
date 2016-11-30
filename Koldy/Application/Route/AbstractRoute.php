@@ -224,8 +224,8 @@ abstract class AbstractRoute {
 			Json::create(array(
 				'success' => false,
 				'type' => 'exception',
-				'exception' => Application::inDevelopment() ? $e->getMessage() : null,
-				'trace' => Application::inDevelopment() ? $e->getTraceAsString() : null
+				'exception' => !Application::isLive() ? $e->getMessage() : null,
+				'trace' => !Application::isLive() ? $e->getTraceAsString() : null
 			))->flush();
 
 		} else {
@@ -239,7 +239,7 @@ abstract class AbstractRoute {
 				include $file503;
 
 			} else {
-				if (Application::inDevelopment()) {
+				if (!Application::isLive()) {
 					echo "<strong>{$e->getMessage()}</strong><pre>{$e->getTraceAsString()}</pre>";
 				} else {
 					echo "<h1>Error</h1><p>Something went wrong. Please try again later!</p>";
@@ -260,7 +260,7 @@ abstract class AbstractRoute {
 	 * @param string $message [optional] message that will be visible to user
 	 * @param \Exception $e [optional] exception, if any. Be careful, you might not
 	 * want to show the exceptions to users, but you would like to show it to developers? Then
-	 * use Application::inDevelopment() and inProduction() methods.
+	 * use Application::isLive() methods.
 	 *
 	 * @throws Exception
 	 */
@@ -323,7 +323,7 @@ abstract class AbstractRoute {
 				'type' => 'http',
 				'code' => $code,
 				'message' => $message,
-				'exception' => (($e !== null && Application::inDevelopment()) ? $e->getMessage() : null)
+				'exception' => (($e !== null && !Application::isLive()) ? $e->getMessage() : null)
 			);
 
 			Json::create($data)->flush();

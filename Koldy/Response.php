@@ -150,7 +150,7 @@ abstract class Response {
 				header("{$header['name']}: {$header['value']}");
 			}
 		} else {
-			Log::error('Can\'t flushHeaders because headers are already sent');
+			Log::alert('Can\'t flushHeaders because headers are already sent');
 		}
 	}
 
