@@ -171,13 +171,13 @@ abstract class AbstractRoute {
 		}
 
 		if ($server === null) {
-			$url = $config['site_url'];
-
 			if (count($config['assets']) > 0) {
 				// take the first one
 				$values = array_values($config['assets']);
 				$firstValue = array_shift($values);
-				$url .= $firstValue;
+				$url = $firstValue;
+			} else {
+				$url = $config['site_url'];
 			}
 
 			if (isset($this->config['url_namespace'])) {
