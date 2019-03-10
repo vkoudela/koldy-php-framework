@@ -1,6 +1,10 @@
-# Koldy PHP Framework
+# THIS PROJECT IS DEPRECATED
 
-[![Join the chat at https://gitter.im/vkoudela/koldy-php-framework](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vkoudela/koldy-php-framework?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+This project was in use long time ago while [Koldy Framework](https://github.com/vkoudela/koldy-php-framework) v1 was current version. Do not use
+this for any of your projects. Instead, use new framework version from (https://github.com/koldy/framework). You can find more
+info on [koldy.net](https://koldy.net).
+
+## Koldy PHP Framework
 
 Koldy is PHP framework built for developers who wants to build web easy, fast, scalable and secure.
 
